@@ -9,7 +9,6 @@
 
 <p align="center">
   <a href="#for-players">Get started</a> ·
-  <a href="#a-look-around">Screenshots</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="docs/setup.md">Setup guide</a> ·
   <a href="TESTING.md">Testing checklist</a>
@@ -33,28 +32,6 @@ The **FunStats** addon quietly records everything worth laughing about, per char
 | 🏆 **Glory** | achievements like *Can't stop jumping* and *Spends ages dead*, personal bests, a Hall of Fame |
 
 Everything is shown **per realm**, with **guild pages**, **search**, **character comparisons**, **weekly and all-time** views, three themes (**Horde**, **Alliance**, **Felfire**) and **English or Swedish**.
-
-<br>
-
-<img src="docs/images/h-screens.png" alt="A look around" width="100%">
-
-<a name="a-look-around"></a>
-
-**The realm page:** this week's deeds, guilds, leaderboards and achievements.
-
-<img src="docs/images/realm.png" alt="Realm overview with stat tiles and guild cards" width="100%">
-
-**Guild pages:** the roster with leaders next to the guild's deeds and latest loot and deaths.
-
-<img src="docs/images/guild.png" alt="Guild page with roster, leaders and the Ledger of Deeds" width="100%">
-
-**Character pages:** gear next to the stats that make this character special (Alliance theme).
-
-<img src="docs/images/character.png" alt="Character page with gear and signature stats in the Alliance theme" width="100%">
-
-**On your phone**, with the Felfire and Alliance themes:
-
-<p align="center"><img src="docs/images/phones.png" alt="The site on phones in the Felfire and Alliance themes" width="80%"></p>
 
 <br>
 

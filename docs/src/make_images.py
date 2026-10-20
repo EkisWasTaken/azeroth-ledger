@@ -1,7 +1,7 @@
-"""Renders the README images with headless Chrome: banner, section headings, feature tiles and
-screenshots of the site (example data). Run from the project folder:  python docs/src/make_images.py
+"""Renders the README images with headless Chrome: banner, section headings and feature tiles.
+Run from the project folder:  python docs/src/make_images.py
 
-Needs Google Chrome and an internet connection (fonts, Chart.js and Wowhead icons load from the web).
+Needs Google Chrome and an internet connection (the fonts load from Google Fonts).
 """
 import functools
 import http.server
@@ -24,7 +24,6 @@ PORT = 8791
 
 HEADINGS = {
     "features": ("What it tracks", "skull"),
-    "screens": ("A look around", "scroll"),
     "how": ("How it works", "gear"),
     "players": ("For players", "sword"),
     "owners": ("Run your own", "crest"),
@@ -67,11 +66,6 @@ def main():
         shot(f"{base}/_art.html?mode=tiles", OUT / "tiles.png", 1280, 196)
         for key, (text, icon) in HEADINGS.items():
             shot(f"{base}/_art.html?mode=h&icon={icon}&text={urllib.parse.quote(text)}", OUT / f"h-{key}.png", 1280, 104, transparent=True)
-        # the site itself, with example data
-        shot(f"{base}/index.html?lang=en&demo", OUT / "realm.png", 1280, 900, scale=1, wait=12000)
-        shot(f"{base}/index.html?lang=en&demo#/g/Example%20data%7CDemo%20Realm/Example%20Guild", OUT / "guild.png", 1280, 900, scale=1, wait=12000)
-        shot(f"{base}/index.html?lang=en&demo&theme=alliance#/c/Bonksworth-Example", OUT / "character.png", 1280, 900, scale=1, wait=12000)
-        shot(f"{base}/_art.html?mode=phones", OUT / "phones.png", 1000, 900, scale=1.5, wait=15000)
     finally:
         srv.shutdown()
         (ROOT / "site" / "_art.html").unlink(missing_ok=True)
