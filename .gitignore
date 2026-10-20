@@ -1,0 +1,12 @@
+# build output (the copy in site/ is the one that's published)
+app/AzerothLedger.exe
+
+# local state
+sync/.published.json
+.chrome-shots/
+site/_art.html
+.claude/
+__pycache__/
+*.pyc
+Thumbs.db
+desktop.ini

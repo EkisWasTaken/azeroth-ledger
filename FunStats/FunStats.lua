@@ -1,0 +1,932 @@
+-- FunStats: records fun statistics per character into FunStatsDB.
+-- Data is written to WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua
+-- on logout or /reload. Sync.lua shares it with other FunStats players in the group.
+
+local ADDON_NAME, ns = ...
+local DB_VERSION = 1
+local MAX_DEATHS = 300
+local MAX_NOTABLE = 200
+local MAX_KILL_NAMES = 400
+
+local band = bit.band
+local MINE = COMBATLOG_OBJECT_AFFILIATION_MINE or 0x00000001
+local TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER or 0x00000400
+
+local frame = CreateFrame("Frame")
+local C            -- this character's record
+local playerGUID, playerName
+local lastHit      -- most recent damage taken, used to explain deaths
+local lastMoney, lastXP, lastXPMax
+local lastX, lastY, lastInst
+local lastInstanceName
+
+---------------------------------------------------------------------------
+-- Helpers
+---------------------------------------------------------------------------
+
+local function Print(msg)
+  DEFAULT_CHAT_FRAME:AddMessage("|cfff0b429FunStats|r: " .. msg)
+end
+
+local function Today()
+  return date("%Y-%m-%d")
+end
+
+local function Day()
+  local key = Today()
+  local d = C.days[key]
+  if not d then
+    d = {}
+    C.days[key] = d
+  end
+  return d
+end
+
+local function Add(field, n)
+  local d = Day()
+  d[field] = (d[field] or 0) + (n or 1)
+end
+
+local function Max(field, n)
+  local d = Day()
+  if not d[field] or n > d[field] then d[field] = n end
+end
+
+-- Turn a GlobalStrings format like "%s rolls %d (%d-%d)" into a Lua pattern.
+local function FormatToPattern(fmt)
+  if not fmt then return nil end
+  local p = fmt:gsub("([%(%)%.%+%-%*%?%[%]%^%$])", "%%%1")
+  p = p:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
+  return "^" .. p .. "$"
+end
+
+local ROLL_PATTERN = FormatToPattern(RANDOM_ROLL_RESULT)
+local LOOT_SELF = FormatToPattern(LOOT_ITEM_SELF)
+local LOOT_SELF_MULTI = FormatToPattern(LOOT_ITEM_SELF_MULTIPLE)
+local LOOT_PUSHED = FormatToPattern(LOOT_ITEM_PUSHED_SELF)
+local LOOT_PUSHED_MULTI = FormatToPattern(LOOT_ITEM_PUSHED_SELF_MULTIPLE)
+
+local QUALITY_BY_COLOR = {
+  ff9d9d9d = 0, ffffffff = 1, ff1eff00 = 2,
+  ff0070dd = 3, ffa335ee = 4, ffff8000 = 5,
+}
+
+local function ItemQuality(link)
+  local color = link:match("|c(%x%x%x%x%x%x%x%x)")
+  return color and QUALITY_BY_COLOR[color:lower()] or 1
+end
+
+local function PushCapped(list, entry, cap)
+  list[#list + 1] = entry
+  while #list > cap do table.remove(list, 1) end
+end
+
+local function MapPosition()
+  local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+  if not mapID then return nil end
+  local pos = C_Map.GetPlayerMapPosition(mapID, "player")
+  if not pos then return mapID end
+  local x, y = pos:GetXY()
+  return mapID, math.floor(x * 1000) / 10, math.floor(y * 1000) / 10
+end
+
+---------------------------------------------------------------------------
+-- Character setup
+---------------------------------------------------------------------------
+
+-- Which game this is: client version, Hardcore rules and season, so the website can
+-- separate WoW Forever, Hardcore Forever, Classic Era and so on.
+local function GameInfo()
+  local version, _, _, toc = GetBuildInfo()
+  local hardcore = C_GameRules and C_GameRules.IsHardcoreActive and C_GameRules.IsHardcoreActive() or nil
+  local season = C_Seasons and C_Seasons.GetActiveSeason and C_Seasons.GetActiveSeason() or nil
+  return {
+    version = version, toc = toc, project = WOW_PROJECT_ID,
+    hardcore = hardcore and true or nil, season = season,
+  }
+end
+ns.GameInfo = GameInfo
+
+local function UpdateGuild()
+  local g = GetGuildInfo("player")
+  if g then C.guild = g elseif not IsInGuild() then C.guild = nil end
+end
+
+local function UpdateProfile()
+  C.game = GameInfo()
+  C.name = playerName
+  C.realm = GetRealmName()
+  local _, classToken = UnitClass("player")
+  C.class = classToken
+  local _, raceToken = UnitRace("player")
+  C.race = raceToken
+  C.faction = UnitFactionGroup("player")
+  C.level = UnitLevel("player")
+  UpdateGuild()
+  C.lastSeen = time()
+  C.owner = FunStatsDB.id
+end
+
+local function InitCharacter()
+  FunStatsDB = FunStatsDB or {}
+  FunStatsDB.v = DB_VERSION
+  FunStatsDB.chars = FunStatsDB.chars or {}
+  FunStatsDB.friends = FunStatsDB.friends or {}
+  FunStatsDB.observed = FunStatsDB.observed or {}
+  FunStatsDB.synced = FunStatsDB.synced or {}   -- other players' stats, received by Sync.lua
+  -- Random id for this WoW account, so the website can tell observers apart.
+  FunStatsDB.id = FunStatsDB.id or ("a" .. time() .. math.random(100000, 999999))
+  -- Private upload code: proves on the website that this install's characters are yours.
+  -- It never leaves this file except when you upload; it is not shared in game.
+  if type(FunStatsDB.secret) ~= "string" or #FunStatsDB.secret < 32 then
+    local hex = {}
+    for i = 1, 40 do hex[i] = string.format("%x", math.random(0, 15)) end
+    FunStatsDB.secret = table.concat(hex)
+  end
+
+  playerGUID = UnitGUID("player")
+  playerName = UnitName("player")
+  local key = playerName .. "-" .. GetRealmName()
+  C = FunStatsDB.chars[key] or {}
+  FunStatsDB.chars[key] = C
+
+  C.days = C.days or {}
+  C.deaths = C.deaths or {}
+  C.kills = C.kills or {}
+  C.killNames = C.killNames or 0
+  C.instances = C.instances or {}
+  C.levels = C.levels or {}
+  C.notable = C.notable or {}
+  C.best = C.best or {}
+  C.firstSeen = C.firstSeen or time()
+  C.settings = C.settings or { announce = false }
+  C.spellDmg = C.spellDmg or {}     -- damage per spell, all time
+  C.casts = C.casts or {}           -- casts per spell, all time
+  C.heat = C.heat or {}             -- seconds played per "weekday-hour"
+  C.zones = C.zones or {}           -- seconds spent per zone
+  C.levelPlayed = C.levelPlayed or {} -- played seconds when each level was reached
+  C.duels = C.duels or {}           -- opponent -> { w, l }
+  C.healers = C.healers or {}       -- who healed me, total effective healing
+  C.playedTotal = C.playedTotal or 0
+  UpdateProfile()
+
+  lastMoney = GetMoney()
+  lastXP, lastXPMax = UnitXP("player"), UnitXPMax("player")
+  C.peakGold = math.max(C.peakGold or 0, lastMoney)
+  C.days[date("%Y-%m-%d")] = C.days[date("%Y-%m-%d")] or {}
+  C.days[date("%Y-%m-%d")].gold = lastMoney
+end
+
+-- Add n to map[key], allowing at most `cap` distinct keys.
+local function CountIn(map, key, n, cap)
+  if not key then return end
+  if map[key] then
+    map[key] = map[key] + (n or 1)
+  else
+    local size = 0
+    for _ in pairs(map) do size = size + 1; if size >= cap then return end end
+    map[key] = n or 1
+  end
+end
+
+---------------------------------------------------------------------------
+-- Friends: players on FunStatsDB.friends are recorded as we see them in
+-- the combat log, so friends without the addon still get stats.
+---------------------------------------------------------------------------
+
+local ENV_CAUSE = {
+  FALLING = "fall", Falling = "fall",
+  DROWNING = "drown", Drowning = "drown",
+  FATIGUE = "fatigue", Fatigue = "fatigue",
+  FIRE = "fire", Fire = "fire",
+  LAVA = "lava", Lava = "lava",
+  SLIME = "slime", Slime = "slime",
+}
+
+local MAX_FRIEND_DEATHS = 150
+local friendByGUID = {}   -- guid -> "Name-Realm" or false
+local friendLastHit = {}  -- guid -> last damage taken
+
+local function SplitName(full)
+  local base, realm = strsplit("-", full)
+  return base, (realm and realm ~= "") and realm or GetRealmName()
+end
+
+local function Observed(key)
+  local O = FunStatsDB.observed[key]
+  if not O then
+    O = { days = {}, deaths = {} }
+    FunStatsDB.observed[key] = O
+  end
+  return O
+end
+
+local function ODay(key)
+  local O = Observed(key)
+  local k = Today()
+  local d = O.days[k]
+  if not d then d = {}; O.days[k] = d end
+  O.lastSeen = time()
+  return d, O
+end
+
+local function OAdd(key, field, n)
+  local d = ODay(key)
+  d[field] = (d[field] or 0) + (n or 1)
+end
+
+-- Returns the friend's "Name-Realm" for a combat log unit, or nil.
+local function FriendKey(guid, name)
+  if not guid or not name or guid == playerGUID then return nil end
+  local cached = friendByGUID[guid]
+  if cached ~= nil then return cached or nil end
+  if not guid:find("^Player%-") then friendByGUID[guid] = false; return nil end
+  local base, realm = SplitName(name)
+  if not FunStatsDB.friends[base:lower()] then friendByGUID[guid] = false; return nil end
+  local key = base .. "-" .. realm
+  friendByGUID[guid] = key
+  local O = Observed(key)
+  O.name, O.realm = base, realm
+  O.game = GameInfo()  -- friends we see are in the same game and mode as us
+  local _, classToken, _, raceToken = GetPlayerInfoByGUID(guid)
+  O.class, O.race = classToken or O.class, raceToken or O.race
+  return key
+end
+
+local function OnFriendDeath(guid, name, key)
+  -- Hunters' Feign Death also fires UNIT_DIED; check a moment later.
+  C_Timer.After(0.3, function()
+    if UnitIsFeignDeath and UnitIsFeignDeath(name) then return end
+    local hit = friendLastHit[guid]
+    local cause, by, spell, amt = "unknown", nil, nil, nil
+    if hit and GetTime() - hit.t < 15 then
+      if hit.env then cause = hit.env else cause = hit.pvp and "player" or "mob"; by, spell = hit.by, hit.spell end
+      amt = hit.amt
+    end
+    OAdd(key, "deaths")
+    if cause ~= "mob" and cause ~= "player" and cause ~= "unknown" then OAdd(key, "deaths_" .. cause) end
+    local _, O = ODay(key)
+    local lvl = UnitLevel(name)
+    if lvl and lvl > 0 then O.level = lvl end
+    PushCapped(O.deaths, {
+      t = time(), lvl = O.level, zone = GetRealZoneText(),
+      inst = IsInInstance() and (GetInstanceInfo()) or nil,
+      cause = cause, by = by, spell = spell, amt = amt,
+    }, MAX_FRIEND_DEATHS)
+    friendLastHit[guid] = nil
+  end)
+end
+
+local function OnFriendCombat(sub, srcGUID, srcName, srcFlags, dstGUID, dstName, a12, a13, a15, a16)
+  local src = FriendKey(srcGUID, srcName)
+  if src and dstGUID ~= srcGUID then
+    if sub == "SWING_DAMAGE" then
+      OAdd(src, "dmg", a12)
+    elseif sub == "SPELL_DAMAGE" or sub == "SPELL_PERIODIC_DAMAGE" or sub == "RANGE_DAMAGE" or sub == "DAMAGE_SHIELD" then
+      OAdd(src, "dmg", a15)
+    elseif sub == "PARTY_KILL" then
+      OAdd(src, "kb")
+    end
+  end
+  if src and (sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL") then
+    local effective = a15 - (a16 or 0)
+    if effective > 0 then OAdd(src, "heal", effective) end
+  end
+
+  local dst = FriendKey(dstGUID, dstName)
+  if not dst then return end
+  if sub == "UNIT_DIED" then
+    OnFriendDeath(dstGUID, dstName, dst)
+    return
+  end
+  local amount, spell, env
+  if sub == "SWING_DAMAGE" then
+    amount, spell = a12, "Melee"
+  elseif sub == "SPELL_DAMAGE" or sub == "SPELL_PERIODIC_DAMAGE" or sub == "RANGE_DAMAGE" then
+    amount, spell = a15, a13
+  elseif sub == "ENVIRONMENTAL_DAMAGE" then
+    amount, env = a13, ENV_CAUSE[a12] or "environment"
+  end
+  if amount and amount > 0 then
+    OAdd(dst, "taken", amount)
+    local pvp = srcFlags and band(srcFlags, TYPE_PLAYER) ~= 0 and not FriendKey(srcGUID, srcName) and srcGUID ~= playerGUID
+    friendLastHit[dstGUID] = { by = srcName, spell = spell, amt = amount, env = env, pvp = pvp, t = GetTime() }
+  end
+end
+
+-- Every few seconds: refresh grouped friends' level and count time played together.
+local groupTick = 0
+local function GroupTick()
+  groupTick = groupTick + 1
+  if groupTick % 5 ~= 0 or not IsInGroup() then return end
+  local prefix, count = "party", GetNumGroupMembers() - 1
+  if IsInRaid() then prefix, count = "raid", GetNumGroupMembers() end
+  for i = 1, count do
+    local unit = prefix .. i
+    local name, realm = UnitName(unit)
+    if name and FunStatsDB.friends[name:lower()] and not UnitIsUnit(unit, "player") then
+      local key = name .. "-" .. ((realm and realm ~= "") and realm or GetRealmName())
+      local d, O = ODay(key)
+      O.name, O.realm = name, (realm and realm ~= "") and realm or GetRealmName()
+      local lvl = UnitLevel(unit)
+      if lvl and lvl > 0 then O.level = lvl end
+      local _, classToken = UnitClass(unit)
+      O.class = classToken or O.class
+      O.guild = GetGuildInfo(unit) or O.guild
+      if UnitIsConnected(unit) then d.together = (d.together or 0) + 5 end
+    end
+  end
+end
+
+---------------------------------------------------------------------------
+-- Combat log
+---------------------------------------------------------------------------
+
+local function RecordHit(amount, spell, target, crit, overkill)
+  if not amount or amount <= 0 then return end
+  Add("dmg", amount)
+  Add("hits")
+  if crit then Add("crits") end
+  if overkill and overkill > 0 then Add("overkill", overkill) end
+  CountIn(C.spellDmg, spell or "Unknown", amount, 200)
+  local d = Day()
+  if not d.maxHit or amount > d.maxHit then
+    d.maxHit, d.maxHitSpell, d.maxHitTarget = amount, spell, target
+  end
+  local b = C.best.hit
+  if not b or amount > b.amt then
+    C.best.hit = { amt = amount, spell = spell, target = target, crit = crit or nil, t = time() }
+  end
+end
+
+local function RecordHeal(amount, over, spell)
+  local effective = amount - (over or 0)
+  Add("heal", effective)
+  if over and over > 0 then Add("overheal", over) end
+  local b = C.best.heal
+  if not b or effective > b.amt then
+    C.best.heal = { amt = effective, spell = spell, t = time() }
+  end
+end
+
+local function OnCombatLog()
+  local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _,
+    a12, a13, a14, a15, a16, a17, a18, a19, a20, a21 = CombatLogGetCurrentEventInfo()
+
+  local fromMe = srcFlags and band(srcFlags, MINE) ~= 0
+  local toMe = dstGUID == playerGUID
+
+  -- Damage and healing done by me or my pet
+  if fromMe and dstGUID ~= playerGUID then
+    if sub == "SWING_DAMAGE" then
+      RecordHit(a12, "Melee", dstName, a18, a13)
+    elseif sub == "SPELL_DAMAGE" or sub == "SPELL_PERIODIC_DAMAGE"
+        or sub == "RANGE_DAMAGE" or sub == "DAMAGE_SHIELD" then
+      RecordHit(a15, a13, dstName, a21, a16)
+    elseif sub == "SWING_MISSED" or sub == "SPELL_MISSED" or sub == "RANGE_MISSED" then
+      Add("whiffs")
+      local missType = sub == "SWING_MISSED" and a12 or a15
+      if missType == "RESIST" then Add("resisted") end
+    elseif sub == "PARTY_KILL" then
+      Add("kb")
+      if dstName then
+        if C.kills[dstName] then
+          C.kills[dstName] = C.kills[dstName] + 1
+        elseif C.killNames < MAX_KILL_NAMES then
+          C.kills[dstName] = 1
+          C.killNames = C.killNames + 1
+        end
+      end
+      if dstFlags and band(dstFlags, TYPE_PLAYER) ~= 0 then Add("hk") end
+    end
+  end
+  if fromMe and (sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL") then
+    RecordHeal(a15, a16, a13)
+  end
+  if srcGUID == playerGUID and sub == "SPELL_CAST_SUCCESS" and a13 then
+    Add("casts")
+    CountIn(C.casts, a13, 1, 200)
+    if a13 == "Hearthstone" then Add("hearth") end
+  end
+
+  -- Healing I received from someone else
+  if toMe and not fromMe and (sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL") then
+    local effective = (a15 or 0) - (a16 or 0)
+    if effective > 0 then
+      Add("healedBy", effective)
+      CountIn(C.healers, srcName, effective, 100)
+    end
+  end
+
+  -- Attacks I avoided
+  if toMe and (sub == "SWING_MISSED" or sub == "SPELL_MISSED" or sub == "RANGE_MISSED") then
+    local missType = sub == "SWING_MISSED" and a12 or a15
+    if missType == "DODGE" then Add("dodges")
+    elseif missType == "PARRY" then Add("parries")
+    elseif missType == "BLOCK" then Add("blocks")
+    elseif missType == "RESIST" then Add("resists")
+    else Add("avoided") end
+  end
+
+  -- Damage taken, remembered so deaths can be explained
+  if toMe then
+    local amount, spell, env
+    if sub == "SWING_DAMAGE" then
+      amount, spell = a12, "Melee"
+    elseif sub == "SPELL_DAMAGE" or sub == "SPELL_PERIODIC_DAMAGE" or sub == "RANGE_DAMAGE" then
+      amount, spell = a15, a13
+    elseif sub == "ENVIRONMENTAL_DAMAGE" then
+      amount, env = a13, ENV_CAUSE[a12] or "environment"
+      if env == "fall" then Add("fallDmg", amount) end
+    end
+    if amount and amount > 0 then
+      Add("taken", amount)
+      local pvp = srcFlags and band(srcFlags, TYPE_PLAYER) ~= 0 and not fromMe
+      lastHit = { by = srcName, spell = spell, amt = amount, env = env, pvp = pvp, t = GetTime() }
+    end
+  end
+
+  if next(FunStatsDB.friends) then
+    OnFriendCombat(sub, srcGUID, srcName, srcFlags, dstGUID, dstName, a12, a13, a15, a16)
+  end
+end
+
+---------------------------------------------------------------------------
+-- Deaths
+---------------------------------------------------------------------------
+
+local function OnDeath()
+  Add("deaths")
+  local cause, by, spell, amt = "unknown", nil, nil, nil
+  if lastHit and GetTime() - lastHit.t < 15 then
+    if lastHit.env then
+      cause = lastHit.env
+    else
+      cause = lastHit.pvp and "player" or "mob"
+      by, spell = lastHit.by, lastHit.spell
+    end
+    amt = lastHit.amt
+  end
+  if cause ~= "mob" and cause ~= "player" and cause ~= "unknown" then
+    Add("deaths_" .. cause)
+  end
+
+  local inInstance = IsInInstance()
+  local mapID, x, y = MapPosition()
+  PushCapped(C.deaths, {
+    t = time(),
+    lvl = UnitLevel("player"),
+    zone = GetRealZoneText(),
+    sub = GetSubZoneText() ~= "" and GetSubZoneText() or nil,
+    inst = inInstance and (GetInstanceInfo()) or nil,
+    map = mapID, x = x, y = y,
+    cause = cause, by = by, spell = spell, amt = amt,
+    grouped = IsInGroup() or nil,
+  }, MAX_DEATHS)
+  lastHit = nil
+
+  if C.settings.announce and IsInGroup() then
+    local total = #C.deaths
+    local why = by and ("to " .. by) or (cause == "fall" and "to gravity") or (cause == "drown" and "by drowning") or ""
+    SendChatMessage(("[FunStats] %s died %s. Death #%d."):format(playerName, why, total), IsInRaid() and "RAID" or "PARTY")
+  end
+end
+
+---------------------------------------------------------------------------
+-- Money, XP, levels, loot, rolls, chat
+---------------------------------------------------------------------------
+
+local function OnMoney()
+  local now = GetMoney()
+  local diff = now - lastMoney
+  if diff > 0 then Add("goldIn", diff) elseif diff < 0 then Add("goldOut", -diff) end
+  lastMoney = now
+  if now > (C.peakGold or 0) then C.peakGold = now end
+  C.gold = now
+  Day().gold = now
+end
+
+local function OnXP()
+  local cur, max = UnitXP("player"), UnitXPMax("player")
+  local gained
+  if cur >= lastXP then gained = cur - lastXP else gained = (lastXPMax - lastXP) + cur end
+  if gained > 0 then Add("xp", gained) end
+  lastXP, lastXPMax = cur, max
+end
+
+local function OnLevelUp(level)
+  C.levels[tostring(level)] = time()
+  C.levelPlayed[tostring(level)] = C.playedTotal
+  Add("levels")
+  C.level = level
+end
+
+local function OnLoot(msg)
+  local link = msg:match(LOOT_SELF_MULTI) or msg:match(LOOT_SELF)
+    or (LOOT_PUSHED_MULTI and msg:match(LOOT_PUSHED_MULTI)) or (LOOT_PUSHED and msg:match(LOOT_PUSHED))
+  if not link or not link:find("|Hitem:") then return end
+  local q = ItemQuality(link)
+  Add("q" .. q)
+  if q >= 3 then
+    PushCapped(C.notable, { t = time(), q = q, item = link:match("%[(.-)%]"), id = tonumber(link:match("item:(%d+)")) }, MAX_NOTABLE)
+  end
+end
+
+-- Patterns for strings with numbered arguments, like "%1$s has defeated %2$s in a duel".
+-- Returns the pattern and the argument number of each capture.
+local function PositionalPattern(fmt)
+  if not fmt then return nil end
+  local order = {}
+  local p = fmt:gsub("([%(%)%.%+%-%*%?%[%]%^%$])", "%%%1")
+  p = p:gsub("%%(%d)%%%$s", function(n) order[#order + 1] = tonumber(n); return "(.+)" end)
+  p = p:gsub("%%s", function() order[#order + 1] = #order + 1; return "(.+)" end)
+  return "^" .. p .. "$", order
+end
+
+local DUEL_PATTERNS = {}
+for _, fmt in ipairs({ DUEL_WINNER_KNOCKOUT, DUEL_WINNER_RETREAT }) do
+  local pat, order = PositionalPattern(fmt)
+  if pat then DUEL_PATTERNS[#DUEL_PATTERNS + 1] = { pat, order } end
+end
+
+local function OnDuel(msg)
+  for _, dp in ipairs(DUEL_PATTERNS) do
+    local caps = { msg:match(dp[1]) }
+    if #caps >= 2 then
+      local args = {}
+      for i, n in ipairs(dp[2]) do args[n] = caps[i] end
+      local winner, loser = args[1], args[2]
+      if winner == playerName and loser then
+        Add("duelsWon")
+        C.duels[loser] = C.duels[loser] or { w = 0, l = 0 }
+        C.duels[loser].w = C.duels[loser].w + 1
+      elseif loser == playerName and winner then
+        Add("duelsLost")
+        C.duels[winner] = C.duels[winner] or { w = 0, l = 0 }
+        C.duels[winner].l = C.duels[winner].l + 1
+      end
+      return true
+    end
+  end
+end
+
+local function OnSystem(msg)
+  if OnDuel(msg) then return end
+  if not ROLL_PATTERN then return end
+  local who, roll, lo, hi = msg:match(ROLL_PATTERN)
+  if who ~= playerName then return end
+  roll, lo, hi = tonumber(roll), tonumber(lo), tonumber(hi)
+  if lo ~= 1 or hi ~= 100 then return end
+  Add("rolls")
+  Add("rollSum", roll)
+  if roll == 100 then Add("roll100") end
+  if roll == 1 then Add("roll1") end
+  C.best.rollHi = math.max(C.best.rollHi or 0, roll)
+  C.best.rollLo = math.min(C.best.rollLo or 101, roll)
+end
+
+local WORDS = {
+  sorry = { "sorry", "sry", "my bad", "mb" },
+  lol = { "lol", "lmao", "haha", "rofl" },
+  oops = { "oops", "whoops", "oh no" },
+}
+
+local function OnChat(msg, author)
+  if not author or Ambiguate(author, "none") ~= playerName then return end
+  Add("msgs")
+  local text = " " .. msg:lower() .. " "
+  for field, list in pairs(WORDS) do
+    for _, w in ipairs(list) do
+      for _ in text:gmatch("%f[%w]" .. w .. "%f[%W]") do Add(field) end
+    end
+  end
+end
+
+---------------------------------------------------------------------------
+-- Character sheet: equipped gear, talent points, professions
+---------------------------------------------------------------------------
+
+-- Gear is keyed "s1".."s19" (inventory slot ids) so it never turns into a list.
+local function SnapshotGear(retries)
+  if not C then return end
+  local gear, missing = {}, false
+  for slot = 1, 19 do
+    local link = GetInventoryItemLink("player", slot)
+    if link then
+      local _, _, quality, ilvl = GetItemInfo(link)
+      if not ilvl then missing = true end
+      gear["s" .. slot] = {
+        id = tonumber(link:match("item:(%d+)")),
+        n = link:match("%[(.-)%]"),
+        q = quality or ItemQuality(link),
+        il = ilvl,
+      }
+    end
+  end
+  C.gear = gear
+  C.gearAt = time()
+  -- Item info can arrive late from the server; try again a few times.
+  retries = retries or 0
+  if missing and retries < 5 then
+    C_Timer.After(5, function() SnapshotGear(retries + 1) end)
+  end
+end
+
+local function SnapshotTalents()
+  if not C or not GetNumTalentTabs then return end
+  local tabs = {}
+  for tab = 1, GetNumTalentTabs() do
+    -- Classic Era returns name, icon, pointsSpent; later clients return id, name, description, icon, pointsSpent.
+    local a, b, c, _, e = GetTalentTabInfo(tab)
+    local name = type(a) == "string" and a or b
+    local points = (type(c) == "number" and c) or (type(e) == "number" and e) or 0
+    tabs[#tabs + 1] = { n = name, p = points }
+  end
+  C.talents = tabs
+end
+
+local PROFESSION_HEADERS = {
+  [TRADE_SKILLS or "Professions"] = true, ["Professions"] = true,
+  [SECONDARY_SKILLS or "Secondary Skills"] = true, ["Secondary Skills"] = true,
+}
+
+local function SnapshotProfessions()
+  if not C or not GetNumSkillLines then return end
+  local out, section = {}, nil
+  for i = 1, GetNumSkillLines() do
+    local name, isHeader, _, rank, _, _, maxRank = GetSkillLineInfo(i)
+    if isHeader then
+      section = name
+    elseif name and section and PROFESSION_HEADERS[section] then
+      out[#out + 1] = { n = name, r = rank, m = maxRank }
+    end
+  end
+  if #out > 0 then C.professions = out end
+end
+
+local function SnapshotSheet()
+  SnapshotGear()
+  SnapshotTalents()
+  SnapshotProfessions()
+end
+
+local function OnZone()
+  local inInstance, kind = IsInInstance()
+  if inInstance and (kind == "party" or kind == "raid") then
+    local name = GetInstanceInfo()
+    if name and name ~= lastInstanceName then
+      Add("dungeons")
+      C.instances[name] = (C.instances[name] or 0) + 1
+    end
+    lastInstanceName = name
+  else
+    lastInstanceName = nil
+  end
+end
+
+---------------------------------------------------------------------------
+-- Once-per-second sampling: time, distance, states
+---------------------------------------------------------------------------
+
+local function Tick()
+  if not C then return end
+  Add("played")
+  C.playedTotal = C.playedTotal + 1
+  local hk = date("%w") .. "-" .. tonumber(date("%H"))
+  C.heat[hk] = (C.heat[hk] or 0) + 1
+  local zone = GetRealZoneText()
+  if zone and zone ~= "" then CountIn(C.zones, zone, 1, 150) end
+  if UnitIsDeadOrGhost("player") then Add("ghost") end
+  if UnitIsAFK("player") then Add("afk") end
+  if UnitAffectingCombat("player") then Add("combat") end
+  if IsSwimming() then Add("swim") end
+  GroupTick()
+
+  if UnitOnTaxi("player") then
+    Add("taxi")
+    lastX = nil
+    return
+  end
+  local y, x, _, inst = UnitPosition("player")
+  if x and lastX and inst == lastInst then
+    local dist = math.sqrt((x - lastX) ^ 2 + (y - lastY) ^ 2)
+    if dist > 0.5 and dist < 40 then Add("dist", dist) end
+  end
+  lastX, lastY, lastInst = x, y, inst
+end
+
+---------------------------------------------------------------------------
+-- Events
+---------------------------------------------------------------------------
+
+local handlers = {}
+
+function handlers.PLAYER_LOGIN()
+  InitCharacter()
+  C_Timer.NewTicker(1, Tick)
+  C_Timer.After(5, SnapshotSheet)
+  -- Ask the server for the guild roster now and then; GUILD_ROSTER_UPDATE then records it.
+  local function RequestRoster()
+    if not IsInGuild() then return end
+    if C_GuildInfo and C_GuildInfo.GuildRoster then C_GuildInfo.GuildRoster() elseif GuildRoster then GuildRoster() end
+  end
+  C_Timer.After(12, RequestRoster)
+  C_Timer.NewTicker(900, RequestRoster)
+  hooksecurefunc("JumpOrAscendStart", function()
+    if C and not IsFalling() then Add("jumps") end
+  end)
+  if RepairAllItems then
+    hooksecurefunc("RepairAllItems", function(guild)
+      local cost = GetRepairAllCost()
+      if cost and cost > 0 and not guild then Add("repair", cost) end
+    end)
+  end
+  Print("tracking " .. playerName .. ". Type /funstats to see today's numbers.")
+end
+
+function handlers.PLAYER_LOGOUT()
+  if C then
+    UpdateProfile()
+    C.gold = GetMoney()
+  end
+end
+
+handlers.COMBAT_LOG_EVENT_UNFILTERED = OnCombatLog
+handlers.PLAYER_DEAD = OnDeath
+handlers.PLAYER_MONEY = OnMoney
+handlers.PLAYER_XP_UPDATE = OnXP
+handlers.PLAYER_LEVEL_UP = OnLevelUp
+handlers.CHAT_MSG_LOOT = OnLoot
+handlers.CHAT_MSG_SYSTEM = OnSystem
+handlers.ZONE_CHANGED_NEW_AREA = OnZone
+handlers.PLAYER_ENTERING_WORLD = OnZone
+
+local sheetPending = false
+local function SheetSoon()
+  if sheetPending then return end
+  sheetPending = true
+  C_Timer.After(2, function() sheetPending = false; SnapshotSheet() end)
+end
+-- Guild roster: every member's name, level and class, so the whole guild shows on the website,
+-- including members without the addon. Stored with the observed players.
+local lastRosterScan = 0
+local function ScanGuild()
+  if not C or not IsInGuild() then return end
+  local guild = GetGuildInfo("player")
+  local n = GetNumGuildMembers and GetNumGuildMembers() or 0
+  if not guild or n == 0 then return end
+  C.guild = guild
+  if GetTime() - lastRosterScan < 60 then return end
+  lastRosterScan = GetTime()
+  local now, game, myRealm = time(), GameInfo(), GetRealmName()
+  local present = {}
+  for i = 1, math.min(n, 1000) do
+    local full, _, _, level, _, _, _, _, online, _, classToken = GetGuildRosterInfo(i)
+    if full then
+      local base, realm = SplitName(full)
+      local key = base .. "-" .. realm
+      present[key] = true
+      if not FunStatsDB.chars[key] then
+        local O = Observed(key)
+        local seen = now
+        if not online and GetGuildRosterLastOnline then
+          local y, m, d, hr = GetGuildRosterLastOnline(i)
+          seen = now - ((((y or 0) * 365 + (m or 0) * 30 + (d or 0)) * 24 + (hr or 0)) * 3600)
+        end
+        O.name, O.realm, O.guild, O.roster, O.game = base, realm, guild, true, game
+        O.class = classToken or O.class
+        if level and level > 0 and (seen >= (O.lastSeen or 0) or not O.level) then O.level = level end
+        if seen > (O.lastSeen or 0) then O.lastSeen = seen end
+      end
+    end
+  end
+  -- Members who left the guild no longer belong to it.
+  for key, O in pairs(FunStatsDB.observed) do
+    if O.roster and O.guild == guild and O.realm == myRealm and not present[key] then O.guild = nil end
+  end
+end
+
+-- Guild info often arrives a few seconds after login; keep the character's guild current.
+function handlers.PLAYER_GUILD_UPDATE()
+  UpdateGuild()
+end
+function handlers.GUILD_ROSTER_UPDATE()
+  UpdateGuild()
+  ScanGuild()
+end
+handlers.PLAYER_EQUIPMENT_CHANGED = SheetSoon
+handlers.CHARACTER_POINTS_CHANGED = SheetSoon
+handlers.SKILL_LINES_CHANGED = SheetSoon
+
+function handlers.QUEST_TURNED_IN()
+  Add("quests")
+end
+
+function handlers.CHAT_MSG_TEXT_EMOTE(_, author)
+  if author and Ambiguate(author, "none") == playerName then Add("emotes") end
+end
+
+for _, ev in ipairs({
+  "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
+  "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_GUILD", "CHAT_MSG_WHISPER_INFORM",
+}) do
+  handlers[ev] = OnChat
+end
+
+frame:SetScript("OnEvent", function(_, event, ...)
+  if event ~= "PLAYER_LOGIN" and not C then return end
+  handlers[event](...)
+end)
+for event in pairs(handlers) do frame:RegisterEvent(event) end
+
+---------------------------------------------------------------------------
+-- Slash command
+---------------------------------------------------------------------------
+
+local function Gold(copper)
+  copper = copper or 0
+  return ("%dg %ds %dc"):format(copper / 10000, (copper / 100) % 100, copper % 100)
+end
+
+local function AddFriend(name)
+  local base = SplitName(name)
+  if not base or base == "" or base:lower() == playerName:lower() then return end
+  FunStatsDB.friends[base:lower()] = base
+  wipe(friendByGUID)
+  Print("now tracking " .. base .. " whenever you see them in combat.")
+end
+
+local function GroupNames()
+  local names = {}
+  if not IsInGroup() then return names end
+  local prefix, count = "party", GetNumGroupMembers() - 1
+  if IsInRaid() then prefix, count = "raid", GetNumGroupMembers() end
+  for i = 1, count do
+    local unit = prefix .. i
+    if not UnitIsUnit(unit, "player") then names[#names + 1] = UnitName(unit) end
+  end
+  return names
+end
+
+local function FriendCommand(cmd, rest)
+  if cmd == "add" then
+    if rest == "group" then
+      local names = GroupNames()
+      if #names == 0 then Print("you're not in a group.") end
+      for _, n in ipairs(names) do AddFriend(n) end
+    elseif rest ~= "" then
+      AddFriend(rest)
+    elseif UnitIsPlayer("target") and not UnitIsUnit("target", "player") then
+      AddFriend((UnitName("target")))
+    else
+      Print("usage: /funstats add Name, /funstats add group, or target a player and type /funstats add")
+    end
+  elseif cmd == "remove" then
+    local base = SplitName(rest)
+    if base and FunStatsDB.friends[base:lower()] then
+      FunStatsDB.friends[base:lower()] = nil
+      wipe(friendByGUID)
+      Print("stopped tracking " .. base .. ". Their stats so far are kept.")
+    else
+      Print("no friend called " .. rest .. ". Type /funstats friends to see the list.")
+    end
+  else
+    local list = {}
+    for _, display in pairs(FunStatsDB.friends) do list[#list + 1] = display end
+    table.sort(list)
+    Print(#list > 0 and ("tracking " .. table.concat(list, ", ")) or "no friends tracked yet. Use /funstats add Name.")
+  end
+end
+
+SLASH_FUNSTATS1 = "/funstats"
+SlashCmdList.FUNSTATS = function(input)
+  if not C then return end
+  input = strtrim(input or "")
+  local cmd, rest = input:match("^(%S*)%s*(.-)$")
+  cmd = (cmd or ""):lower()
+  if cmd == "add" or cmd == "remove" or cmd == "friends" then
+    FriendCommand(cmd, rest)
+    return
+  end
+  if cmd == "sync" then
+    Print(ns.SyncStatus and ns.SyncStatus() or "sync isn't running.")
+    return
+  end
+  local arg = cmd
+  if arg == "announce" then
+    C.settings.announce = not C.settings.announce
+    Print("death announcements in group chat are now " .. (C.settings.announce and "ON" or "OFF"))
+    return
+  end
+  local d = Day()
+  Print(("Today: %d damage, %d healing, %d deaths, %d killing blows"):format(
+    d.dmg or 0, d.heal or 0, d.deaths or 0, d.kb or 0))
+  Print(("Jumps %d, ran %d yards, earned %s, spent %s"):format(
+    d.jumps or 0, d.dist or 0, Gold(d.goldIn), Gold(d.goldOut)))
+  Print(("All-time deaths: %d. Biggest hit: %s"):format(#C.deaths,
+    C.best.hit and (C.best.hit.amt .. " (" .. (C.best.hit.spell or "?") .. ")") or "none yet"))
+  Print("Type /reload or log out to save, then upload FunStats.lua on the website.")
+  Print("/funstats sync shows whose stats you've received from your group and guild.")
+  Print("/funstats add Name (or 'add group') tracks a friend, /funstats friends lists them.")
+  Print("/funstats announce toggles death announcements in group chat.")
+end

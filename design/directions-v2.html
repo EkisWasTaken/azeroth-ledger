@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger Design Directions, Round 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Cinzel:wght@700;900&family=Cinzel+Decorative:wght@700;900&family=MedievalSharp&family=Pirata+One&family=Uncial+Antiqua&family=Metamorphous&family=Pixelify+Sans:wght@500;700&family=Jacquard+12&display=swap">
+<style>
+  :root { --page: #0e0e10; --ink: #e8e6e1; --dim: #9a978f; --edge: #2a2a2e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 "Inter", system-ui, sans-serif; }
+  .shell { max-width: 1180px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-left)) 80px; display: grid; gap: 30px; }
+  .intro h1 { margin: 0 0 4px; font: 800 24px "Inter", sans-serif; letter-spacing: -.01em; }
+  .intro p { margin: 0; color: var(--dim); max-width: 72ch; }
+  .bar { display: grid; gap: 10px; padding: 12px 16px; border: 1px solid var(--edge); border-radius: 10px; position: sticky; top: 0; z-index: 5; background: rgba(14,14,16,.95); backdrop-filter: blur(6px); }
+  .bar .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .bar .lbl { color: var(--dim); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; margin-right: 6px; min-width: 88px; }
+  .bar button { font: 500 13px "Inter", sans-serif; color: var(--ink); background: #1a1a1e; border: 1px solid var(--edge); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--ink); color: #111; border-color: var(--ink); }
+  .bar button:focus-visible { outline: 2px solid #f2b84b; outline-offset: 2px; }
+  .bar .fbtn { font-size: 15px; }
+  .dir-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 10px; }
+  .dir-label b { font: 700 18px "Inter", sans-serif; }
+  .dir-label span { color: var(--dim); }
+  .stage { border-radius: 12px; overflow: hidden; border: 1px solid var(--edge); }
+  section { scroll-margin-top: 170px; }
+
+  /* ---------- shared mock skeleton ---------- */
+  .mock { --hf: "Cinzel", serif; padding: 28px max(16px, 3vw) 32px; display: grid; gap: 18px; font-family: "Inter", sans-serif; }
+  .mock .hf { font-family: var(--hf); }
+  .mock .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 24px; }
+  .mock .title { margin: 0; line-height: 1.05; font-family: var(--hf); }
+  .mock .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 760px) { .mock .grid { grid-template-columns: minmax(0, 1fr); } }
+  .mock .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 520px) { .mock .tiles { grid-template-columns: minmax(0, 1fr); } }
+  .mock .col { display: grid; gap: 16px; align-content: start; min-width: 0; }
+  .mock .tile { display: grid; gap: 2px; min-width: 0; }
+  .mock .tabs { display: inline-flex; gap: 4px; }
+  .c-mage { --cc: #69ccf0; --ccl: #1f86b8; } .c-war { --cc: #c79c6e; --ccl: #9a6a35; } .c-pri { --cc: #f2f2f2; --ccl: #6b7280; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .06em; padding: 1px 6px; border-radius: 4px; margin-right: 6px; vertical-align: 1px; }
+
+  /* =============== 1. CLEAN DARK =============== */
+  .d-dark { background: #0f1115; color: #e7e9ee; }
+  .d-dark .title { font-size: clamp(30px, 5vw, 46px); font-weight: 900; color: #fff; }
+  .d-dark .sub { color: #8d94a3; margin-top: 4px; }
+  .d-dark .tab { font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; color: #a7aebb; background: transparent; border: 1px solid #262b34; }
+  .d-dark .tab.on { color: #111; background: #f2b84b; border-color: #f2b84b; }
+  .d-dark .panel { background: #161a20; border: 1px solid #222731; border-radius: 12px; padding: 16px 18px; }
+  .d-dark .h { font-family: var(--hf); font-weight: 700; font-size: 17px; color: #f2b84b; margin-bottom: 12px; }
+  .d-dark .k { font-size: 12px; color: #8d94a3; font-weight: 500; }
+  .d-dark .v { font-size: 30px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .d-dark .v.red { color: #ff6b6b; }
+  .d-dark .muted { color: #8d94a3; }
+  .d-dark .meter { display: grid; gap: 12px; }
+  .d-dark .m { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; font-size: 14px; }
+  .d-dark .m .rk { color: #5f6675; font-weight: 600; }
+  .d-dark .m .nm { font-weight: 600; }
+  .d-dark .m .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .d-dark .m .track { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: #232833; overflow: hidden; }
+  .d-dark .m .fill { height: 100%; border-radius: 3px; background: var(--cc); }
+  .d-dark .badge { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,107,107,.12); color: #ff6b6b; font-weight: 800; }
+  .d-dark .ach { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .d-dark .ach .t { font-family: var(--hf); font-weight: 700; font-size: 16px; color: #ff8a80; }
+  .d-dark .who { font-family: var(--hf); font-weight: 900; font-size: 30px; color: #fff; }
+  .d-dark .tag { color: #f2b84b; font-weight: 600; }
+  .d-dark .big { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+  .d-dark .pill { background: #f2b84b; color: #111; }
+  .d-dark .log { font-size: 14px; line-height: 1.6; } .d-dark .log .mob { color: #ff6b6b; font-weight: 600; } .d-dark .log .sp { color: #f2b84b; } .d-dark .log .ts { color: #5f6675; }
+  .d-dark .lbl2 { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #8d94a3; font-weight: 600; }
+
+  /* =============== 2. CLEAN LIGHT =============== */
+  .d-light { background: #f4f5f7; color: #16181d; }
+  .d-light .title { font-size: clamp(30px, 5vw, 46px); font-weight: 900; color: #16181d; }
+  .d-light .sub { color: #5d6470; margin-top: 4px; }
+  .d-light .tab { font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; color: #4a515c; background: #fff; border: 1px solid #dfe2e7; }
+  .d-light .tab.on { color: #fff; background: #16181d; border-color: #16181d; }
+  .d-light .panel { background: #fff; border: 1px solid #e3e6ea; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(16,24,40,.05); }
+  .d-light .h { font-family: var(--hf); font-weight: 700; font-size: 17px; color: #8a2a14; margin-bottom: 12px; }
+  .d-light .k { font-size: 12px; color: #5d6470; font-weight: 500; }
+  .d-light .v { font-size: 30px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .d-light .v.red { color: #c62828; }
+  .d-light .muted { color: #5d6470; }
+  .d-light .meter { display: grid; gap: 12px; }
+  .d-light .m { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; font-size: 14px; }
+  .d-light .m .rk { color: #9aa1ab; font-weight: 600; }
+  .d-light .m .nm { font-weight: 600; }
+  .d-light .m .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .d-light .m .track { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: #eceef1; overflow: hidden; }
+  .d-light .m .fill { height: 100%; border-radius: 3px; background: var(--ccl); }
+  .d-light .badge { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: #fdecea; color: #c62828; font-weight: 800; }
+  .d-light .ach { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .d-light .ach .t { font-family: var(--hf); font-weight: 700; font-size: 16px; color: #c62828; }
+  .d-light .who { font-family: var(--hf); font-weight: 900; font-size: 30px; }
+  .d-light .tag { color: #8a2a14; font-weight: 600; }
+  .d-light .big { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+  .d-light .pill { background: #16181d; color: #fff; }
+  .d-light .log { font-size: 14px; line-height: 1.6; } .d-light .log .mob { color: #c62828; font-weight: 600; } .d-light .log .sp { color: #8a2a14; } .d-light .log .ts { color: #9aa1ab; }
+  .d-light .lbl2 { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #5d6470; font-weight: 600; }
+
+  /* =============== 3. PIXEL =============== */
+  .d-pixel { --hf: "Pixelify Sans", sans-serif; background: #12131c; color: #eaeaf2;
+    background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 16px 16px; }
+  .d-pixel .title { font-size: clamp(32px, 5.4vw, 52px); font-weight: 700; color: #ffd84a; text-shadow: 3px 3px 0 #b3361b, 6px 6px 0 #000; }
+  .d-pixel .sub { color: #a3a6c2; margin-top: 6px; }
+  .d-pixel .tab { font-family: "Pixelify Sans", sans-serif; font-size: 14px; padding: 6px 14px; color: #c9cbe0; background: #23253a; box-shadow: 0 0 0 2px #000, inset -2px -2px 0 #15162a, inset 2px 2px 0 #3a3d5c; }
+  .d-pixel .tab.on { background: #ffd84a; color: #241a00; box-shadow: 0 0 0 2px #000, inset -2px -2px 0 #c9a514, inset 2px 2px 0 #fff3a8; }
+  .d-pixel .panel { background: #1c1e2e; padding: 16px 18px; clip-path: polygon(0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px)); box-shadow: inset 0 0 0 3px #2f3250; }
+  .d-pixel .h { font-family: var(--hf); font-weight: 700; font-size: 18px; color: #ffd84a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .d-pixel .k { font-size: 12px; color: #a3a6c2; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .d-pixel .v { font-family: "Pixelify Sans", sans-serif; font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .d-pixel .v.red { color: #ff5d5d; }
+  .d-pixel .muted { color: #a3a6c2; }
+  .d-pixel .meter { display: grid; gap: 12px; }
+  .d-pixel .m { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; font-size: 14px; }
+  .d-pixel .m .rk { color: #6e7194; font-weight: 700; }
+  .d-pixel .m .nm { font-weight: 600; }
+  .d-pixel .m .val { font-family: "Pixelify Sans", sans-serif; font-weight: 700; font-size: 16px; }
+  .d-pixel .m .track { grid-column: 2 / 4; height: 12px; background: #0d0e17; box-shadow: 0 0 0 2px #000; }
+  .d-pixel .m .fill { height: 100%; background: repeating-linear-gradient(90deg, var(--cc) 0 8px, transparent 8px 10px); }
+  .d-pixel .ach { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .d-pixel .ach .t { font-family: var(--hf); font-weight: 700; font-size: 17px; color: #ff5d5d; }
+  .d-pixel .who { font-family: var(--hf); font-weight: 700; font-size: 32px; color: #fff; text-shadow: 2px 2px 0 #000; }
+  .d-pixel .tag { color: #7cf29a; font-weight: 600; }
+  .d-pixel .big { font-family: "Pixelify Sans", sans-serif; font-size: 36px; font-weight: 700; }
+  .d-pixel .pill { background: #ffd84a; color: #241a00; border-radius: 0; box-shadow: 0 0 0 2px #000; }
+  .d-pixel .log { font-size: 14px; line-height: 1.6; } .d-pixel .log .mob { color: #ff5d5d; font-weight: 600; } .d-pixel .log .sp { color: #ffd84a; } .d-pixel .log .ts { color: #6e7194; }
+  .d-pixel .lbl2 { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #a3a6c2; font-weight: 600; }
+  .sprite { display: inline-block; image-rendering: pixelated; flex: none; }
+
+  /* =============== 4. ASCII =============== */
+  .d-ascii { --hf: "Cinzel", serif; background: #0b0d0c; color: #d7e2d9; }
+  .d-ascii .title { font-size: clamp(30px, 5vw, 46px); font-weight: 900; color: #9dfc8f; text-shadow: 0 0 14px rgba(120,255,110,.35); }
+  .d-ascii .sub { color: #7e9184; margin-top: 4px; }
+  .d-ascii .tab { font: 600 13px "JetBrains Mono", monospace; padding: 4px 10px; color: #7e9184; }
+  .d-ascii .tab::before { content: "[ "; } .d-ascii .tab::after { content: " ]"; }
+  .d-ascii .tab.on { color: #0b0d0c; background: #9dfc8f; }
+  .d-ascii .panel { position: relative; border: 1px solid #2b3a2f; padding: 18px 18px 14px; }
+  .d-ascii .panel::before, .d-ascii .panel::after { position: absolute; font: 13px/1 "JetBrains Mono", monospace; color: #9dfc8f; }
+  .d-ascii .panel::before { content: "+"; top: -7px; left: -4px; } .d-ascii .panel::after { content: "+"; bottom: -6px; right: -4px; }
+  .d-ascii .h { font-family: var(--hf); font-weight: 700; font-size: 16px; color: #9dfc8f; margin: -28px 0 12px -6px; background: #0b0d0c; padding: 0 6px; justify-self: start; display: inline-block; }
+  .d-ascii .k { font: 12px "JetBrains Mono", monospace; color: #7e9184; text-transform: lowercase; }
+  .d-ascii .v { font: 700 28px "JetBrains Mono", monospace; color: #eafbe9; }
+  .d-ascii .v.red { color: #ff7a6b; }
+  .d-ascii .muted { color: #7e9184; }
+  .d-ascii pre { margin: 0; font: 14px/1.6 "JetBrains Mono", monospace; white-space: pre; overflow-x: auto; }
+  .d-ascii .b-mage { color: #69ccf0; } .d-ascii .b-war { color: #c79c6e; } .d-ascii .b-pri { color: #f2f2f2; } .d-ascii .dimc { color: #415a47; }
+  .d-ascii .ach { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; }
+  .d-ascii .badge { font: 700 13px/1.2 "JetBrains Mono", monospace; color: #ff7a6b; white-space: pre; }
+  .d-ascii .ach .t { font-family: var(--hf); font-weight: 700; font-size: 16px; color: #ff7a6b; }
+  .d-ascii .who { font-family: var(--hf); font-weight: 900; font-size: 30px; color: #eafbe9; }
+  .d-ascii .tag { color: #9dfc8f; }
+  .d-ascii .big { font: 700 32px "JetBrains Mono", monospace; color: #eafbe9; }
+  .d-ascii .pill { background: #9dfc8f; color: #0b0d0c; border-radius: 0; }
+  .d-ascii .log { font: 13px/1.6 "JetBrains Mono", monospace; } .d-ascii .log .mob { color: #ff7a6b; } .d-ascii .log .sp { color: #f2d36b; } .d-ascii .log .ts { color: #4f6355; }
+  .d-ascii .lbl2 { font: 12px "JetBrains Mono", monospace; color: #7e9184; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="intro">
+    <h1>Design directions, round 2</h1>
+    <p>Cleaner and clearer, with a fun header font and Inter for everything else. Try different header fonts and both languages from the bar; all four designs update. Nothing here is published.</p>
+  </div>
+
+  <div class="bar">
+    <div class="grp"><span class="lbl">Header font</span><span id="fonts" class="grp"></span></div>
+    <div class="grp"><span class="lbl">Language</span>
+      <button type="button" data-lang="en" aria-pressed="true">English</button>
+      <button type="button" data-lang="sv" aria-pressed="false">Svenska</button>
+    </div>
+    <div class="grp"><span class="lbl">Jump to</span>
+      <button type="button" data-go="d1">1 Clean Dark</button>
+      <button type="button" data-go="d2">2 Clean Light</button>
+      <button type="button" data-go="d3">3 Pixel</button>
+      <button type="button" data-go="d4">4 ASCII</button>
+    </div>
+  </div>
+
+  <section id="d1"><div class="dir-label"><b>1 · Clean Dark</b><span data-i="d1"></span></div><div class="stage"><div class="mock d-dark" data-mock="dark"></div></div></section>
+  <section id="d2"><div class="dir-label"><b>2 · Clean Light</b><span data-i="d2"></span></div><div class="stage"><div class="mock d-light" data-mock="light"></div></div></section>
+  <section id="d3"><div class="dir-label"><b>3 · Pixel</b><span data-i="d3"></span></div><div class="stage"><div class="mock d-pixel" data-mock="pixel"></div></div></section>
+  <section id="d4"><div class="dir-label"><b>4 · ASCII</b><span data-i="d4"></span></div><div class="stage"><div class="mock d-ascii" data-mock="ascii"></div></div></section>
+</div>
+
+<script>
+  const FONTS = [
+    ["Design default", ""], ["Cinzel", '"Cinzel", serif'], ["Cinzel Decorative", '"Cinzel Decorative", serif'], ["MedievalSharp", '"MedievalSharp", serif'],
+    ["Pirata One", '"Pirata One", serif'], ["Uncial Antiqua", '"Uncial Antiqua", serif'], ["Metamorphous", '"Metamorphous", serif'],
+    ["Pixelify Sans", '"Pixelify Sans", sans-serif'], ["Jacquard 12", '"Jacquard 12", serif'],
+  ];
+  const T = {
+    en: {
+      d1: "A calmer #4: lots of space, thin lines, slim bars, one warm accent.",
+      d2: "Same structure on a bright page. The clearest to read.",
+      d3: "Clean layout with retro pixel-art icons, chunky segmented meters and stepped corners.",
+      d4: "Terminal look: box frames, text-drawn bars, green phosphor glow.",
+      sub: "Every death, every crit, every greedy roll.", week: "This Week", all: "All Time",
+      deaths: "Deaths", dmg: "Damage dealt", gold: "Gold looted", ghost: "2h 35m as ghosts", hits: "4.2% crits", spent: "spent 41g",
+      meter: "Damage Done", ach: "Achievement", achT: "Spirit Healer's Regular", achD: "Died 66 times this week",
+      log: "Death Log", logLine: "was slain by <span class='mob'>Hogger</span>'s <span class='sp'>Rend</span> (87) in Westfall.",
+      prof: "Profile", known: "Known for: Can't stop jumping", jumps: "Jumps", cmp: "#1 of 3 · 4.3× the others' average", race: "Troll Mage · Level 60",
+    },
+    sv: {
+      d1: "Ett lugnare #4: mycket luft, tunna linjer, smala staplar, en varm accentfärg.",
+      d2: "Samma struktur på en ljus sida. Lättast att läsa.",
+      d3: "Ren layout med retro pixelikoner, kantiga segmenterade mätare och trappstegshörn.",
+      d4: "Terminalkänsla: boxramar, staplar ritade med tecken, grönt fosforsken.",
+      sub: "Varje död, varje crit, varje girigt tärningsslag.", week: "Denna vecka", all: "Totalt",
+      deaths: "Dödsfall", dmg: "Utdelad skada", gold: "Plundrat guld", ghost: "2 h 35 min som spöken", hits: "4,2 % crits", spent: "spenderat 41g",
+      meter: "Utdelad skada", ach: "Bedrift", achT: "Andehelarens stamkund", achD: "Dog 66 gånger denna vecka",
+      log: "Dödslogg", logLine: "dödades av <span class='mob'>Hogger</span>s <span class='sp'>Rend</span> (87) i Westfall.",
+      prof: "Profil", known: "Känd för: Kan inte sluta hoppa", jumps: "Hopp", cmp: "#1 av 3 · 4,3× de andras snitt", race: "Troll Mage · Nivå 60",
+    },
+  };
+  let lang = "en", font = "";
+
+  // 8x8 pixel sprites: each character is one pixel, mapped to a colour.
+  const SPRITES = {
+    skull: [["..####..", ".######.", "#..##..#", "#..##..#", "########", ".##..##.", "..####..", "..#..#.."], { "#": "#f1efe6" }],
+    sword: [[".......#", "......#w", ".....#w.", "#...#w..", ".#.#w...", "..##....", ".##.#...", "##...#.."], { "#": "#9aa3b5", w: "#e9eef8" }],
+    coin: [["..####..", ".#yyyy#.", "#yy##yy#", "#y#yy#y#", "#y#yy#y#", "#yy##yy#", ".#yyyy#.", "..####.."], { "#": "#8a5a00", y: "#ffd84a" }],
+    shield: [["########", "#rrrrrr#", "#rwwwwr#", "#rwrrwr#", "#rwwwwr#", ".#rrrr#.", "..#rr#..", "...##..."], { "#": "#000", r: "#d33a2a", w: "#ffd84a" }],
+  };
+  function sprite(name, px = 3) {
+    const [rows, pal] = SPRITES[name];
+    let rects = "";
+    rows.forEach((r, y) => [...r].forEach((ch, x) => { if (pal[ch]) rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"/>`; }));
+    return `<svg class="sprite" width="${8 * px}" height="${8 * px}" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+  }
+
+  const PEOPLE = [["Jordan", "2.8M", 100, "c-mage", "b-mage"], ["Alex", "1.6M", 57, "c-war", "b-war"], ["Sam", "405k", 15, "c-pri", "b-pri"]];
+
+  function meterHTML(kind) {
+    if (kind === "ascii") {
+      const width = 22;
+      const lines = PEOPLE.map(([n, v, p, , b], i) => {
+        const filled = Math.max(1, Math.round(width * p / 100));
+        return ` ${i + 1}. ${n.padEnd(8)} <span class="${b}">${"█".repeat(filled)}</span><span class="dimc">${"░".repeat(width - filled)}</span> ${v.padStart(5)}`;
+      });
+      return `<pre>${lines.join("\n")}</pre>`;
+    }
+    return `<div class="meter">${PEOPLE.map(([n, v, p, c], i) => `<div class="m ${c}"><span class="rk">${i + 1}</span><span class="nm">${n}</span><span class="val">${v}</span><span class="track"><span class="fill" style="display:block;width:${p}%"></span></span></div>`).join("")}</div>`;
+  }
+
+  function mockHTML(kind, t) {
+    const px = kind === "pixel";
+    const icon = name => px ? sprite(name, 2) : "";
+    const badge = kind === "ascii" ? `<span class="badge">.--.\n|10|\n'--'</span>` : px ? `<span>${sprite("shield", 6)}</span>` : `<span class="badge">10</span>`;
+    return `
+      <div class="top">
+        <div><h2 class="title">Azeroth Ledger</h2><div class="sub">${t.sub}</div></div>
+        <div class="tabs"><span class="tab on">${t.week}</span><span class="tab">${t.all}</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile panel"><span class="k">${icon("skull")}${t.deaths}</span><span class="v red">105</span><span class="muted" style="font-size:13px">${t.ghost}</span></div>
+        <div class="tile panel"><span class="k">${icon("sword")}${t.dmg}</span><span class="v">4.8M</span><span class="muted" style="font-size:13px">${t.hits}</span></div>
+        <div class="tile panel"><span class="k">${icon("coin")}${t.gold}</span><span class="v">80g 12s</span><span class="muted" style="font-size:13px">${t.spent}</span></div>
+      </div>
+      <div class="grid">
+        <div class="col">
+          <div class="panel"><div class="h">${icon("sword")}${t.meter}</div>${meterHTML(kind)}</div>
+          <div class="panel"><div class="h">${icon("shield")}${t.ach}</div>
+            <div class="ach">${badge}<div><div class="t">${t.achT}</div><div><b>Jordan</b> <span class="muted">· ${t.achD}</span></div></div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="panel"><div class="h">${t.prof}</div>
+            <div style="display:grid;gap:2px">
+              <span class="lbl2">${t.race}</span>
+              <span class="who">Jordan</span>
+              <span class="tag">${t.known}</span>
+              <span class="lbl2" style="margin-top:10px">${t.jumps}</span>
+              <span class="big">29,625</span>
+              <span class="muted"><span class="pill">#1</span>${t.cmp}</span>
+            </div>
+          </div>
+          <div class="panel"><div class="h">${icon("skull")}${t.log}</div>
+            <div class="log"><span class="ts">[Tue 21:14]</span> <b>Alex</b> ${t.logLine}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function render() {
+    const t = T[lang];
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i]").forEach(el => el.textContent = t[el.dataset.i]);
+    document.querySelectorAll("[data-mock]").forEach(el => {
+      el.innerHTML = mockHTML(el.dataset.mock, t);
+      if (font) el.style.setProperty("--hf", font); else el.style.removeProperty("--hf");
+    });
+    document.getElementById("fonts").innerHTML = FONTS.map(([n, f]) =>
+      `<button type="button" class="fbtn" data-font='${f}' aria-pressed="${f === font}" style="${f ? `font-family:${f}` : ""}">${n}</button>`).join("");
+    document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  }
+  document.addEventListener("click", e => {
+    const l = e.target.closest("[data-lang]"); if (l) { lang = l.dataset.lang; render(); }
+    const f = e.target.closest("[data-font]"); if (f) { font = f.dataset.font; render(); }
+    const g = e.target.closest("[data-go]"); if (g) document.getElementById(g.dataset.go).scrollIntoView({ behavior: "smooth" });
+  });
+  render();
+</script>
+</body>
+</html>

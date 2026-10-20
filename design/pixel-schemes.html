@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Colour Schemes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Pixelify+Sans:wght@500;700&family=Jacquard+12&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --page: #0e0e10; --ink: #e8e6e1; --dim: #9a978f; --edge: #2a2a2e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 "Inter", system-ui, sans-serif; }
+  .shell { max-width: 1180px; margin: 0 auto; padding: 28px max(16px, env(safe-area-inset-left)) 80px; display: grid; gap: 24px; }
+  .intro h1 { margin: 0 0 4px; font: 800 24px "Inter", sans-serif; }
+  .intro p { margin: 0; color: var(--dim); max-width: 72ch; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .sw { cursor: pointer; border: 2px solid var(--edge); padding: 0; text-align: left; font: inherit; color: inherit; background: none; display: grid; }
+  .sw[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px #000, 0 0 0 4px #fff; }
+  .sw .prev { height: 64px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .sw .prev span:first-child { grid-column: 1 / 5; display: flex; align-items: center; padding: 0 10px; font: 26px "Jacquard 12", serif; }
+  .sw .meta { padding: 6px 10px; background: #18181b; }
+  .sw .meta b { display: block; font-weight: 700; }
+  .sw .meta i { font-style: normal; font-size: 12px; color: var(--dim); }
+  .sw:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+  /* ---------- the pixel design, driven entirely by scheme tokens ---------- */
+  .mock {
+    --hf: "Jacquard 12", serif; --pf: "Pixelify Sans", sans-serif;
+    background-color: var(--bg); color: var(--ink);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 16px 16px;
+    padding: 28px max(16px, 3vw) 36px; display: grid; gap: 18px; border: 2px solid #000; min-width: 0;
+    transition: background-color .25s;
+  }
+  .mock .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 24px; }
+  .mock .title { margin: 0; font: clamp(44px, 8vw, 76px)/0.9 var(--hf); color: var(--accent); text-shadow: 3px 3px 0 var(--accent2), 6px 6px 0 #000; letter-spacing: .01em; }
+  .mock .sub { color: var(--muted); margin-top: 10px; }
+  .mock .tabs { display: inline-flex; gap: 8px; }
+  .mock .tab { font: 600 14px var(--pf); padding: 6px 14px; color: var(--ink); background: var(--panel2); box-shadow: 0 0 0 2px #000, inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.12); }
+  .mock .tab.on { background: var(--accent); color: var(--on-accent); }
+  .mock .panel {
+    background: var(--panel); padding: 16px 18px; min-width: 0; display: grid; gap: 10px; align-content: start;
+    clip-path: polygon(0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px));
+    box-shadow: inset 0 0 0 3px var(--rim);
+  }
+  .mock .h { font: 30px/1 var(--hf); color: var(--accent); display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+  .mock .h > span { display: inline-flex; align-items: center; gap: 10px; }
+  .mock .h small { font: 500 12px "Inter", sans-serif; color: var(--muted); }
+  .mock .sec { font: clamp(38px, 6vw, 52px)/1 var(--hf); color: var(--accent); text-shadow: 3px 3px 0 #000; text-align: center; margin: 14px 0 0; }
+  .mock .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+  .mock .grid21 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 780px) { .mock .grid2, .mock .grid21 { grid-template-columns: minmax(0, 1fr); } }
+  .mock .col { display: grid; gap: 16px; align-content: start; min-width: 0; }
+  .mock .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 640px) { .mock .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .mock .k { font-size: 12px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: .08em; }
+  .mock .v { font: 700 34px/1.1 var(--pf); color: var(--ink); }
+  .mock .v.bad { color: var(--bad); }
+  .mock .foot { font-size: 13px; color: var(--muted); }
+  .mock .muted { color: var(--muted); }
+  .mock .meter { display: grid; gap: 12px; }
+  .mock .m { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; font-size: 14px; }
+  .mock .m .rk { color: var(--muted); font: 700 14px var(--pf); }
+  .mock .m .nm { font-weight: 700; }
+  .mock .m .val { font: 700 17px var(--pf); }
+  .mock .m .track { grid-column: 2 / 4; height: 14px; background: var(--track); box-shadow: 0 0 0 2px #000; }
+  .mock .m .fill { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--cc) 0 8px, transparent 8px 10px); }
+  .mock .ach { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .mock .ach .t { font: 26px/1 var(--hf); color: var(--bad); }
+  .mock .who { font: 56px/0.95 var(--hf); color: var(--ink); text-shadow: 3px 3px 0 #000; }
+  .mock .tag { color: var(--good); font-weight: 700; }
+  .mock .big { font: 700 40px/1 var(--pf); }
+  .mock .pill { display: inline-block; font: 700 12px var(--pf); padding: 1px 6px; margin-right: 6px; background: var(--accent); color: var(--on-accent); box-shadow: 0 0 0 2px #000; }
+  .mock .lbl2 { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+  .mock .log { font-size: 14px; line-height: 1.65; display: grid; gap: 4px; }
+  .mock .log .mob { color: var(--bad); font-weight: 700; } .mock .log .sp { color: var(--accent); } .mock .log .ts { color: var(--muted); font-family: var(--pf); }
+  .mock .chart { position: relative; height: 260px; min-width: 0; }
+  .mock .chart.tall { height: 300px; }
+  .mock .heat { display: grid; grid-template-columns: 34px repeat(24, minmax(0, 1fr)); gap: 3px; font-size: 11px; }
+  .mock .heat .h2 { color: var(--muted); text-align: center; font-family: var(--pf); }
+  .mock .heat .d { color: var(--muted); align-self: center; font-family: var(--pf); }
+  .mock .heat .c { aspect-ratio: 1; background: var(--track); box-shadow: 0 0 0 1px rgba(0,0,0,.6); position: relative; }
+  .mock .heat .c i { position: absolute; inset: 0; background: var(--accent); opacity: var(--a); }
+  .mock .slots { display: grid; gap: 8px; }
+  .mock .slot { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: center; }
+  .mock .slot .ic { width: 40px; height: 40px; display: grid; place-items: center; background: var(--track); box-shadow: 0 0 0 2px #000, inset 0 0 0 2px var(--qc); }
+  .mock .slot b { color: var(--qc); display: block; line-height: 1.2; }
+  .mock .slot small { color: var(--muted); }
+  .sprite { display: inline-block; image-rendering: pixelated; flex: none; }
+  .c-mage { --cc: var(--mage); } .c-war { --cc: var(--war); } .c-pri { --cc: var(--pri); } .c-rog { --cc: var(--rog); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="intro">
+    <h1>Pixel colour schemes</h1>
+    <p>Pick a scheme below and the whole page repaints, charts included. Headings use Jacquard 12, numbers use Pixelify Sans, and everything else uses Inter so it stays easy to read.</p>
+  </div>
+  <div class="swatches" id="swatches"></div>
+  <div class="mock" id="mock"></div>
+</div>
+
+<script>
+  // Each scheme is just a set of colour tokens. Class colours shift slightly on light schemes so every bar stays visible.
+  const SCHEMES = {
+    midnight: { name: "Midnight", note: "Navy, gold and red. The original.", bg: "#12131c", grid: "rgba(255,255,255,.03)", panel: "#1c1e2e", panel2: "#262940", rim: "#2f3250", track: "#0d0e17", ink: "#eef0f8", muted: "#a3a6c2", accent: "#ffd84a", accent2: "#b3361b", "on-accent": "#241a00", good: "#7cf29a", bad: "#ff5d5d" },
+    horde: { name: "Horde", note: "Blood red, iron and gold.", bg: "#1a0c0a", grid: "rgba(255,120,80,.05)", panel: "#2a1410", panel2: "#3d1d16", rim: "#5a2a1c", track: "#120706", ink: "#f7e9df", muted: "#c79c8a", accent: "#ffb02e", accent2: "#8c1c10", "on-accent": "#2a1200", good: "#ffd36b", bad: "#ff4a3d" },
+    alliance: { name: "Alliance", note: "Royal blue with gold trim.", bg: "#0b1530", grid: "rgba(120,170,255,.05)", panel: "#13224a", panel2: "#1c2f60", rim: "#2c4482", track: "#070d20", ink: "#eef3ff", muted: "#a2b4dc", accent: "#ffd84a", accent2: "#1f4fd1", "on-accent": "#14204a", good: "#7fd4ff", bad: "#ff6b6b" },
+    fel: { name: "Felfire", note: "Black, fel green and void purple.", bg: "#0a0a0d", grid: "rgba(140,255,90,.04)", panel: "#15131b", panel2: "#211c2c", rim: "#3a2d52", track: "#060608", ink: "#ecf5e8", muted: "#9e9ab0", accent: "#8cff4a", accent2: "#7a2fd6", "on-accent": "#0b1a02", good: "#c58cff", bad: "#ff4f8b" },
+    frost: { name: "Frostfall", note: "Icy blue, Lich King cold.", bg: "#0c1620", grid: "rgba(160,220,255,.05)", panel: "#132331", panel2: "#1b3144", rim: "#2a4a63", track: "#081019", ink: "#eaf6ff", muted: "#9ab9cf", accent: "#8fe3ff", accent2: "#2a5d8a", "on-accent": "#05202e", good: "#c4f1ff", bad: "#ff7a90" },
+    dusk: { name: "Dusk", note: "Synthwave purple and sunset orange.", bg: "#170d26", grid: "rgba(255,120,200,.05)", panel: "#22143a", panel2: "#2f1c4f", rim: "#4a2b75", track: "#0e0718", ink: "#fbefff", muted: "#bba3d6", accent: "#ff9d3b", accent2: "#c2186b", "on-accent": "#2a0f00", good: "#4be3d0", bad: "#ff4f8b" },
+    gameboy: { name: "Pocket", note: "Handheld-green nostalgia.", bg: "#0f380f", grid: "rgba(155,188,15,.06)", panel: "#1f4a1f", panel2: "#306230", rim: "#306230", track: "#0b2a0b", ink: "#e0f0b0", muted: "#9bbc0f", accent: "#cadc9f", accent2: "#306230", "on-accent": "#0f380f", good: "#e0f0b0", bad: "#ffb3a7" },
+    snow: { name: "Snowfall", note: "Light and crisp. Easiest to read.", bg: "#eef1f5", grid: "rgba(20,30,60,.05)", panel: "#ffffff", panel2: "#e2e7ef", rim: "#c9d1de", track: "#e7ebf1", ink: "#141a26", muted: "#5a6478", accent: "#2b59c3", accent2: "#9db6ee", "on-accent": "#ffffff", good: "#1a7f4b", bad: "#c62828", light: true },
+  };
+  const CLASS_DARK = { mage: "#69ccf0", war: "#c79c6e", pri: "#f2f2f2", rog: "#fff569" };
+  const CLASS_LIGHT = { mage: "#1f86b8", war: "#9a6a35", pri: "#6b7280", rog: "#b39b00" };
+  const QUAL = { 2: "#1eff00", 3: "#3d9bff", 4: "#c06cff", 5: "#ff8000" };
+  const QUAL_LIGHT = { 2: "#138a00", 3: "#0060c0", 4: "#8a2fd6", 5: "#c25e00" };
+
+  const SPRITES = {
+    skull: [["..####..", ".######.", "#..##..#", "#..##..#", "########", ".##..##.", "..####..", "..#..#.."], { "#": "#f1efe6" }],
+    sword: [[".......#", "......#w", ".....#w.", "#...#w..", ".#.#w...", "..##....", ".##.#...", "##...#.."], { "#": "#9aa3b5", w: "#e9eef8" }],
+    coin: [["..####..", ".#yyyy#.", "#yy##yy#", "#y#yy#y#", "#y#yy#y#", "#yy##yy#", ".#yyyy#.", "..####.."], { "#": "#8a5a00", y: "#ffd84a" }],
+    shield: [["########", "#rrrrrr#", "#rwwwwr#", "#rwrrwr#", "#rwwwwr#", ".#rrrr#.", "..#rr#..", "...##..."], { "#": "#000", r: "#d33a2a", w: "#ffd84a" }],
+    heart: [[".##.##..", "#rr#rr#.", "#rrrrr#.", "#rrrrr#.", ".#rrr#..", "..#r#...", "...#....", "........"], { "#": "#000", r: "#ff4f6b" }],
+    clock: [["..####..", ".#wwww#.", "#www#ww#", "#www#ww#", "#www##w#", "#wwwwww#", ".#wwww#.", "..####.."], { "#": "#000", w: "#dfe6f0" }],
+    boot: [["..###...", "..#b#...", "..#b#...", "..#b#...", "..#bb##.", ".#bbbbb#", ".#######", "........"], { "#": "#000", b: "#a06a3a" }],
+    hammer: [["####....", "#hh#....", "#hh###..", "####ww#.", "....#ww#", ".....#ww", "......#w", ".......#"], { "#": "#000", h: "#b8bcc8", w: "#a06a3a" }],
+    helm: [["..####..", ".#hhhh#.", "#hhhhhh#", "#h#..#h#", "#h#..#h#", "#hh##hh#", ".#h##h#.", "..#..#.."], { "#": "#000", h: "#9aa3b5" }],
+  };
+  function sprite(name, px = 3) {
+    const [rows, pal] = SPRITES[name];
+    let rects = "";
+    rows.forEach((r, y) => [...r].forEach((ch, x) => { if (pal[ch]) rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"/>`; }));
+    return `<svg class="sprite" width="${8 * px}" height="${8 * px}" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+  }
+
+  let current = "midnight";
+  const charts = {};
+
+  function mockHTML() {
+    const people = [["Jordan", "2.8M", 100, "c-mage"], ["Alex", "1.6M", 57, "c-war"], ["Sam", "405k", 15, "c-pri"], ["Riley", "380k", 13, "c-rog"]];
+    let heat = `<span></span>` + [...Array(24)].map((_, h) => `<span class="h2">${h % 3 === 0 ? h : ""}</span>`).join("");
+    const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (let d = 0; d < 7; d++) {
+      heat += `<span class="d">${DOW[d]}</span>`;
+      for (let h = 0; h < 24; h++) {
+        const evening = h >= 18 && h <= 23 ? 0.55 + 0.45 * Math.sin((h - 17) / 2) * (d >= 5 || d === 0 ? 1 : 0.75) : (h < 2 && (d === 5 || d === 6) ? 0.5 : 0);
+        heat += `<span class="c"><i style="--a:${Math.max(0, evening).toFixed(2)}"></i></span>`;
+      }
+    }
+    return `
+      <div class="top">
+        <div><h2 class="title">Azeroth Ledger</h2><div class="sub">Every death, every crit, every greedy roll.</div></div>
+        <div class="tabs"><span class="tab on">This Week</span><span class="tab">All Time</span></div>
+      </div>
+      <div class="tiles">
+        <div class="panel"><span class="k">${sprite("skull", 2)}Deaths</span><span class="v bad">105</span><span class="foot">2h 35m as ghosts</span></div>
+        <div class="panel"><span class="k">${sprite("sword", 2)}Damage</span><span class="v">4.8M</span><span class="foot">4.2% crits</span></div>
+        <div class="panel"><span class="k">${sprite("heart", 2)}Healing</span><span class="v">1.9M</span><span class="foot">310k overhealed</span></div>
+        <div class="panel"><span class="k">${sprite("coin", 2)}Gold looted</span><span class="v">80g 12s</span><span class="foot">spent 41g</span></div>
+        <div class="panel"><span class="k">${sprite("clock", 2)}Played</span><span class="v">31h</span><span class="foot">18h grouped</span></div>
+        <div class="panel"><span class="k">${sprite("boot", 2)}Jumps</span><span class="v">9,412</span><span class="foot">304 per hour</span></div>
+      </div>
+
+      <div class="grid21">
+        <div class="col">
+          <div class="panel"><div class="h"><span>${sprite("sword", 3)}Damage Done</span><small>this week</small></div>
+            <div class="meter">${people.map(([n, v, p, c], i) => `<div class="m ${c}"><span class="rk">${i + 1}</span><span class="nm">${n}</span><span class="val">${v}</span><span class="track"><span class="fill" style="width:${p}%"></span></span></div>`).join("")}</div>
+          </div>
+          <div class="panel"><div class="h"><span>${sprite("shield", 3)}Achievement</span></div>
+            <div class="ach">${sprite("shield", 6)}<div><div class="t">Spirit Healer's Regular</div><div><b>Jordan</b> <span class="muted">· Died 66 times this week</span></div></div></div>
+          </div>
+        </div>
+        <div class="panel"><div class="h"><span>Damage per day</span><small>stacked by friend</small></div><div class="chart"><canvas id="cDaily"></canvas></div></div>
+      </div>
+
+      <h3 class="sec">The Race to 60</h3>
+      <div class="panel"><div class="h"><span>Level progress</span><small>every ding, plotted</small></div><div class="chart tall"><canvas id="cRace"></canvas></div></div>
+
+      <div class="grid2">
+        <div class="panel"><div class="h"><span>${sprite("skull", 3)}Causes of death</span></div><div class="chart"><canvas id="cCause"></canvas></div></div>
+        <div class="panel"><div class="h"><span>${sprite("skull", 3)}Death Log</span></div>
+          <div class="log">
+            <div><span class="ts">[Tue 21:14]</span> <b>Alex</b> was slain by <span class="mob">Hogger</span>'s <span class="sp">Rend</span> (87) in Westfall.</div>
+            <div><span class="ts">[Tue 20:51]</span> <b>Jordan</b> fell to their death in Thousand Needles.</div>
+            <div><span class="ts">[Mon 22:03]</span> <b>Sam</b> was slain by <span class="mob">Defias Pillager</span>'s <span class="sp">Fireball</span> (112) in Westfall.</div>
+            <div><span class="ts">[Mon 19:40]</span> <b>Riley</b> drowned in Stranglethorn Vale.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel"><div class="h"><span>${sprite("clock", 3)}When the group plays</span><small>time played by weekday and hour</small></div><div class="heat">${heat}</div></div>
+
+      <h3 class="sec">Profile</h3>
+      <div class="grid2">
+        <div class="panel">
+          <span class="lbl2">Troll Mage · Level 60</span>
+          <span class="who">Jordan</span>
+          <span class="tag">Known for: Can't stop jumping</span>
+          <span class="lbl2" style="margin-top:8px">Jumps</span>
+          <span class="big">29,625</span>
+          <span class="muted"><span class="pill">#1</span>#1 of 4 · 4.3× the others' average</span>
+        </div>
+        <div class="panel"><div class="h"><span>${sprite("helm", 3)}Character sheet</span></div>
+          <div class="slots">
+            <div class="slot" style="--qc:var(--q4)"><span class="ic">${sprite("helm", 3)}</span><span><b>Crown of Destruction</b><small>Head · item level 66</small></span></div>
+            <div class="slot" style="--qc:var(--q3)"><span class="ic">${sprite("hammer", 3)}</span><span><b>Smite's Mighty Hammer</b><small>Main Hand · item level 24</small></span></div>
+            <div class="slot" style="--qc:var(--q2)"><span class="ic">${sprite("boot", 3)}</span><span><b>Silksoul Slippers</b><small>Feet · item level 57</small></span></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Segmented fill for chart bars, matching the pixel meters.
+  function segments(color, vertical) {
+    const c = document.createElement("canvas");
+    c.width = vertical ? 4 : 10; c.height = vertical ? 10 : 4;
+    const g = c.getContext("2d");
+    g.fillStyle = color;
+    if (vertical) g.fillRect(0, 0, 4, 8); else g.fillRect(0, 0, 8, 4);
+    return g.createPattern(c, "repeat");
+  }
+
+  function drawCharts(s, cls) {
+    Object.values(charts).forEach(c => c.destroy());
+    if (typeof Chart !== "function") return;
+    const tick = { color: s.muted, font: { family: "Inter", size: 12 } };
+    const grid = { color: s.light ? "rgba(20,30,60,.08)" : "rgba(255,255,255,.07)" };
+    const tooltip = {
+      backgroundColor: s.panel, borderColor: s.light ? "#141a26" : "#000", borderWidth: 2, cornerRadius: 0, padding: 10,
+      titleColor: s.accent, bodyColor: s.ink, titleFont: { family: "Pixelify Sans", size: 14, weight: "700" }, bodyFont: { family: "Inter", size: 13 },
+      boxPadding: 4, usePointStyle: true,
+    };
+    const legend = { labels: { color: s.ink, usePointStyle: true, pointStyle: "rect", boxWidth: 10, boxHeight: 10, padding: 14, font: { family: "Inter", size: 13, weight: "600" } } };
+    const people = [["Jordan", cls.mage], ["Alex", cls.war], ["Sam", cls.pri], ["Riley", cls.rog]];
+    const days = ["Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon"];
+    const vals = [[40, 60, 0, 90, 120, 80, 30], [30, 40, 50, 60, 70, 40, 20], [10, 0, 15, 20, 30, 10, 5], [0, 12, 18, 0, 25, 20, 10]];
+    Chart.defaults.maintainAspectRatio = false;
+    charts.daily = new Chart(document.getElementById("cDaily"), {
+      type: "bar",
+      data: { labels: days, datasets: people.map(([n, c], i) => ({ label: n, data: vals[i].map(v => v * 1000), backgroundColor: segments(c, true), hoverBackgroundColor: c, borderColor: "#000", borderWidth: 2, borderSkipped: false })) },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { tooltip, legend },
+        scales: { x: { stacked: true, ticks: tick, grid: { display: false }, border: { color: s.rim, width: 2 } }, y: { stacked: true, ticks: { ...tick, callback: v => v / 1000 + "k" }, grid, border: { display: false } } } },
+    });
+    const now = Date.now(), day = 864e5;
+    const race = people.map(([n, c], i) => {
+      const pts = []; let lvl = 1;
+      for (let d = 0; d <= 30; d++) { lvl = Math.min(60, lvl + [1.9, 1.8, 1.1, 1.5][i] * (d % 7 === 3 ? 0.3 : 1)); pts.push({ x: now - (30 - d) * day, y: Math.floor(lvl) }); }
+      return { label: n, data: pts, borderColor: c, backgroundColor: c, borderWidth: 3, stepped: "before", pointStyle: "rect", pointRadius: 3, pointHoverRadius: 7, pointBorderColor: "#000", pointBorderWidth: 1 };
+    });
+    charts.race = new Chart(document.getElementById("cRace"), {
+      type: "line", data: { datasets: race },
+      options: { parsing: false, plugins: { tooltip: { ...tooltip, callbacks: { title: it => it.length ? "Level " + it[0].raw.y : "" } }, legend },
+        scales: { x: { type: "linear", ticks: { ...tick, maxTicksLimit: 7, callback: v => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" }) }, grid, border: { color: s.rim, width: 2 } },
+                  y: { min: 1, max: 60, ticks: { ...tick, stepSize: 10 }, grid, border: { display: false } } } },
+    });
+    const causeColors = s.light ? ["#c62828", "#7b4fd6", "#1f6fd1", "#d9730d"] : ["#ff5d5d", "#b48cff", "#4fa3ff", "#ffa13d"];
+    charts.cause = new Chart(document.getElementById("cCause"), {
+      type: "doughnut",
+      data: { labels: ["Slain by creatures", "Fell", "Drowned", "Burned"], datasets: [{ data: [68, 21, 9, 7], backgroundColor: causeColors, borderColor: "#000", borderWidth: 3, hoverOffset: 6 }] },
+      options: { cutout: "58%", plugins: { tooltip, legend: { ...legend, position: "right" } } },
+    });
+  }
+
+  function apply(key) {
+    current = key;
+    const s = SCHEMES[key];
+    const cls = s.light ? CLASS_LIGHT : CLASS_DARK;
+    const q = s.light ? QUAL_LIGHT : QUAL;
+    const mock = document.getElementById("mock");
+    Object.entries(s).forEach(([k, v]) => { if (typeof v === "string" && k !== "name" && k !== "note") mock.style.setProperty("--" + k, v); });
+    mock.style.setProperty("--mage", cls.mage); mock.style.setProperty("--war", cls.war); mock.style.setProperty("--pri", cls.pri); mock.style.setProperty("--rog", cls.rog);
+    Object.entries(q).forEach(([n, c]) => mock.style.setProperty("--q" + n, c));
+    mock.innerHTML = mockHTML();
+    document.querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.s === key)));
+    drawCharts(s, cls);
+  }
+
+  document.getElementById("swatches").innerHTML = Object.entries(SCHEMES).map(([k, s]) => `
+    <button type="button" class="sw" data-s="${k}" aria-pressed="false">
+      <span class="prev" style="background:${s.bg}">
+        <span style="color:${s.accent};text-shadow:2px 2px 0 ${s.accent2}">${s.name}</span>
+        <span style="background:${s.panel}"></span><span style="background:${s.accent}"></span><span style="background:${s.good}"></span><span style="background:${s.bad}"></span>
+      </span>
+      <span class="meta"><b>${s.name}</b><i>${s.note}</i></span>
+    </button>`).join("");
+  document.getElementById("swatches").addEventListener("click", e => { const b = e.target.closest(".sw"); if (b) apply(b.dataset.s); });
+  document.fonts.ready.then(() => apply(current));
+  apply(current);
+</script>
+</body>
+</html>

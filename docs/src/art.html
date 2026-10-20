@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- README artwork in the website's own style. Rendered to PNG by make_images.py with headless Chrome.
+     ?mode=banner | ?mode=h&text=...&icon=sword | ?mode=tiles   (&theme=horde|alliance|fel) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Pixelify+Sans:wght@500;700&family=Jacquard+12&display=swap">
+<style>
+:root, :root[data-theme="horde"] {
+  --bg: #1a0c0a; --grid: rgba(255,120,80,.06); --panel: #2a1410; --panel2: #3d1d16; --rim: #5a2a1c;
+  --ink: #f7e9df; --muted: #c79c8a; --accent: #ffb02e; --accent2: #8c1c10; --bad: #ff4a3d;
+}
+:root[data-theme="alliance"] {
+  --bg: #0b1530; --grid: rgba(120,170,255,.06); --panel: #13224a; --panel2: #1c2f60; --rim: #2c4482;
+  --ink: #eef3ff; --muted: #a2b4dc; --accent: #ffd84a; --accent2: #1f4fd1; --bad: #ff6b6b;
+}
+:root[data-theme="fel"] {
+  --bg: #0a0a0d; --grid: rgba(140,255,90,.05); --panel: #15131b; --panel2: #211c2c; --rim: #3a2d52;
+  --ink: #ecf5e8; --muted: #9e9ab0; --accent: #8cff4a; --accent2: #7a2fd6; --bad: #ff4f8b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  width: 1280px; color: var(--ink); font: 16px/1.5 "Inter", sans-serif; background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.cut { clip-path: polygon(0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)); }
+svg { display: block; image-rendering: pixelated; }
+
+/* banner */
+.banner { height: 400px; display: grid; grid-template-columns: auto 1fr; gap: 56px; align-items: center; padding: 0 88px; position: relative; overflow: hidden; }
+.banner::after { content: ""; position: absolute; inset: auto 0 0 0; height: 10px; background: repeating-linear-gradient(90deg, var(--accent) 0 16px, var(--accent2) 16px 32px); }
+.banner h1 { margin: 0; font: 136px/0.86 "Jacquard 12", serif; color: var(--accent); text-shadow: 6px 6px 0 var(--accent2), 10px 10px 0 #000; }
+.banner p { margin: 22px 0 0; font: 700 26px/1.35 "Pixelify Sans", sans-serif; color: var(--ink); max-width: 760px; }
+.banner .tags { display: flex; gap: 12px; margin-top: 26px; }
+.tag { font: 700 16px "Pixelify Sans", sans-serif; padding: 7px 14px; background: var(--panel2); color: var(--muted); box-shadow: 0 0 0 3px #000; display: inline-flex; gap: 8px; align-items: center; }
+
+/* section heading plate */
+.h { height: 104px; display: flex; align-items: center; gap: 22px; padding: 0 34px; background: var(--panel); box-shadow: inset 0 0 0 4px var(--rim), inset 0 7px 0 var(--accent); }
+.h span { font: 66px/1 "Jacquard 12", serif; color: var(--accent); text-shadow: 4px 4px 0 var(--accent2), 6px 6px 0 #000; padding-top: 8px; }
+.h .rule { flex: 1; height: 6px; background: repeating-linear-gradient(90deg, var(--rim) 0 12px, transparent 12px 20px); }
+
+/* phones: the real site in 390px frames */
+.phones { display: flex; gap: 48px; justify-content: center; padding: 36px 0; }
+.phone { width: 414px; padding: 12px; background: #000; box-shadow: 0 0 0 4px var(--rim), 8px 8px 0 4px rgba(0,0,0,.45); }
+.phone iframe { width: 390px; height: 800px; border: 0; display: block; background: #000; }
+
+/* feature tiles */
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 22px; }
+.tile { background: var(--panel); box-shadow: inset 0 0 0 3px var(--rim), inset 0 6px 0 var(--c, var(--accent)); padding: 22px 22px 20px; display: grid; gap: 8px; }
+.tile .lbl { display: flex; gap: 10px; align-items: center; font: 700 15px "Inter", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tile .val { font: 800 44px/1.05 "Inter", sans-serif; letter-spacing: -.02em; }
+.tile .val.red { color: var(--bad); }
+.tile .foot { font-size: 15px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="out"></div>
+<script>
+const SPRITES = /*SPRITES*/{};
+function sprite(name, px) {
+  const [rows, pal] = SPRITES[name];
+  let r = "";
+  rows.forEach((row, y) => [...row].forEach((c, x) => { if (pal[c]) r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[c]}"/>`; }));
+  return `<svg width="${rows[0].length * px}" height="${rows.length * px}" viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges">${r}</svg>`;
+}
+const q = new URLSearchParams(location.search);
+document.documentElement.dataset.theme = q.get("theme") || "horde";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+if (SPRITES.crest) SPRITES.crest[1] = { "#": "#000", g: css("--accent"), r: css("--accent2"), y: "#ffd27a", h: "#6b3e1d", s: "#b8c4cc", w: "#fff" };
+const out = document.getElementById("out");
+const mode = q.get("mode") || "banner";
+if (mode === "banner") {
+  out.innerHTML = `<div class="banner">${sprite("crest", 15)}<div>
+    <h1>Azeroth Ledger</h1>
+    <p>Fun stats for WoW Forever. Deaths, damage, loot and glory for you, your friends and your guild.</p>
+    <div class="tags"><span class="tag">${sprite("skull", 2)}Deaths</span><span class="tag">${sprite("sword", 2)}Damage</span><span class="tag">${sprite("coin", 2)}Loot</span><span class="tag">${sprite("shield", 2)}Guilds</span><span class="tag">${sprite("scroll", 2)}Achievements</span></div>
+  </div></div>`;
+} else if (mode === "h") {
+  out.innerHTML = `<div class="h cut">${sprite(q.get("icon") || "sword", 6)}<span>${q.get("text")}</span><i class="rule"></i></div>`;
+  document.body.style.background = "transparent";
+} else if (mode === "phones") {
+  document.body.style.width = "1000px";
+  const src = (theme, hash) => `index.html?lang=en&demo&theme=${theme}${hash}`;
+  out.innerHTML = `<div class="phones">
+    <div class="phone cut"><iframe src="${src("fel", "#/c/Mirelle-Example")}"></iframe></div>
+    <div class="phone cut"><iframe src="${src("alliance", "#/g/Example%20data%7CDemo%20Realm/Example%20Guild")}"></iframe></div>
+  </div>`;
+} else if (mode === "tiles") {
+  out.innerHTML = `<div class="tiles">
+    <div class="tile cut" style="--c:var(--bad)"><span class="lbl">${sprite("skull", 2)}Deaths</span><span class="val red">47</span><span class="foot">most to Hogger, of course</span></div>
+    <div class="tile cut"><span class="lbl">${sprite("sword", 2)}Damage dealt</span><span class="val">2.4M</span><span class="foot">biggest hit: 4,812 Pyroblast</span></div>
+    <div class="tile cut" style="--c:#ffd84a"><span class="lbl">${sprite("coin", 2)}Gold looted</span><span class="val">312g</span><span class="foot">spent 290g on repairs</span></div>
+    <div class="tile cut" style="--c:#7fd4ff"><span class="lbl">${sprite("spring", 2)}Jumps</span><span class="val">18,204</span><span class="foot">212 per hour</span></div>
+  </div>`;
+}
+document.fonts.ready.then(() => { document.title = "ready"; });
+</script>
+</body>
+</html>
