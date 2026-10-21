@@ -15,6 +15,11 @@ OUTLINE = "#120c08"
 POOL = [c for c in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@$%&*+=?"]
 
 
+def bright(hex_):
+    r, g, b = (int(hex_[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.3 * r + 0.59 * g + 0.11 * b > 0.45
+
+
 def mix(hex_, to, t):
     a = [int(hex_[i:i + 2], 16) for i in (1, 3, 5)]
     b = [int(to[i:i + 2], 16) for i in (1, 3, 5)]
@@ -22,10 +27,12 @@ def mix(hex_, to, t):
 
 
 class Icon:
-    def __init__(self, pal, flat=""):
+    def __init__(self, pal, flat="", glow=None):
         self.g = [["." for _ in range(W)] for _ in range(W)]
         self.pal = dict(pal)  # char -> colour
         self.flat = set(flat)  # chars that get no lighting (glows, gems, sparks)
+        # chars that twinkle on the site: the bright unlit ones unless listed by hand
+        self.glow = set(glow) if glow is not None else {c for c in self.flat if bright(self.pal.get(c, "#000000"))}
 
     def px(self, x, y, c):
         x, y = int(math.floor(x * S)), int(math.floor(y * S))
@@ -115,15 +122,15 @@ class Icon:
         self.g = out
         self.pal["#"] = OUTLINE
         used = {c for row in self.g for c in row}
-        return ["".join(r) for r in self.g], {k: v for k, v in self.pal.items() if k in used}
+        return ["".join(r) for r in self.g], {k: v for k, v in self.pal.items() if k in used}, "".join(sorted(self.glow & used))
 
     def after(self, fn):
         """Draw on top after outlining (sparks, flames that float free)."""
-        rows, pal = self.finish()
+        rows, pal, _ = self.finish()
         self.g = [list(r) for r in rows]
         fn(self)
         used = {c for row in self.g for c in row}
-        return ["".join(r) for r in self.g], {k: v for k, v in self.pal.items() if k in used}
+        return ["".join(r) for r in self.g], {k: v for k, v in self.pal.items() if k in used}, "".join(sorted(self.glow & used))
 
 
 # ---------------------------------------------------------------- icons
@@ -268,7 +275,7 @@ def lotus():
 
 
 def onyxia():
-    i = Icon({"d": "#3a2e3a", "h": "#d8ccb0", "e": "#ff8a1a", "k": "#140c10", "w": "#f4f0e0"}, flat="ekw")
+    i = Icon({"d": "#3a2e3a", "h": "#d8ccb0", "e": "#ff8a1a", "k": "#140c10", "w": "#f4f0e0"}, flat="ekw", glow="e")
     i.path([(10, 8), (6, 4), (3, 0)], "h", 2.6)
     i.path([(22, 8), (26, 4), (29, 0)], "h", 2.6)
     i.poly([(8, 7), (1, 10), (7, 12)], "h")
@@ -489,7 +496,7 @@ def paladin():
 
 
 def hunter():
-    i = Icon({"h": "#8a5a2a", "a": "#c8a070", "s": "#c8ccd8", "r": "#c8402a", "k": "#3a2414", "w": "#e8e6e1"}, flat="w")
+    i = Icon({"h": "#8a5a2a", "a": "#c8a070", "s": "#c8ccd8", "r": "#c8402a", "k": "#3a2414", "w": "#e8e6e1"}, flat="w", glow="")
     i.each(lambda x, y: 169 < (x - 4) ** 2 + (y - 16) ** 2 <= 240 and x > 8, "h")
     i.rect(17, 14, 19, 18, "k")
     i.line(9, 2.5, 9, 29.5, "w")
@@ -580,6 +587,186 @@ def druid():
     return i.finish()
 
 
+# ---------------------------------------------------------------- achievement icons
+
+def crit():
+    """Critical Mass: a crit starburst."""
+    i = Icon({"o": "#ff8a1a", "y": "#ffe27a", "w": "#ffffff"}, flat="yw")
+
+    def star(r_out, r_in, c):
+        pts = []
+        for n in range(16):
+            a = math.radians(n * 22.5 - 90)
+            r = r_out if n % 2 == 0 else r_in
+            pts.append((16 + math.cos(a) * r, 16 + math.sin(a) * r))
+        i.poly(pts, c)
+    star(15.5, 7, "o")
+    star(10, 4.5, "y")
+    i.rect(14, 14, 17, 17, "w")
+    return i.finish()
+
+
+def tomb():
+    """Overkill: a gravestone on a patch of grass."""
+    i = Icon({"g": "#9a9aa6", "k": "#3a3a48", "v": "#4a8a3a"}, flat="k")
+    i.circle(16, 12, 9, "g")
+    i.rect(7, 12, 24, 27, "g")
+    i.rect(2, 26, 29, 29, "v")
+    i.rect(14, 8, 17, 19, "k")
+    i.rect(10, 11, 21, 12, "k")
+    return i.finish()
+
+
+def ghost():
+    """Professional Ghost: a spirit-healer blue ghost."""
+    i = Icon({"w": "#cfe8ff", "k": "#1a2a4a"}, flat="k")
+    i.circle(16, 13, 10.5, "w")
+    i.rect(6, 13, 26, 27, "w")
+    for x in (10, 18):
+        i.clear(lambda px, py, x=x: py > 25 and abs(px - x) < 2.5)
+    i.rect(10, 10, 13, 15, "k")
+    i.rect(18, 10, 21, 15, "k")
+    i.rect(14, 18, 17, 21, "k")
+    return i.finish()
+
+
+def feather():
+    """Gravity's Favorite: a feather, as in Feather Fall."""
+    i = Icon({"f": "#f0f0f4", "h": "#a07850", "b": "#a8d0ff"}, flat="b")
+    i.line(9, 24, 26, 6, "f", 8)
+    i.line(4, 29, 25, 7, "h", 1.4)
+    for x, y in ((12, 15), (18, 9), (20, 20)):
+        i.clear(lambda px, py, x=x, y=y: (px - x) ** 2 + (py - y) ** 2 <= 2.5)
+
+    def air(i):
+        for x, y in ((26, 24), (28, 26), (22, 28)):
+            i.px(x, y, "b")
+    return i.after(air)
+
+
+def dice():
+    """Lucky Roller: a need-roll die."""
+    i = Icon({"w": "#efe8d8", "k": "#2a1a1a", "r": "#b0242a"}, flat="kr")
+    i.rect(5, 5, 26, 26, "w")
+    for x, y in ((8, 8), (20, 8), (8, 20), (20, 20)):
+        i.rect(x, y, x + 3, y + 3, "k")
+    i.rect(14, 14, 17, 17, "r")
+    return i.finish()
+
+
+def wing():
+    """Frequent Flyer: a gryphon wing, a curved bone with feathers hanging from it."""
+    i = Icon({"w": "#f4ecd8", "g": "#d9a43a", "b": "#8a6a3a"})
+    for x0, y0, x1, y1 in ((7, 11, 5, 25), (13, 8, 12, 28), (19, 6, 19, 29), (25, 5, 26, 25), (30, 4, 31, 19)):
+        i.line(x0, y0, x1, y1, "w", 4)
+        i.line(x1, y1 - 3, x1, y1, "g", 4)
+    i.path([(2, 14), (12, 7), (30, 3)], "b", 3.5)
+    return i.finish()
+
+
+def speech():
+    """Chatterbox: a speech bubble."""
+    i = Icon({"w": "#e8e6e1", "k": "#3a3a48"}, flat="k")
+    i.rect(3, 6, 28, 21, "w")
+    i.rect(5, 4, 26, 23, "w")
+    i.poly([(8, 22), (5, 30), (16, 22)], "w")
+    for x in (8, 14, 20):
+        i.rect(x, 12, x + 3, 15, "k")
+    return i.finish()
+
+
+def flag():
+    """Apology Tour: a white flag."""
+    i = Icon({"h": "#8a5a2a", "w": "#f4f4f0"})
+    i.poly([(10, 4), (28, 5), (25, 11), (29, 17), (10, 17)], "w")
+    i.rect(6, 2, 9, 30, "h")
+    return i.finish()
+
+
+def bandage():
+    """Life Support: a first-aid bandage."""
+    i = Icon({"w": "#f0e8d8", "r": "#c8242a"}, flat="r")
+    i.line(7, 25, 25, 7, "w", 11)
+    i.rect(14, 10, 17, 21, "r")
+    i.rect(10, 14, 21, 17, "r")
+    return i.finish()
+
+
+def zzz():
+    """Professional AFK: a big Z and a small one, apart."""
+    i = Icon({"c": "#a8d0ff"})
+    for x0, y0, sz, w in ((16, 15, 13, 3.2), (2, 2, 7, 2.4)):
+        i.line(x0, y0, x0 + sz, y0, "c", w)
+        i.line(x0 + sz, y0, x0, y0 + sz, "c", w)
+        i.line(x0, y0 + sz, x0 + sz, y0 + sz, "c", w)
+    return i.finish()
+
+
+def bunny():
+    """Bunny Hopper: a rabbit."""
+    i = Icon({"b": "#b8a088", "p": "#f0a0b0", "k": "#1a1010"}, flat="pk")
+    i.ellipse(11, 9, 3.5, 8, "b")
+    i.ellipse(21, 9, 3.5, 8, "b")
+    i.circle(16, 21, 9.5, "b")
+    i.rect(10, 4, 11, 13, "p")
+    i.rect(20, 4, 21, 13, "p")
+    i.rect(10, 18, 11, 19, "k")
+    i.rect(20, 18, 21, 19, "k")
+    i.rect(14, 22, 17, 23, "p")
+    return i.finish()
+
+
+def anvil():
+    """Repair Bill: an anvil with sparks."""
+    i = Icon({"i": "#6a6e78", "y": "#ffd84a"}, flat="y")
+    i.poly([(2, 10), (22, 10), (30, 13), (22, 16), (20, 16), (20, 21), (25, 25), (25, 28), (7, 28), (7, 25), (12, 21), (12, 16), (6, 16), (2, 13)], "i")
+
+    def sparks(i):
+        for x, y in ((24, 4), (28, 6), (20, 2), (30, 2)):
+            i.px(x, y, "y")
+    return i.after(sparks)
+
+
+def map_():
+    """Explorer: a folded map with a dotted route."""
+    i = Icon({"p": "#ecd9a8", "q": "#c9a86a", "r": "#c8242a"}, flat="r")
+    i.rect(3, 6, 28, 26, "p")
+    i.rect(12, 6, 19, 26, "q")
+    for x, y in ((6, 22), (10, 18), (14, 16), (18, 14)):
+        i.rect(x, y, x + 1, y + 1, "r")
+    i.line(21, 8, 25, 12, "r", 2)
+    i.line(25, 8, 21, 12, "r", 2)
+    return i.finish()
+
+
+def meat():
+    """Meat Shield: a meat drumstick."""
+    i = Icon({"m": "#b0502a", "w": "#efe6d4"})
+    i.line(12, 20, 5, 27, "w", 4)
+    i.circle(4, 25, 2.6, "w")
+    i.circle(7, 29, 2.6, "w")
+    i.ellipse(19, 13, 10.5, 9.5, "m")
+    return i.finish()
+
+
+ACHS = [
+    ("crit", crit, "Critical Strike", "Crit numbers", "rare", "Critical Mass"),
+    ("tomb", tomb, "Here Lies a Mob", "Gravestones", "uncommon", "Overkill"),
+    ("ghost", ghost, "Restless Spirit", "Ghost form", "uncommon", "Professional Ghost"),
+    ("feather", feather, "Light Feather", "Feather Fall", "uncommon", "Gravity's Favorite"),
+    ("dice", dice, "Need Roll", "Need and greed dice", "uncommon", "Lucky Roller"),
+    ("wing", wing, "Gryphon Wing", "Flight paths", "rare", "Frequent Flyer"),
+    ("speech", speech, "Trade Chat", "Chat bubbles", "common", "Chatterbox"),
+    ("flag", flag, "White Flag", "Surrender", "common", "Apology Tour"),
+    ("bandage", bandage, "Heavy Linen Bandage", "First Aid", "common", "Life Support"),
+    ("zzz", zzz, "Away From Keyboard", "AFK", "poor", "Professional AFK"),
+    ("bunny", bunny, "Hopping Critter", "Elwynn rabbits", "common", "Bunny Hopper"),
+    ("anvil", anvil, "Blacksmith's Anvil", "Repair vendors", "common", "Repair Bill"),
+    ("map", map_, "Explorer's Map", "Exploration", "uncommon", "Explorer"),
+    ("meat", meat, "Haunch of Meat", "Food", "common", "Meat Shield"),
+]
+
+
 # key, draw, name, inspired by, rarity (or class colour), what it's for
 STATS = [
     ("skull", skull, "Skull of the Fallen", "Skull of Impending Doom", "epic", "skull · Deaths"),
@@ -616,7 +803,7 @@ CLASSES = [
     ("warlock", warlock, "Warlock", "Soul shard", "#9482c9", "class"),
     ("druid", druid, "Druid", "Bear paw", "#ff7d0a", "class"),
 ]
-GROUPS = [("Stats", STATS), ("Legendaries", LEGENDS), ("Classes", CLASSES)]
+GROUPS = [("Stats", STATS), ("Legendaries", LEGENDS), ("Achievements", ACHS), ("Classes", CLASSES)]
 
 RARITY = {"poor": "#9d9d9d", "common": "#ffffff", "uncommon": "#1eff00", "rare": "#0070dd", "epic": "#a335ee", "legendary": "#ff8000"}
 
@@ -626,9 +813,9 @@ def main():
     sprites, meta = {}, []
     for group, icons in GROUPS:
         for key_, fn, name, inspired, rarity, replaces in icons:
-            rows, pal = fn()
+            rows, pal, glow = fn()
             assert len(rows) == W and all(len(r) == W for r in rows), key_
-            sprites[key_] = [rows, pal]
+            sprites[key_] = [rows, pal, glow] if glow else [rows, pal]
             meta.append({"group": group, "key": key_, "name": name, "inspired": inspired, "rarity": rarity,
                          "color": RARITY.get(rarity, rarity), "replaces": replaces})
     (root / "icons16.json").write_text(json.dumps(sprites, separators=(",", ":")), encoding="utf8")

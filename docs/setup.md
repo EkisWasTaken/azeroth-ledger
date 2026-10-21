@@ -23,6 +23,7 @@ A public stats site for WoW Forever (and the Anniversary / Classic Era realms wh
 - **Guild pages** (`#/g/...`): the roster with leaders, the guild's deeds and latest loot and deaths, plus its own leaderboards and Hall of Fame.
 - **Character pages** (`#/c/Name-Realm`): gear (Wowhead icons and tooltips) next to signature stats, then activity charts, records and a **Compare** panel. If the addon saw several characters on the same WoW account, the page lists "Other characters by this player".
 - **Search** in the navigation bar finds characters and guilds across all realms.
+- **Map of the Fallen** (on the Deaths view): every death, level-up and rare drop on pixel maps of Kalimdor, the Eastern Kingdoms and Outland, with a replay and the deadliest zones. Drag to move, Ctrl + scroll or pinch to zoom. FunStats 1.1 and newer save the positions (older deaths are converted at the next login). The continents are painted by hand over the game's own map art with the kit in [design/map-trace](../design/map-trace/README.md); the map appears on the site once a continent has been painted and imported.
 
 Each page is split into a few views: Overview, Meters & Combat, Deaths, Loot & World, Characters and Add stats on realm and guild pages; Character, Activity, Records and Compare on character pages. Pick them from the tab bar, or from the **View** menu on phones.
 

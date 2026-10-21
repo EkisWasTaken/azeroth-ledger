@@ -11,3 +11,8 @@ __pycache__/
 *.pyc
 Thumbs.db
 desktop.ini
+
+# map tracing kit: Blizzard's map art and the download cache stay local
+design/map-trace/.cache/
+design/map-trace/*-reference.png
+design/map-trace/*-check.png

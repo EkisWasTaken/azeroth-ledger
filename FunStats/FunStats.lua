@@ -81,13 +81,78 @@ local function PushCapped(list, entry, cap)
   while #list > cap do table.remove(list, 1) end
 end
 
-local function MapPosition()
-  local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+local function MapPosition(unit)
+  unit = unit or "player"
+  local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit(unit)
   if not mapID then return nil end
-  local pos = C_Map.GetPlayerMapPosition(mapID, "player")
+  local pos = C_Map.GetPlayerMapPosition(mapID, unit)
   if not pos then return mapID end
   local x, y = pos:GetXY()
   return mapID, math.floor(x * 1000) / 10, math.floor(y * 1000) / 10
+end
+
+-- Continent maps the website draws: Kalimdor, Eastern Kingdoms, Outland.
+local CONTINENTS = { 1414, 1415, 1945 }
+local CONTINENT_TYPE = Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2
+
+-- The continent a map (zone, subzone, city) belongs to.
+local function ContinentOf(mapID)
+  local info = mapID and C_Map.GetMapInfo(mapID)
+  while info and info.mapType and info.mapType > CONTINENT_TYPE and info.parentMapID and info.parentMapID > 0 do
+    info = C_Map.GetMapInfo(info.parentMapID)
+  end
+  if info and info.mapType == CONTINENT_TYPE then return info.mapID end
+end
+
+-- A zone position (0-100) as a position on its continent map (0-100).
+local function OnContinent(mapID, x, y)
+  if not (mapID and x and y and C_Map.GetMapRectOnMap) then return nil end
+  local cont = ContinentOf(mapID)
+  if not cont then return nil end
+  local ok, minX, maxX, minY, maxY = pcall(C_Map.GetMapRectOnMap, mapID, cont)
+  if not ok or not minX or maxX <= minX then return nil end
+  local cx = (minX + (maxX - minX) * x / 100) * 100
+  local cy = (minY + (maxY - minY) * y / 100) * 100
+  return cont, math.floor(cx * 10) / 10, math.floor(cy * 10) / 10
+end
+
+-- Where a unit is: zone, zone position and continent position, for the website's maps.
+local function Spot(unit)
+  local mapID, x, y = MapPosition(unit)
+  local cont, cx, cy = OnContinent(mapID, x, y)
+  return { zone = GetRealZoneText(), map = mapID, x = x, y = y, cont = cont, cx = cx, cy = cy }
+end
+
+-- Every zone's rectangle on each continent, so the website can draw the continents.
+local function BuildAtlas()
+  if not (C_Map.GetMapChildrenInfo and C_Map.GetMapRectOnMap) then return nil end
+  local zoneType = Enum and Enum.UIMapType and Enum.UIMapType.Zone or 3
+  local atlas = { v = select(4, GetBuildInfo()) }
+  for _, cont in ipairs(CONTINENTS) do
+    local info = C_Map.GetMapInfo(cont)
+    local kids = info and C_Map.GetMapChildrenInfo(cont, zoneType)
+    if kids and #kids > 0 then
+      local zones = {}
+      for _, z in ipairs(kids) do
+        local ok, minX, maxX, minY, maxY = pcall(C_Map.GetMapRectOnMap, z.mapID, cont)
+        if ok and minX and maxX > minX then
+          local r = function(v) return math.floor(v * 1000 + 0.5) / 10 end
+          zones[#zones + 1] = { id = z.mapID, n = z.name, x0 = r(minX), x1 = r(maxX), y0 = r(minY), y1 = r(maxY) }
+        end
+      end
+      atlas[tostring(cont)] = { n = info.name, zones = zones }
+    end
+  end
+  return atlas
+end
+
+-- The group unit token ("party2", "raid14") for a GUID, if they're in the group.
+local function GroupUnitFor(guid)
+  local raid = IsInRaid()
+  for i = 1, raid and GetNumGroupMembers() or GetNumSubgroupMembers() do
+    local u = (raid and "raid" or "party") .. i
+    if UnitGUID(u) == guid then return u end
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -168,6 +233,12 @@ local function InitCharacter()
   C.duels = C.duels or {}           -- opponent -> { w, l }
   C.healers = C.healers or {}       -- who healed me, total effective healing
   C.playedTotal = C.playedTotal or 0
+  C.dingAt = C.dingAt or {}         -- where each level was reached: zone and map positions
+  -- Deaths saved before continent positions existed get them now.
+  for _, d in ipairs(C.deaths) do
+    if type(d) == "table" and d.map and d.x and not d.cx then d.cont, d.cx, d.cy = OnContinent(d.map, d.x, d.y) end
+  end
+  if not C.atlas or C.atlas.v ~= select(4, GetBuildInfo()) then C.atlas = BuildAtlas() end
   UpdateProfile()
 
   lastMoney = GetMoney()
@@ -268,9 +339,12 @@ local function OnFriendDeath(guid, name, key)
     local _, O = ODay(key)
     local lvl = UnitLevel(name)
     if lvl and lvl > 0 then O.level = lvl end
+    local unit = GroupUnitFor(guid)
+    local spot = unit and Spot(unit) or {}
     PushCapped(O.deaths, {
       t = time(), lvl = O.level, zone = GetRealZoneText(),
       inst = IsInInstance() and (GetInstanceInfo()) or nil,
+      map = spot.map, x = spot.x, y = spot.y, cont = spot.cont, cx = spot.cx, cy = spot.cy,
       cause = cause, by = by, spell = spell, amt = amt,
     }, MAX_FRIEND_DEATHS)
     friendLastHit[guid] = nil
@@ -473,13 +547,14 @@ local function OnDeath()
 
   local inInstance = IsInInstance()
   local mapID, x, y = MapPosition()
+  local cont, cx, cy = OnContinent(mapID, x, y)
   PushCapped(C.deaths, {
     t = time(),
     lvl = UnitLevel("player"),
     zone = GetRealZoneText(),
     sub = GetSubZoneText() ~= "" and GetSubZoneText() or nil,
     inst = inInstance and (GetInstanceInfo()) or nil,
-    map = mapID, x = x, y = y,
+    map = mapID, x = x, y = y, cont = cont, cx = cx, cy = cy,
     cause = cause, by = by, spell = spell, amt = amt,
     grouped = IsInGroup() or nil,
   }, MAX_DEATHS)
@@ -517,6 +592,8 @@ end
 local function OnLevelUp(level)
   C.levels[tostring(level)] = time()
   C.levelPlayed[tostring(level)] = C.playedTotal
+  local spot = Spot()
+  C.dingAt[tostring(level)] = { zone = spot.zone, cont = spot.cont, cx = spot.cx, cy = spot.cy }
   Add("levels")
   C.level = level
 end
@@ -528,7 +605,9 @@ local function OnLoot(msg)
   local q = ItemQuality(link)
   Add("q" .. q)
   if q >= 3 then
-    PushCapped(C.notable, { t = time(), q = q, item = link:match("%[(.-)%]"), id = tonumber(link:match("item:(%d+)")) }, MAX_NOTABLE)
+    local spot = Spot()
+    PushCapped(C.notable, { t = time(), q = q, item = link:match("%[(.-)%]"), id = tonumber(link:match("item:(%d+)")),
+      zone = spot.zone, cont = spot.cont, cx = spot.cx, cy = spot.cy }, MAX_NOTABLE)
   end
 end
 
