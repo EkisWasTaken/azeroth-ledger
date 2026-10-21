@@ -376,9 +376,9 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .recchip:hover { box-shadow: inset 0 0 0 1px #ff8000; }
 .recchip b { color: #ffb347; }
 .rec.fresh { box-shadow: inset 0 0 0 2px #ff8000, inset 0 0 0 3px #ffb34777, inset 0 0 0 4px rgba(0,0,0,.45); }
-.newrec { position: absolute; bottom: 9px; right: 10px; font: 400 11px/1 var(--pf); color: #1a0c00; background: #ff8000; padding: 3px 5px; box-shadow: none; border-radius: 0; }
+.newrec { display: inline-block; vertical-align: 3px; margin-left: 10px; font: 400 11px/1 var(--pf); letter-spacing: 0; color: #1a0c00; background: #ff8000; padding: 3px 5px; box-shadow: none; border-radius: 0; }
 .rec { position: relative; }
-.rec.fresh :is(.w, .beat) { padding-right: 84px; }
+.rec :is(.when, .beat) { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rec .beat { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: no-preference) { html:not(.calm) .newrec { animation: recblink 1.6s steps(2) infinite; } }
 
@@ -2435,7 +2435,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     { t: "Big Pumper", i: "sword", pts: 50, k: s => s.dmg, v: s => tr("Dealt {0} damage", num(s.dmg)) },
     { t: "Lifebinder", i: "heart", pts: 50, k: s => s.heal, v: s => tr("Healed {0}", num(s.heal)) },
     { t: "Executioner", i: "axe", pts: 25, k: s => s.kb, v: s => tr("{0} killing blows", num(s.kb)) },
-    { t: "One-Hit Wonder", i: "sulfuras", pts: 25, k: s => s.maxHit, v: s => tr("Hit for {0} with {1}", num(s.maxHit), esc(s.maxHitSpell || tr("something"))) + (s.maxHitTarget ? tr(" on {0}", esc(s.maxHitTarget)) : "") },
+    { t: "One-Hit Wonder", i: "sulfuras", pts: 25, k: s => s.maxHit, v: s => tr("Hit for {0} with {1}", num(s.maxHit), esc(s.maxHitSpell || tr("something"))) }, // the target is on the Hardest hit card
     { t: "Critical Mass", i: "crit", pts: 25, k: s => s.hits >= 100 ? s.critRate : 0, v: s => tr("{0} of hits were crits", pct(s.critRate)) },
     { t: "Overkill", i: "tomb", pts: 10, k: s => s.overkill, v: s => tr("{0} damage past dead", num(s.overkill)) },
     { t: "Gravity's Favorite", i: "feather", pts: 10, k: s => (s.deaths_fall || 0) * 1e6 + (s.fallDmg || 0), v: s => s.deaths_fall ? tr("{0} deaths from falling", num(s.deaths_fall)) : tr("Took {0} fall damage", num(s.fallDmg)), shame: true },
@@ -2851,7 +2851,13 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     $("fame").innerHTML = recordsHTML(recs) || `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
     carUpdateAll();
   }
-  const recordsHTML = recs => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 2)}</span>${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}<span class="t">${r.t}</span><span class="v">${r.v}</span><span class="w">${nameHTML(r.p)}<span class="muted">· ${r.when}</span></span>${r.fresh ? `<span class="beat">${beatText(r)}</span>` : ""}</div>`).join("");
+  // A short "when" (a date) sits after the name; a long one (a spell and its target) gets its own line.
+  const longWhen = r => String(r.when || "").replace(/<[^>]+>/g, "").length > 14;
+  const recordsHTML = recs => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 2)}</span><span class="t">${r.t}</span>`
+    + `<span class="v">${r.v}${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}</span>`
+    + `<span class="w">${nameHTML(r.p)}${r.when && !longWhen(r) ? `<span class="muted">· ${r.when}</span>` : ""}</span>`
+    + (r.when && longWhen(r) ? `<span class="when">${r.when}</span>` : "")
+    + (r.fresh ? `<span class="beat">${beatText(r)}</span>` : "") + `</div>`).join("");
   const beatText = r => r.beat.p === r.p
     ? tr("Topped their own {0} from {1}", r.beat.v, shortDate(r.beat.k))
     : tr("Beat {0}'s {1} from {2}", esc(r.beat.p.name), r.beat.v, shortDate(r.beat.k));
@@ -3278,7 +3284,23 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 
   const profileRoute = () => { const r = parseRoute(); return r.kind === "char" ? r.key : null; };
 
+  // One-line card texts that are a little too long shrink to fit (down to 10.5px) instead of being cut off;
+  // whatever still doesn't fit keeps its ellipsis and shows the full text on hover.
+  const FIT = ".tile .foot, .tile .lbl > span, .ach .t, .ach .d, .rec .t, .rec .w .muted, .rec .when, .rec .beat, .glead .lbl, .sigc .cmp, .sec-head p";
+  function fitText() {
+    document.querySelectorAll(FIT).forEach(el => {
+      if (!el.offsetWidth) return;
+      el.style.fontSize = "";
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth + 1 && size > 10.5) { size -= .5; el.style.fontSize = size + "px"; }
+      if (el.scrollWidth > el.clientWidth + 1) el.title = el.textContent.trim(); else el.removeAttribute("title");
+    });
+  }
+  let fitTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitText, 150); });
+
   function render() {
+    requestAnimationFrame(fitText); // after this render has laid the page out
     const d = state.data;
     const real = characters(d);
     // ?demo shows only the example data (for screenshots and trying the site out)
@@ -3597,6 +3619,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     state.sub[state.page] = b.dataset.sub;
     try { localStorage.setItem("ledger-sub", JSON.stringify(state.sub)); } catch (e) { /* remembering is optional */ }
     applySubs(state.page);
+    fitText();
   });
   function setPage(pg) {
     const profile = pg.startsWith("p-");
