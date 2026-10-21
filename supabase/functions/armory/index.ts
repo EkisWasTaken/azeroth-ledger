@@ -2,8 +2,9 @@
 //
 // Fills in level, gear and guild from Blizzard's official API for characters that are on the
 // ledger but don't run the addon themselves (guild members from rosters, party members seen in
-// game, copies received from friends). Runs on a schedule (see supabase/armory.sql); results are
-// stored as rows of kind 'api', which the website merges in.
+// game, copies received from friends), plus the face render ("avatar") for every character,
+// addon users included. Runs on a schedule (see supabase/armory.sql); results are stored as rows
+// of kind 'api', which the website merges in.
 //
 // Secrets (Supabase > Edge Functions > Secrets): BLIZZARD_CLIENT_ID, BLIZZARD_CLIENT_SECRET.
 // Optional: FOREVER_NAMESPACE (e.g. "profile-forever"), once Blizzard publishes WoW Forever's API.
@@ -14,10 +15,11 @@ const CLIENT_ID = Deno.env.get("BLIZZARD_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("BLIZZARD_CLIENT_SECRET") ?? "";
 const FOREVER_NS = Deno.env.get("FOREVER_NAMESPACE") ?? "";
 
-const PER_RUN = 150;            // characters looked up per run (2 API calls each)
+const PER_RUN = 150;            // characters looked up per run (up to 3 API calls each)
 const REFRESH_HOURS = 12;       // look a character up again after this long
 const MISSING_HOURS = 72;       // ...or this long if Blizzard didn't know them
 const MIN_GAP_MINUTES = 20;     // ignore calls that come sooner than this after the last run
+const VERSION = 2;              // saved with each lookup; older rows are looked up again (2 added face renders)
 
 // Known realms and their region. Others are tried in EU first, then US.
 const REALM_REGION: Record<string, string> = {
@@ -90,6 +92,7 @@ async function lookUp(tok: string, name: string, realm: string, ns: string, regi
       gear["s" + s] = { id: it.item?.id, n: it.name, q: QUALITY[it.quality?.type] ?? 1, il: it.level?.value };
     }
   }
+  const media: any = await lookUpMedia(tok, name, realm, ns, region);
   return {
     status: 200,
     data: {
@@ -97,9 +100,29 @@ async function lookUp(tok: string, name: string, realm: string, ns: string, regi
       class: CLASS[p.character_class?.id] ?? undefined, race: RACE[p.race?.id] ?? undefined,
       guild: p.guild?.name ?? null, faction: p.faction?.type, ilvl: p.equipped_item_level ?? p.average_item_level,
       lastLogin: p.last_login_timestamp ? Math.floor(p.last_login_timestamp / 1000) : undefined,
-      gear, fetched: Math.floor(Date.now() / 1000),
+      gear, avatar: media.assets?.avatar, v: VERSION, fetched: Math.floor(Date.now() / 1000),
     },
   };
+}
+
+// Addon users bring their own stats, so for them only the face render is looked up.
+async function lookUpFace(tok: string, name: string, realm: string, ns: string, region: string) {
+  const media: any = await lookUpMedia(tok, name, realm, ns, region);
+  if (media.status !== 200 || !media.assets?.avatar) return { status: media.status === 200 ? 404 : media.status };
+  return { status: 200, data: { name, realm, region, avatar: media.assets.avatar, faceOnly: true, v: VERSION, fetched: Math.floor(Date.now() / 1000) } };
+}
+
+// Rendered images of a character (face avatar, bust, full body), if Blizzard has them for this game.
+async function lookUpMedia(tok: string, name: string, realm: string, ns: string, region: string) {
+  const url = `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(slug(realm))}/${encodeURIComponent(name.toLowerCase())}/character-media?namespace=${ns}-${region}&locale=en_US`;
+  const res = await fetch(url, { headers: { Authorization: "Bearer " + tok } });
+  if (!res.ok) return { status: res.status };
+  const m = await res.json();
+  // Newer responses list assets as [{ key, value }]; older ones use avatar_url, bust_url and render_url.
+  const assets: Json = {};
+  for (const a of m.assets ?? []) assets[a.key] = a.value;
+  for (const k of ["avatar_url", "bust_url", "render_url"]) if (m[k]) assets[k] = m[k];
+  return { status: 200, assets };
 }
 
 Deno.serve(async (req) => {
@@ -107,7 +130,8 @@ Deno.serve(async (req) => {
     if (!SERVICE_KEY) return Response.json({ error: "No service key in the function's environment (SUPABASE_SERVICE_ROLE_KEY)." }, { status: 500 });
     if (!CLIENT_ID || !CLIENT_SECRET) return Response.json({ error: "Set BLIZZARD_CLIENT_ID and BLIZZARD_CLIENT_SECRET under Edge Functions > Secrets." }, { status: 500 });
 
-    // Test mode: ?check=Name-Realm looks one character up and shows what Blizzard returns (nothing is saved).
+    // Test mode: ?check=Name-Realm looks one character up and shows what Blizzard returns, including any
+    // rendered images under "media" (nothing is saved).
     const check = new URL(req.url).searchParams.get("check");
     if (check && check.includes("-")) {
       const name = check.slice(0, check.indexOf("-")), realm = check.slice(check.indexOf("-") + 1);
@@ -117,7 +141,7 @@ Deno.serve(async (req) => {
         for (const region of REALM_REGION[realm.toLowerCase()] ? [REALM_REGION[realm.toLowerCase()]] : ["eu", "us"]) {
           const r: any = await lookUp(tok, name, realm, ns, region);
           tried.push({ namespace: `${ns}-${region}`, status: r.status, level: r.data?.level, guild: r.data?.guild, gear: r.data ? Object.keys(r.data.gear).length : undefined });
-          if (r.status === 200) return Response.json({ login: "ok", tried });
+          if (r.status === 200) return Response.json({ login: "ok", tried, media: await lookUpMedia(tok, name, realm, ns, region) });
         }
       }
       return Response.json({ login: "ok", tried });
@@ -130,15 +154,17 @@ Deno.serve(async (req) => {
     }
 
     const rows = await all("entries?select=kind,char_key,data->realm,data->name,data->game&kind=in.(char,relay,obs)&order=id");
-    const known = await all("entries?select=char_key,data->fetched,data->missing,data->region&kind=eq.api&order=id");
+    const known = await all("entries?select=char_key,data->fetched,data->missing,data->region,data->v&kind=eq.api&order=id");
     const done = new Map(known.map(r => [r.char_key, r]));
 
-    // Characters without their own addon upload, newest information about their game first.
+    // Everyone on the ledger: a full lookup for characters without their own addon upload,
+    // just the face render for addon users (their own upload is the best source for the rest).
     const people = new Map<string, Json>();
     const hasOwn = new Set(rows.filter(r => r.kind === "char").map(r => r.char_key));
     for (const r of rows) {
-      if (hasOwn.has(r.char_key)) continue;
-      const p = people.get(r.char_key) ?? { key: r.char_key };
+      const own = hasOwn.has(r.char_key);
+      if (own && r.kind !== "char") continue;
+      const p = people.get(r.char_key) ?? { key: r.char_key, own };
       p.name ||= r.name || r.char_key.split("-")[0];
       p.realm ||= r.realm || r.char_key.slice(r.char_key.indexOf("-") + 1);
       p.game ||= r.game;
@@ -147,7 +173,7 @@ Deno.serve(async (req) => {
     const now = Date.now() / 1000;
     const due = [...people.values()].filter(p => {
       const d = done.get(p.key);
-      if (!d) return true;
+      if (!d || (!d.missing && d.v !== VERSION)) return true;
       return now - (d.fetched ?? 0) > (d.missing ? MISSING_HOURS : REFRESH_HOURS) * 3600;
     }).sort((a, b) => (done.get(a.key)?.fetched ?? 0) - (done.get(b.key)?.fetched ?? 0)).slice(0, PER_RUN);
 
@@ -161,7 +187,7 @@ Deno.serve(async (req) => {
       const home = REALM_REGION[String(p.realm).toLowerCase()] ?? done.get(p.key)?.region;
       let result: any = null;
       for (const region of home ? [home] : ["eu", "us"]) {
-        result = await lookUp(tok, p.name, p.realm, ns, region);
+        result = await (p.own ? lookUpFace : lookUp)(tok, p.name, p.realm, ns, region);
         if (result.status === 200) break;
       }
       const data = result?.status === 200 ? result.data : { name: p.name, realm: p.realm, missing: true, fetched: Math.floor(now) };

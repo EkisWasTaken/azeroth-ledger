@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="fel">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -36,7 +36,7 @@
 <script src="https://wow.zamimg.com/js/tooltips.js" async></script>
 <style>
 /* Pixel style. Headings: Jacquard 12. Numbers: Pixelify Sans. Everything else: Inter.
-   Colours come from the theme tokens below; the picker sets data-theme on <html>. */
+   Colours come from the theme tokens below; the picker sets data-theme on <html> (Felfire by default). */
 :root, :root[data-theme="horde"] {
   color-scheme: dark;
   --bg: #1a0c0a; --grid: rgba(255,120,80,.05); --panel: #2a1410; --panel2: #3d1d16; --rim: #5a2a1c; --track: #120706;
@@ -74,7 +74,7 @@ body {
   padding-block: 18px 72px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px;
 }
 h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
 p { margin: 0; }
@@ -104,9 +104,11 @@ button, select, input { font: inherit; color: inherit; }
 .frame-title small { font: 500 12px var(--body); color: var(--muted); }
 
 section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
-.sec-head { display: grid; gap: 6px; justify-items: center; text-align: center; }
-.sec-head h2 { font: clamp(40px, 6vw, 56px)/0.95 var(--hf); color: var(--accent); text-shadow: 3px 3px 0 var(--accent2), 5px 5px 0 #000; }
-.sec-head p { color: var(--muted); }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; }
+.sec-head h2 { font: clamp(30px, 4vw, 40px)/1 var(--hf); color: var(--accent); text-shadow: 2px 2px 0 var(--accent2), 4px 4px 0 #000; }
+.sec-head p { color: var(--muted); font-size: 14px; }
+.sec-head p:empty { display: none; }
+#app:not([data-route="main"]) .main-only { display: none !important; }
 
 /* ---------- Sticky navigation ---------- */
 .topnav {
@@ -169,6 +171,7 @@ body[data-route="main"] .profile-only { display: none !important; }
 .pagetab:hover { color: var(--ink); }
 .pagetab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
 .pagetab[aria-selected="true"] .sprite { filter: brightness(0.25); }
+.pagetab .sprite, #gearIcon .sprite { margin: -6px 0; }
 .page-pick { display: none; }
 @media (max-width: 960px) {
   .pagetabs { display: none; }
@@ -208,9 +211,32 @@ body[data-route="main"] .profile-only { display: none !important; }
 @media (max-width: 720px) { .search { flex: 1 1 140px; } }
 
 /* ---------- Guilds ---------- */
-.guilds { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+/* a swipeable row of guild cards, with arrow buttons when it overflows */
+.guilds { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; gap: 14px; overflow-x: auto; scroll-snap-type: x proximity; padding: 2px 2px 8px; scrollbar-width: thin; }
+.guilds > * { scroll-snap-align: start; }
+.car-nav { margin-left: auto; display: flex; gap: 6px; align-self: center; }
+.car-nav[hidden] { display: none; }
+.car-nav .pstep { box-shadow: 0 0 0 2px #000; background: var(--panel2); }
+.car-pos { align-self: center; min-width: 44px; text-align: center; font: 700 13px var(--pf); color: var(--muted); }
+/* the overview's top row: one guild at a time beside the Ledger of Deeds */
+.toprow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+#s-guilds { grid-template-rows: auto 1fr; }
+.toprow .gcard { display: flex; flex-direction: column; }
+.toprow .gcard .btn { margin-top: auto; align-self: flex-start; }
+@media (min-width: 1000px) {
+  #app[data-route="main"] .toprow { grid-template-columns: 330px minmax(0, 1fr); }
+  #s-guilds .sec-head p:first-of-type { display: none; }
+}
 .gcard { gap: 10px; }
-.gname { font: 32px/1 var(--hf); color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+.gname { font: 28px/1 var(--hf); color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+.ghead { display: grid; gap: 2px; }
+.ghead .muted { font-size: 13px; }
+.gstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; }
+.gstats b { display: block; font: 800 17px/1.15 var(--nf); color: var(--ink); overflow-wrap: anywhere; }
+.gstats span { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.gmvp { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.gfaces { display: flex; flex-wrap: wrap; gap: 4px; }
+.gfaces .cicon { margin: 0; }
 a.gname:hover { text-decoration: underline; text-underline-offset: 4px; }
 .gmembers { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 14px; }
 .gcard .btn { justify-self: start; text-decoration: none; }
@@ -277,9 +303,9 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 /* ---------- Stat tiles ---------- */
 .tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.tile { gap: 4px; padding: 14px 16px; }
-.tile .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; hyphens: auto; min-width: 0; }
-.tile .val { font: 800 28px/1.15 var(--nf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.02em; }
+.tile { gap: 3px; padding: 10px 14px; }
+.tile .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; gap: 8px; overflow-wrap: break-word; min-width: 0; }
+.tile .val { font: 800 26px/1.15 var(--nf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.02em; }
 .tile .val.red { color: var(--bad); }
 .tile .foot { font-size: 12px; color: var(--muted); }
 
@@ -291,22 +317,46 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .coin.s { color: #d6d9e2; } .coin.s::after { background: #c3c7d3; }
 .coin.c { color: #e3955a; } .coin.c::after { background: #c0763a; }
 
+/* ---------- New records (legendary orange in every theme) ---------- */
+.recnews { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; box-shadow: inset 0 0 0 3px #ff8000, 0 0 18px -6px #ff8000; }
+.recnews > b { font: 700 17px var(--pf); color: #ffb347; }
+.recnews > small { color: var(--muted); font-size: 12px; margin-right: 4px; }
+.recchip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; font: 600 13px var(--body); color: var(--ink); background: var(--panel2); border: 0; cursor: pointer; box-shadow: 0 0 0 2px #000; }
+.recchip:hover { box-shadow: 0 0 0 2px #000, 0 0 0 4px #ff8000; }
+.recchip b { color: #ffb347; }
+.rec.fresh { box-shadow: inset 4px 0 0 var(--c, var(--accent)), inset 0 0 0 2px #ff8000, 0 0 16px -4px #ff8000; }
+.newrec { justify-self: start; font: 800 10px/1 var(--nf); letter-spacing: .1em; text-transform: uppercase; color: #1a0c00; background: #ff8000; padding: 3px 6px; margin-bottom: 4px; box-shadow: 0 0 0 2px #000; }
+.rec .beat { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .newrec { animation: recblink 1.6s steps(2) infinite; } }
+@keyframes recblink { 50% { background: #ffd27a; } }
+
 /* ---------- Achievements ---------- */
-.achievements { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.achievements { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.achievements:not(.open) > .extra, .fame:not(.open) > .extra { display: none; }
+.btn.more { justify-self: start; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; }
+@media (min-width: 1200px) { .pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+.deeds-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 1000px) { #app[data-route="main"] .deeds-row .tiles { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+#oLeads { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0 18px; }
+.oleads { gap: 4px; padding: 12px 16px; }
+.oleads .glead { padding: 2px 0; }
 .ach {
-  display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; align-items: center;
+  display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center;
   padding: 12px 14px 12px 10px; background: var(--panel); clip-path: var(--cut); box-shadow: inset 0 0 0 3px var(--rim);
 }
 .ach.shame { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--bad) 55%, var(--rim)); }
-.shield { width: 52px; height: 52px; position: relative; display: grid; place-items: center; }
+.shield { width: 64px; height: 64px; position: relative; display: grid; place-items: center; }
 .shield svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .shield b { position: relative; font: 800 14px var(--nf); color: #fff; text-shadow: 2px 2px 0 #000; margin-top: -6px; }
-.ach .t { font: 700 16px/1.25 var(--pf); color: var(--accent); }
+.ach .t { font: 800 13px/1.3 var(--nf); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 .ach.shame .t { color: var(--bad); }
 .ach .who { font-weight: 700; display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 2px; }
 .ach .d { color: var(--muted); font-size: 14px; line-height: 1.35; }
 
 .dot { width: 10px; height: 10px; flex: none; display: inline-block; box-shadow: 0 0 0 2px #000; }
+.cicon { display: inline-flex; flex: none; margin: -5px 0; vertical-align: middle; }
+#pName .cicon { margin: -8px 14px -8px 0; }
 .cname { font-weight: 700; }
 a.plink { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 a.plink:hover .cname { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
@@ -390,9 +440,9 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .heat-legend .ramp { width: 120px; height: 10px; box-shadow: 0 0 0 2px #000; background: linear-gradient(90deg, var(--track), var(--accent)); }
 
 /* ---------- Hall of fame ---------- */
-.fame { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.fame { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .rec { display: grid; gap: 2px; padding: 12px 14px; background: var(--panel); box-shadow: inset 4px 0 0 var(--c, var(--accent)), inset 0 0 0 2px var(--rim); }
-.rec .t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.rec .t { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
 .rec .v { font: 800 22px/1.2 var(--nf); color: var(--accent); overflow-wrap: anywhere; letter-spacing: -.02em; }
 .rec .w { font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
 
@@ -504,7 +554,7 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .sheet-head { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
 .sheet-head .spec { color: var(--good); font-weight: 700; }
 .doll { display: grid; grid-template-columns: minmax(0, 1fr) 160px minmax(0, 1fr); gap: 10px 24px; align-items: start; max-width: 900px; width: 100%; justify-self: center; }
-@media (max-width: 560px) { .doll { grid-template-columns: minmax(0, 1fr); } .doll .mid { display: none !important; } }
+@media (max-width: 560px) { .doll { grid-template-columns: minmax(0, 1fr); } .doll .mid { order: -1; grid-auto-flow: column; justify-content: start; align-items: center; gap: 22px; padding: 0 0 6px 8px; } }
 .slots { display: grid; gap: 8px; min-width: 0; }
 .slot { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 42px; }
 .slot .ic { width: 40px; height: 40px; display: grid; place-items: center; background: var(--track); box-shadow: 0 0 0 2px #000, inset 0 0 0 2px var(--qc, var(--rim)); font: 700 10px var(--pf); color: var(--muted); text-transform: uppercase; image-rendering: pixelated; }
@@ -514,6 +564,11 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .slot.empty .it .nm { color: var(--muted); font-weight: 400; font-style: italic; opacity: .6; }
 .doll .mid { display: grid; gap: 10px; justify-items: center; text-align: center; padding-top: 8px; }
 .emblem { width: 96px; height: 96px; display: grid; place-items: center; background: var(--track); box-shadow: 0 0 0 3px #000, inset 0 0 0 4px var(--c); font: 800 36px var(--nf); color: var(--ink); text-shadow: 3px 3px 0 #000; }
+.portrait { position: relative; }
+.portrait::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--c); pointer-events: none; }
+.portrait .face { width: 96px; height: 96px; display: block; image-rendering: pixelated; }
+.portrait .lvl { position: absolute; right: -10px; bottom: -10px; z-index: 1; font: 800 16px/1 var(--nf); color: var(--ink); background: var(--track); padding: 4px 7px; box-shadow: 0 0 0 3px #000, inset 0 0 0 2px var(--c); text-shadow: 2px 2px 0 #000; }
+.mid.solo { display: flex; padding: 4px 0 4px 8px; }
 .ilvl b { font: 800 26px var(--nf); color: var(--accent); display: block; line-height: 1; }
 .ilvl span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
 .weapons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 24px; border-top: 2px solid var(--track); padding-top: 12px; max-width: 900px; width: 100%; justify-self: center; }
@@ -674,6 +729,15 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     </div>
   </section>
 
+  <div class="frame recnews" id="recNews" data-pg="overview" hidden></div>
+
+  <div class="toprow" data-pg="overview">
+  <section id="s-guilds" data-pg="overview" aria-labelledby="h-guilds">
+    <div class="sec-head"><h2 id="h-guilds">Guilds</h2><p>Every guild on this realm with FunStats players</p><p id="guildsSub"></p>
+      <span class="car-nav" id="guildsNav"><button type="button" class="pstep" data-car="-1" aria-label="Previous guilds">‹</button><span class="car-pos" id="guildsPos"></span><button type="button" class="pstep" data-car="1" aria-label="Next guilds">›</button></span></div>
+    <div class="guilds" id="guilds"></div>
+  </section>
+
   <section id="s-deeds" data-pg="overview" aria-labelledby="h-deeds">
     <div class="deeds-wrap">
     <div class="frame groster guild-only">
@@ -682,7 +746,13 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     </div>
     <div class="deeds-main">
     <div class="sec-head"><h2 id="h-deeds">Ledger of Deeds</h2><p id="deedsRange"></p></div>
-    <div class="tiles" id="tiles"></div>
+    <div class="deeds-row">
+      <div class="tiles" id="tiles"></div>
+      <div class="frame oleads main-only">
+        <div class="frame-title"><span>Leaders</span><small id="oLeadsSub"></small></div>
+        <div id="oLeads"></div>
+      </div>
+    </div>
     <div class="frame plately guild-only">
       <div class="frame-title"><span>Lately</span><small>newest first</small></div>
       <div id="gLately"></div>
@@ -690,17 +760,21 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     </div>
     </div>
   </section>
+  </div>
 
-  <section id="s-guilds" data-pg="overview" aria-labelledby="h-guilds">
-    <div class="sec-head"><h2 id="h-guilds">Guilds</h2><p>Every guild on this realm with FunStats players</p></div>
-    <p class="muted" id="guildsSub" style="text-align:center;margin-top:-8px"></p>
-    <div class="guilds" id="guilds"></div>
-  </section>
-
+  <div class="pair" data-pg="overview">
   <section id="s-ach" data-pg="overview" aria-labelledby="h-ach">
     <div class="sec-head"><h2 id="h-ach">Achievements Earned</h2><p>Glory for some, shame for others</p></div>
     <div class="achievements" id="achievements"></div>
+    <button type="button" class="btn more" id="achievementsMore" data-more="achievements" hidden></button>
   </section>
+
+  <section id="s-fame" data-pg="overview" aria-labelledby="h-fame">
+    <div class="sec-head"><h2 id="h-fame">Hall of Fame</h2><p>All-time records. Some to be proud of.</p></div>
+    <div class="fame" id="fame"></div>
+    <button type="button" class="btn more" id="fameMore" data-more="fame" hidden></button>
+  </section>
+  </div>
 
   <section id="s-meter" data-pg="meters" aria-labelledby="h-meter">
     <div class="sec-head"><h2 id="h-meter">The Meters</h2><p>Who's pumping, who's padding</p></div>
@@ -838,11 +912,6 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
         <div class="angels" id="angels"></div>
       </div>
     </div>
-  </section>
-
-  <section id="s-fame" data-pg="overview" aria-labelledby="h-fame">
-    <div class="sec-head"><h2 id="h-fame">Hall of Fame</h2><p>All-time records. Some to be proud of.</p></div>
-    <div class="fame" id="fame"></div>
   </section>
 
   <section id="s-ledger" data-pg="characters" aria-labelledby="h-ledger">
@@ -1068,6 +1137,10 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     "Every guild on this realm with FunStats players": "Alla gillen på den här realmen med FunStats-spelare",
     "No guild": "Inget gille", "{0} member": "{0} medlem", "{0} members": "{0} medlemmar", "{0} guild": "{0} gille", "{0} guilds": "{0} gillen",
     "Top damage": "Mest skada", "Open guild page": "Öppna gillessidan", "No guilds yet.": "Inga gillen än.",
+    "Show all {0}": "Visa alla {0}", "Show fewer": "Visa färre", "Top level {0}": "Högsta nivå {0}", "No stats yet.": "Ingen statistik än.",
+    "Previous guilds": "Föregående gillen", "Next guilds": "Nästa gillen",
+    "Gold": "Guld", "New record": "Nytt rekord", "A record fell!": "Ett rekord föll!", "{0} records fell!": "{0} rekord föll!", "last 7 days": "senaste 7 dagarna",
+    "Beat {0}'s {1} from {2}": "Slog {0}s {1} från {2}", "Topped their own {0} from {1}": "Slog sitt eget {0} från {1}",
     "Characters": "Karaktärer", "Guild Roster": "Gillesrullan", "Everyone on this realm with FunStats": "Alla på den här realmen med FunStats",
     "Every member with FunStats": "Alla medlemmar med FunStats", "Add stats": "Lägg till", "Add Your Stats": "Lägg till din statistik",
     "Anyone with the addon can join": "Alla med addonen kan vara med",
@@ -1180,6 +1253,11 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   const pct = v => LANG === "sv" ? `${dec(v * 100, 1)} %` : `${(v * 100).toFixed(1)}%`;
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const classOf = ch => CLASS[ch.class] || ["Adventurer", "#b9b2a6"];
+  // The class icon for a character, or the plain colour dot when the class is unknown.
+  const classIcon = (ch, px = 1) => {
+    const k = String(ch && ch.class || "").toLowerCase();
+    return CLASS[ch && ch.class] && SPRITES[k] ? `<span class="cicon" title="${classOf(ch)[0]}">${sprite(k, px)}</span>` : `<span class="dot" style="background:${classOf(ch)[1]}"></span>`;
+  };
 
   const METRICS = [
     { k: "dmg", label: "Damage Done", fmt: compact, full: num },
@@ -1292,7 +1370,9 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     }
     for (const [cid, a] of Object.entries(src.api || {})) {
       const ch = out[cid];
-      if (!ch || ch.self) continue;
+      if (!ch) continue;
+      if (a.avatar) ch.avatar = a.avatar; // Blizzard's face render, addon users included
+      if (ch.self || a.faceOnly) continue;
       if (a.gear && Object.keys(a.gear).length && !(ch.gear && Object.keys(ch.gear).length)) { ch.gear = a.gear; ch.armory = true; ch.ilvl = a.ilvl; }
       ch.class ||= a.class;
       ch.race ||= a.race;
@@ -1697,20 +1777,37 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 
   // ---------- pixel sprites ----------
   // Each string is one row; each character is one pixel, coloured by the palette.
+  // The 32x32 icons are generated by design/src/make_icons.py (re-run it to change them); the crest is drawn by hand.
   const SPRITES = {
-    skull: [["..####..", ".######.", "#..##..#", "#..##..#", "########", ".##..##.", "..####..", "..#..#.."], { "#": "#f1efe6" }],
-    sword: [[".......#", "......#w", ".....#w.", "#...#w..", ".#.#w...", "..##....", ".##.#...", "##...#.."], { "#": "#9aa3b5", w: "#e9eef8" }],
-    coin: [["..####..", ".#yyyy#.", "#yy##yy#", "#y#yy#y#", "#y#yy#y#", "#yy##yy#", ".#yyyy#.", "..####.."], { "#": "#8a5a00", y: "#ffd84a" }],
-    shield: [["########", "#rrrrrr#", "#rwwwwr#", "#rwrrwr#", "#rwwwwr#", ".#rrrr#.", "..#rr#..", "...##..."], { "#": "#000", r: "#c8901a", w: "#ffe28a" }],
-    shieldBad: [["########", "#rrrrrr#", "#rwwwwr#", "#rwrrwr#", "#rwwwwr#", ".#rrrr#.", "..#rr#..", "...##..."], { "#": "#000", r: "#b3261e", w: "#ff8a7a" }],
-    heart: [[".##.##..", "#rr#rr#.", "#rrrrr#.", "#rrrrr#.", ".#rrr#..", "..#r#...", "...#....", "........"], { "#": "#000", r: "#ff4f6b" }],
-    clock: [["..####..", ".#wwww#.", "#www#ww#", "#www#ww#", "#www##w#", "#wwwwww#", ".#wwww#.", "..####.."], { "#": "#000", w: "#dfe6f0" }],
-    boot: [["..###...", "..#b#...", "..#b#...", "..#b#...", "..#bb##.", ".#bbbbb#", ".#######", "........"], { "#": "#000", b: "#a06a3a" }],
-    scroll: [[".######.", "#pppppp#", ".#p##p#.", ".#pppp#.", ".#p##p#.", ".#pppp#.", "#pppppp#", ".######."], { "#": "#000", p: "#e8d3a6" }],
-    axe: [["...##...", "..#aa#..", ".#aaa##.", ".#aa#w..", "..##.w..", ".....w..", ".....w..", ".....w.."], { "#": "#000", a: "#b8bcc8", w: "#a06a3a" }],
-    gate: [["########", "#gggggg#", "#g#gg#g#", "#g#gg#g#", "#g#gg#g#", "#g#gg#g#", "#g#gg#g#", "########"], { "#": "#000", g: "#7a6a8a" }],
-    spring: [["........", "..####..", ".#gggg#.", "..####..", ".#gggg#.", "..####..", ".#gggg#.", "########"], { "#": "#000", g: "#7cf29a" }],
-    gear: [["...##...", ".#.##.#.", "..####..", "###..###", "###..###", "..####..", ".#.##.#.", "...##..."], { "#": "#c9ccd6" }],
+    skull: [["................................","................................","............########............","..........##0000kk00##..........",".........#00wwwkkwww00#.........","........#0wwwwwkwwwwww0#........",".......#0wwwwwwkwwwwwww0#.......","......#0wwwwwwwwkkwwwwww0#......","......#0wwwwwwwwkkwwwwww1#......",".....#0wwwwwwwwwkwwwwwwww0#.....",".....#0wwwwwwwwwkwwwwwwww1#.....",".....#0wwwwwwwwwwwwwwwwww1#.....",".....#0wwwkkkwwwwwwkkkwww1#.....",".....#0wwkkkkkwwwwkkkkkww1#.....",".....#0wwkkeekwwwwkkeekww1#.....",".....#0wwkkeekwwwwkkeekww1#.....",".....#0wwkkkkkwwwwkkkkkww1#.....","......#0wwkkkwwwwwwkkkww1#......","......#0wwwwwwwkwwwwwwww1#......",".......#0wwwwwwkkwwwwww1#.......","........#0wwwwkkkwwwww1#........",".........#0wwwwwwwwwww1#........",".........#0wwwwwwwwwww1#........",".........#0wkwkwkwkwkw1#........",".........#0kkkkkkkkkkk1#........",".........#0wkwkwkwkwkw1#........",".........#0wkwkwkwkwkw1#........",".........#0111111111111#........","..........#############.........","................................","................................","................................"],{"w":"#e8e0c8","k":"#24161a","e":"#7dff5a","0":"#f1ecdd","1":"#908b7c","#":"#120c08"}],
+    sword: [["................................","....................ll....###...","...................l.....#000#..","..................l.....#0bbb0#.","..................lll..#0bbbb1#.","....................ll#0bbllb1#.","...................ll#0bbblb1#..","...................l#0wllll1#...","...................l0wllll1#....","..................#0wllbb1#.....",".................#0wbllb1#......","..cc............#0wllll1#...llll",".c.c...........#0wwbbb1#....l...",".c..c.........#0wwlbb1#......l..","....#####....#0wwblb1#......lll.","...#22222#..#0wwlll1#......ll...","...#23ggg2##0blbbb1#.......l....","....##23gg20bblbb1#.............","......##2ggbbblb1#..............","........#2cclll1#...............",".......#0ccccl1#................",".......#0ccccg3#................",".......#4hcc3gg2#...............","......#4h511#2gg2#..............","....##4h5###.#2g3#..............","...#24h5#....#2g3#..............","..#2gg5#......#23#..............",".#2ggg3#......#23#..............","..#2g3#........##...............","...#2#..........................","....#...........................","................................"],{"b":"#6f9ad8","l":"#fff27a","w":"#ffffff","g":"#e0a83a","h":"#2e4a8c","c":"#5ae0ff","0":"#a6c0e7","1":"#455f86","2":"#ecc985","3":"#8b6824","4":"#7d8fb8","5":"#1d2e57","#":"#120c08"}],
+    heart: [["................................",".............##.................","............#00###.#####....w...","............#0g000#00000##.www..",".............#0ggg0ggggg00#.w...","..............#0gggggggggg0#....","..............#0gggyyyyyggg0#...","..............#0ggyyooyyygg1#...",".............#0ggyyooooyyygg0#..","..........w..#0ggyooooooyygg1#..",".........www.#0ggyooooooyygg1#..","..........w..#0ggyyooooyyygg1#..",".............#0ggyyyooyyyygg1#..","..............#0ggyyyyyyyggg1#..","..............#0gggyyyyygggg1#..","...............#0ggggggggg11g0#.","..............#2vg1ggggg11##0g0#","............##2vv3#01111##..#01#","...........#0#2v3#.#####.....##.","...........#00v3#...............","...........#2gg1#...............","..........#2v311#............w..","........##2v3###............www.",".......#00v3#................w..",".......#2g1#....................","......#2vv10#...................","......#2v3##....................",".....#2v3#......................","....#2v3#.......................","....#23#........................",".....##.........................","................................"],{"v":"#d8d4e8","g":"#e8b440","o":"#fffbe0","y":"#ffe27a","w":"#ffffff","0":"#f1d089","1":"#907028","2":"#e7e4f1","3":"#868390","#":"#120c08"}],
+    axe: [[".........#...#00000000#....#11#.","......###0#..#0eeeeee2#...#1w3#.",".....#000e0##4iiiiiii5#..#1w3#..",".....#0eiii44iiiiiiii5#.#1w3#...",".....#0iiiirriiiiiiiii4#1w3#....","......#4iiirrriiiiiiiii1w3#.....","..##.#4iiiiirrriiiiiiiih6#......",".#00#4iirriiirrriiiiiihh6#......",".#0e4iiirrriiirrriiiihh6#.......","..#0iiiiirrriiirrriihhhh1#......","...#4iiiiirrriiirrihhhhww1#.....","....#4iiiiirrriiiihhh63www1#....","...#4iiiiiiirrriiihh6##13331#...","..#0iiiiiiiiirriihh6#..#####1#..",".#0eeiiiiiiiii5ihh6#........#...","..#0eeiiiii555#7h6#.............","...#0eei555###7hh6#.............","....#0e2###.#7hh6#..............",".....#02#..#7hh6#...............","......##.##7hh6#................","........#k#7h6#.................",".......#.#kh6#..................","......#k#7hkk#..................",".......#kh6#k#..................",".....##7hk6##...................","....#kkhh6k#....................","....#7hk6##.....................","....#7h6k#......................","...#1w6##.......................","..#1w3#.........................",".#1w3#..........................",".#13#..........................."],{"i":"#4e525c","e":"#c8ccd6","r":"#b3261e","h":"#5a3a22","k":"#2a1a10","w":"#e8dcc0","0":"#dddfe6","1":"#f1e9d8","2":"#7c7e85","3":"#908877","4":"#91949a","5":"#303339","6":"#382415","7":"#998576","#":"#120c08"}],
+    scroll: [["................................","................................","......#####################.....",".....#000000000000000000000#....",".....#0qqqqqqqqqqqqqqqqqqq1#....",".....#0qqqqqqqqqqqqqqqqqqq1#....",".....#01qqqqqqqqqqqqqqqqq11#....","......##2ppppppppppppppp3##.....","..##...#2ppppppppppppppp3#......",".#44#..#2ppppppppppppppp3#......",".#45#..#2ppkkkkkkkkkkkpp3#......",".#45#..#2ppppppppppppppp3#......",".#45#..#2ppppppppppppppp3#......",".#45#..#2ppkkkkkkkkkpppp3#......",".#45#..#2ppppppppppppppp3#......",".#45#..#2ppppppppppppppp3#......","..##...#2ppkkkkkkkkkkkpp3#......",".#44#..#2ppppppppppppppp3#......",".#45#..#2ppppppppppppppp3#......","..##...#2ppkkkkkkpppmmmp3#......",".......#2ppppppppppmmmmm3#......",".......#2pppppppppmmmmmm6#......",".......#2pppppppppmmmmmm6#......",".......#2pppppppppmmmmmm6#......","......##2ppppppppppmmmmm3##.....",".....#00qqqqqqqqqqqqmmmqq00#....",".....#0qqqqqqqqqqqqmqqqmqq1#....",".....#0qqqqqqqqqqqmmqqqmqq1#....",".....#011111111111m61116q11#....","......############7#####7##.....","..................#.....#.......","................................"],{"p":"#ecd9a8","q":"#c9a86a","k":"#7a5a32","m":"#b0242a","0":"#dec9a3","1":"#7d6842","2":"#f3e7c9","3":"#928768","4":"#ffe78f","5":"#9e862e","6":"#6d161a","7":"#ce777b","#":"#120c08"}],
+    coin: [["................................","................................","................................","...........................w....","..........................w.w...","...........................w....","................................","................................",".....................#..........",".................####0####......","................#1111y1110#.....","...............#1yyyyyyyyy0#....","...w..........#1yyYYYYYYyyy0#...",".............#1yyYYyyyyYYyyy0#..","........#####1yyYyyyyyyyyYyyy0#.","....####1111#1yYYyyyyyyyyYYyy2#.","...#1111yyyy1yyYyyyYYYYyyyYyy2#.","..#1yyyyyyyyyyyYyyyYwYYyyyYyy2#.","..#1yyyyyyyyYyyYyyyYYYYyyyYyyY0#","..#0yyyyyyyyyyyYyyyYYYYyyyYyy2#.","..#0YYYYyyyyYyyYYyyyyyyyyYYyy2#.","..#1yyYYYYYYYyyyYyyyyyyyyYyyy2#.","..#0yyyyyyyyyYyyyYYyyyyYYyyyY2#.","..#0YYYYyyyyYYYyyyYYYYYYyyyY2#..","..#1yyYYYYYYYYyYyyyyyyyyyyY2#...","..#0yyyyyyyyyyyyYyyyyyyyyY2#....","..#0YYYYyyyyYYYYY2222Y2222#.....","..#1yyYYYYYYYYyy3####0####......","..#0yyyyyyyyyyyy2#...#..........","..#022YYyyyyYY222#..............","...###02222222###...............","......########.................."],{"y":"#ffd84a","Y":"#c8901a","w":"#fff6c8","0":"#ddba71","1":"#ffe78f","2":"#7c5910","3":"#9e862e","#":"#120c08"}],
+    clock: [["................................",".......###################......","......#0000000000000000000#.....","......#0ffffffffcffffffff1#.....","......#0fffffffffffffffff1#.....","......#0ff1ffffffffff11ff1#.....",".......#01#2gggggggg3##01#......",".......#01#2gggggggg3##01#......",".......#01#2gggggggg3##01#......",".......#01#2gggggggg3##01#......",".......#01##2gggggg3#.#01#......",".......#01#.#4yyyy5#..#01#......",".......#01#.#2yyyy3#..#01#......",".......#01#..#4yy5#...#01#......",".......#01#..#2yy3#...#01#......",".......#01#...#23#....#01#......",".......#01#...#25#....#01#......",".......#01#..#2gy2#...#01#......",".......#01#..#2gy3#...#01#......",".......#01#.#2ggyg2#..#01#......",".......#01#.#2gyyg3#..#01#......",".......#01##2gyyyyg2#.#01#......",".......#01#2gyyyyyyg2##01#......",".......#01#2yyyyyyyy3##01#......",".......#01#4yyyyyyyy3##01#......",".......#01#4555555553##01#......",".......#01#############01#......","......#0ff0000000000000ff0#.....","......#0ffffffffcffffffff1#.....","......#0fffffffffffffffff1#.....","......#0111111111111111111#.....",".......###################......"],{"f":"#b07a3a","g":"#bfe3ef","y":"#e8c060","c":"#5ad1ff","0":"#cead85","1":"#6d4c24","2":"#d7eef5","3":"#768d94","4":"#f1d89c","5":"#90773c","#":"#120c08"}],
+    boot: [["................................","................................",".............######.............","..........###000000###..........",".........#000ssssss000#.........","........#0ssksssssssks0#........",".......#0ssssssssssssss0#.......","......#0ssssss1111ssssss0#......",".....#0sssss11####01sssss0#.....",".....#0skss1##....##0sssk1#.....",".....#0sss1#........#0sss1#.....","....#0ssss1#........#0ssss0#....","....#0sss1#..........#0sss1#....","....#0sss1#..........#0sss1#....","....#0ssss0#.........#0ssss0#...","....#0skss1#.........#0ssks1#...","....#0ssss1#.........#0ssss1#...","....#0ssss1#.........#0ssss1#...","www.#0ssss1#.........#0ssss1#www","....#0ssss1#.........#0ssss1#...","....#0ssss1#.........#0ssss1#...","....#0skss1#.........#0ssks1#...","www.#0ssss1#.........#0ssss1#www","....#0ssss1#.........#0ssss1#...","....#0ssss1#.........#0ssss1#...","...#2ggggg3#.........#2ggggg2#..","...#2ggggg3#.........#2ggggg3#..","...#2333333#.........#2333333#..","....#######...........#######...","................................","................................","................................"],{"s":"#c8ccd8","k":"#3a3a48","g":"#ffd84a","w":"#ffffff","0":"#dddfe7","1":"#7c7e86","2":"#ffe78f","3":"#9e862e","#":"#120c08"}],
+    spring: [["................................","................................",".........##############.........","........#00000000000000#........","........#0ssssssssssss1#........","........#0ssssssssssss1#........","........#0sssssssssss11#........",".........#2bbbbbbbbb3##.........",".........#2bbbbbbbbb3#..........",".........#2bbbbbbkkkk#..........","........#2bbbbbbbbbb3#..........","........#2bbbbbbbbbb3#..........","........#2bbbbbbbkkkk#..........","........#2bbbbbbbbbb3#..........","........#2bbbbbbbbbbb2###.......","........#2bbbbbbbkkkkb222##.....","........#2bbbbbbbbbbbbbss00#....","........#2bbbbbbbbbbbbbssss0#...","........#2bbbbbbbbbbbbbsssss0#..","........#2bbbbbbbbbbbbbbssss1#..","........#2bbbbbbbbbbbbbbssss1#..","........#kkkkkkkkkkkkkkkkkkkkk#.","........#kkkkkkkkkkkkkkkkkkkkk#.","........#kkkkkkkkkkkkkkkkkkkkk#.",".........##0ssss1#############..","..........#0ssss1#..............","..........#011111#..............","...........oyyyo#...............","...........ooyoo................","............oyo.................",".............o..................",".............o.................."],{"b":"#2f8a4a","s":"#b8bcc8","k":"#3a2414","o":"#ff7a1a","y":"#ffe27a","0":"#d3d5dd","1":"#72757c","2":"#7eb68f","3":"#1d562e","#":"#120c08"}],
+    gate: [["................................",".........#......................","...######0######................","..#000000g000000#...............","..#0ggggggggggg1#...............","..#0gggg111gggg1#...............","..#0ggg1###0ggg1#...............","..#0gg1#####0gg1#...............","..#0g1##ccc##0g1#...............",".#0gg1##ccc##0gg0#..............","..#0g1##ccc##0g1#...............","..#0gg0#####0gg1#...............","..#0ggg0###0ggg1#...............","..#0gggg000ggggy#...............","..#0gggggggggggyy#..............","..#011111g11111gyy#.............","...######0#####0gyy#.....##.....",".........#.....#0gyy#...#00#....","................#0gyy#.#0g1#....",".................#0gyy#0g1#.....","..................#0gyyg1#...#..","...................#0gyy#...#0#.","....................#0gyy#.#0g0#",".....................#0gyy#0g1#.","......................#0gyyg1#..",".......................#0gg1#...","........................#0g1#...",".........................#01#...","..........................##....","................................","................................","................................"],{"g":"#d9a43a","c":"#c03ad0","y":"#fff0a8","0":"#e7c785","1":"#876624","#":"#120c08"}],
+    shield: [["................................","................................","....########################....","...#000000000001110000000000#...","...#0rrrrrrrrrrwwwrrrrrrrrr2#...","...#0rrrrrrrrrrrrrrrrrrrrrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","....#0rrffffffffffffffffrr2#....","....#0rrffffffffffffffffrr2#....","....#0rrffffffffffffffffrr2#....",".....#0rrffffffffffffffrr2#.....",".....#0rrffffffffffffffrr2#.....",".....#0rrfffffffffffffrrr2#.....","......#0rrrffffffffffrrr2#......",".......#0rrrffffffffrrr2#.......","........#0rrrffffffrrr2#........",".........#0rrrffffrrr2#.........","..........#0rrrffrrr2#..........","...........#0rrrrrr2#...........","............#0rrrr2#............",".............#0rr2#.............","..............#02#..............","...............##...............","................................"],{"r":"#e0a83a","f":"#2c4fa8","w":"#fff2c0","0":"#ecc985","1":"#fff7d8","2":"#8b6824","#":"#120c08"}],
+    shieldBad: [["................................","................................","....########################....","...#000000000001110000000000#...","...#0rrrrrrrrrrwwwrrrrrrrrr2#...","...#0rrrrrrrrrrrrrrrrrrrrrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","...#0rrffffffffffffffffffrr2#...","....#0rrffffffffffffffffrr2#....","....#0rrffffffffffffffffrr2#....","....#0rrffffffffffffffffrr2#....",".....#0rrffffffffffffffrr2#.....",".....#0rrffffffffffffffrr2#.....",".....#0rrfffffffffffffrrr2#.....","......#0rrrffffffffffrrr2#......",".......#0rrrffffffffrrr2#.......","........#0rrrffffffrrr2#........",".........#0rrrffffrrr2#.........","..........#0rrrffrrr2#..........","...........#0rrrrrr2#...........","............#0rrrr2#............",".............#0rr2#.............","..............#02#..............","...............##...............","................................"],{"r":"#e0a83a","f":"#8c1c10","w":"#fff2c0","0":"#ecc985","1":"#fff7d8","2":"#8b6824","#":"#120c08"}],
+    gear: [["................................","................................","..............####..............",".............#0000#.............","........#....#0ss1#....#........","......##0#...#0ss1#...#0##......",".....#00s0###0ssss0###0s00#.....",".....#0ss1#00ssssss00#0ss1#.....","....#0ssss0ssssssssss0ssss0#....",".....#01ssssssssssssssss11#.....","......##0ssssssssssssss1##......","......#0sssssccccccsssss0#......","......#0sssscc####ccssss1#......","...###0sssscc#....#ccssss0###...","..#000sssssc#......#csssss000#..","..#0sssssssc#......#csssssss1#..","..#0sssssssc#......#csssssss1#..","..#011sssssc#......#csssss111#..","...###0sssscc#....#ccssss1###...","......#0sssscc####ccssss1#......","......#0sssssccccccsssss1#......","......##0ssssssssssssss1##......",".....#00ssssssssssssssss00#.....","....#0ssss1ssssssssss1ssss0#....",".....#0ss1#01ssssss11#0ss1#.....",".....#01s1###0ssss1###0s11#.....","......##0#...#0ss1#...#0##......","........#....#0ss1#....#........",".............#0111#.............","..............####..............","................................","................................"],{"s":"#8fa0c0","c":"#5ad1ff","0":"#bac4d8","1":"#596377","#":"#120c08"}],
+    hearth: [["................................","................................","................................","................................","...........##########...........",".........##0000000000##.........","........#00ssssssssss00#........",".......#0ssssssssssssss0#.......","......#0ssssssssssssssss0#......",".....#0ssssssssscssssssss0#.....",".....#0ssssssssscssssssss1#.....","....#0sssssssccccccsssssss0#....","....#0sssssscccsccccssssss1#....","...#0ssssssccssscssccssssss0#...","...#0sssssccsssscsssccsssss1#...","...#0sssssccssswwsssccsssss1#...","...#0ssssscssswwwwssscsssss1#...","...#0sssssccccwwwwcccccssss1#...","...#0sssssccssswwsssccsssss1#...","...#0sssssccsssscsssccsssss1#...","...#0ssssssccssscssccssssss1#...","....#0sssssscccsccccssssss1#....","....#0sssssssccccccsssssss1#....",".....#0ssssssssscssssssss1#.....",".....#0ssssssssscssssssss1#.....","......#0sssssssscsssssss1#......",".......#0ssssssssssssss1#.......","........#01ssssssssss11#........",".........##0111111111##.........","...........##########...........","................................","................................"],{"s":"#8e8e9a","c":"#5ad1ff","w":"#e8fbff","0":"#b9b9c0","1":"#58585f","#":"#120c08"}],
+    loot: [["................................","...............##...............","..............#yy#..............","...........###yyyy###...........","..........#000yyyy000#..........","..........#0bbbyybb1#...........","...........#0bbbbbb1#...........","...........#0bbbbbb1#...........","...........#0bbbbb1####.........","..........#2ggggggg2222#........",".........#2ggggggggggg3#........",".........#0gggggggggg1#.........","........#0bbbbbbbbbbbb0#........",".......#0bbbbbbbbbbbbbb0#.......","......#0kbbbkbbbkbbbkbbbk#......","......#0bbbbbbbbbbbbbbbb1#......",".....#0bbbbbbbbbbbbbbbbbb0#.....",".....#0bbbkbbbkbbbkbbbkbb1#.....",".....#0bbbbbbbbbbbbbbbbbb1#.....",".....#0bbbbbbbbbbbbbbbbbb1#.....",".....#0bkbbbkbbbkbbbkbbbk1#.....",".....#0bbbbbbbbbbbbbbbbbb1#.....",".....#0bbbbbbbbbbbbbbbbbb1#.....",".....#0bbbkbbbkbbbkbbbkbb1#.....","......#0bbbbbbbbbbbbbbbb1#......","......#0bbbbbbbbbbbbbbbb1#......",".......#kbbbkbbbkbbbkbb1k#......","........#0bbbbbbbbbbbb1##.......",".........#01bbbbbbbb11#.........","..........##01111111##..........","............########............","................................"],{"b":"#8a2a22","k":"#4a1410","g":"#d9a43a","y":"#ffd84a","0":"#b67b76","1":"#561a15","2":"#e7c785","3":"#876624","#":"#120c08"}],
+    sulfuras: [["...............##...............","..............#rr#..............","........#.....#rr#.....#........",".......#r#...#rrrr#...#r#.......",".......#r#..#rroor#...#r#.......","..#####rrr#.#rroorr#.#rrr#####..",".#00000rorr#rroooorr#rror00000#.",".#0ddddrorr#rroyyorr#rrordddd1#.",".#0ddddgddd0dddddddd0dddgdddd1#.",".#0ddddgddddddddddddddddgdddd1#.",".#0ddddgdoodddooooddooodgdddd1#.",".#0ddddgddoodooyyoooodddgdddd1#.",".#0ooodgdddoooyyyyooddddgdooo1#.",".#0ddddgddoodooyyoooodddgdddd1#.",".#0ddddgddodddooooddodddgdddd1#.",".#0ddddgddoddddddddddoddgdddd1#.",".#0ddddgddddddddddddddddgdddd1#.",".#0dddd211111dddddd111112dddd1#.",".#0ddd1######3gggg2######0ddd1#.",".#01111#....#32gg22#....#01111#.","..#####......##45##......#####..","..............#45#..............","..............#67#..............","..............#45#..............","..............#45#..............","..............#67#..............","..............#45#..............","..............#45#..............",".............#3gg3#.............",".............#3gg2#.............",".............#3222#.............","..............####.............."],{"d":"#3a2a26","g":"#c8901a","r":"#d8381a","o":"#ff8a1a","y":"#ffe27a","0":"#857b78","1":"#241a18","2":"#7c5910","3":"#ddba71","4":"#8f8582","5":"#2e2421","6":"#746d6c","7":"#130c0b","#":"#120c08"}],
+    atiesh: [["................................","............#................#..","...........#0#..............#0#.",".........#.#00#.....#......#0#..","........#0###00#...#0#....#01###",".........#00#0k0#..#00#..#0k1#00",".........#0k0kkk0###01###0kkk01#","..........#0kkkkk022ss220kkkk1#.",".........###0kkkks3#cc#2skkkk1#.","........#000kkkkssccccccsskk1#..",".........##01kkkskcwwwcckskk1#..","...........##01ssccwwwcccssk10#.",".............##2sccwwwcccs31##..","...............#2#cccccc#2##....","......c........#22cccccc23#.....","...............#4s3#cc#23#......","..............#4hh32ss23#.......",".............#4hh5##23##........",".........c.##4hh5#..##..........","..........#2#4h5#...........c...","..........#22h5#................","..........#4s3#.................",".........#4h532#................","......###4h5###.................",".....#224h5#.............c......","......#2sh5#....................",".....#4hs3#.....................",".....#4h532#....................","....#4h5###.....................","...#4h5#........................","...#45#.........................","....##.........................."],{"h":"#3a2a3a","s":"#c8ccd8","k":"#2a2440","c":"#b46cff","w":"#f4e8ff","0":"#7b7789","1":"#1a1628","2":"#dddfe7","3":"#7c7e86","4":"#857b85","5":"#241a24","#":"#120c08"}],
+    ashbringer: [["...............##...............","..............#00#..............",".............#0ss0#.............",".............#0ss1#.............","............#0ssfs0#............","........y..#0sssfs1#............",".......yyy.#0sssfs1#............","........y..#0sssfs1#............","...........#0sssfs1#....y.......","...........#0sssfs1#...yyy......","..##.......#0sssfs1#....y...##..",".#22#....y.#0sssfs1#.......#22#.",".#23#...yyy#0sssfs1#.......#23#.",".#23#....y.#0sssfs1#.......#23#.",".#2g2#.....#0sssfs1#......#2g3#.","..#23#.....#0sssfs1#......#23#..","..#23##....#0sssfs1#.....##23#..","..#2g22##..#0sssfs1#...##22g3#..","...#2gg22###0sssfs1####22gg3#...","....#2ggg222gssssss2222ggg3#....","....#2gggggggggrrggggggggg3#....","....#23gggggggrrrrggggggg33#....",".....##233ggggrrrrgggg333##.....",".......###23333rr33333###.......","..........############..........","..............#444#.............","..............#4h5#.............","..............#4h5#.............","..............#2g5#.............",".............#2gg3#.............","..............#23#..............","...............##..............."],{"s":"#d0d6e4","f":"#ffffff","g":"#e8b440","r":"#c02030","h":"#4a2a5a","y":"#fff2a8","0":"#e2e6ee","1":"#81858d","2":"#f1d089","3":"#907028","4":"#8f7b99","5":"#2e1a38","#":"#120c08"}],
+    onyxia: [[".#000#....................#000#.","..#0h0#..................#0h1#..","..#0h1#..................#0h1#..","...#0h0#................#0h1#...","....#0h0################0h1#....",".....#0h0222222222222220h1#.....","......#0dddddddddddddddd1#......","....###0dddddddddddddddd1##.....","..##000dddddddkkkkddddddd00###..",".#00hhddddddddddddddddddddh000#.",".#011hddddddddddddddddddddh11#..","..###2dddkkkddddddddkkkkdd3##...","....#2dddddkkkddddkkkddddd3#....",".....#2dddedddkdddkddeddd3#.....",".....#2ddddeeeddddeeedddd3#.....","......#2dddddddddddddddd3#......","......#2dddddddddddddddd3#......","......#2ddddddkkkkdddddd3#......",".......#2dddddddddddddd3#.......",".......#2dddddddddddddd3#.......","........#2dddddddddddd3#........","........#2ddddkkkkdddd3#........",".........#2dddddddddd3#.........",".........#2dddddddddd3#.........",".........#2dddddddddd3#.........","..........#2ddkddkdd3#..........","..........#2dddddddd3#..........","..........#2dddddddd3#..........","...........#w3w33w3w#...........","............########............","................................","................................"],{"d":"#3a2e3a","h":"#d8ccb0","e":"#ff8a1a","k":"#140c10","w":"#f4f0e0","0":"#e7dfce","1":"#867e6d","2":"#857d85","3":"#241d24","#":"#120c08"}],
+    lotus: [["................................","................................","...........................c....","................................","....c......##......##...........","..........#00#....#11#..........","..........#0p0#..#1m2#......c...","..........#0pp0##1mm2#..........",".....####.#0ppp01mmm2#.####.....","....#1111##0ppppmmmm2##0000#....",".....#1mm11ppppmmmmmp00pp3#.....",".....#1mmmmppppmmmmpppppp3#.....","......#1mmmmpppmmmpppppp3#......","......#1mmmmpppmmppppppp3#......",".....##0mmmmmpmyyppppmmm2##.....","...##00pppmmmpyyyymmmmmmm11##...","..#00ppppppmmyyyyyymmmmmmmm11#..","..#03ppppppppyyyyyymmmmmmmm22#..","...##03pppp333yyyymmmmmmm22##...",".....##0333####yyqqqqmm22##.....",".......####....##4qqqq5##.......","..............#..#45qqq4#.......","...........###6##6##4555#.......","........###666#..#667###........",".......#6667##....##666#........","......#6g7##........##66#.......",".....#677#............#66#......","....#67##..............##6#.....","...#6##..................#......","..#6#...........................","...#............................","................................"],{"g":"#2a6a3a","q":"#7a4aa8","p":"#2e1440","m":"#4a2266","y":"#f0d8ff","c":"#c58cff","0":"#7d6d89","1":"#8f76a0","2":"#2e153f","3":"#1d0c28","4":"#ad8fc9","5":"#4c2e68","6":"#7ba385","7":"#1a4224","#":"#120c08"}],
+    warrior: [["................................","................................","....##....................##....","...#00#..................#00#...","..#0ss0#................#0ss0#..","..#0sss0#..............#0sss1#..","...#0sss0#............#0sss1#...","....#0sss0#..........#0sss1#....",".....#0sss0#........#0sss1#.....","......#0sss0#......#0sss1#......",".......#0sss0#....#0sss1#.......","........#0sss0#..#0sss1#........",".........#0sss0##0sss1#.........","..........#0sss00sss1#..........","...........#0ssssss1#...........","............#0ssss1#............","............#0ssss1#............","...........#0ssssss0#...........","..........#0sss11sss0#..........","....##...#0sss1##0sss0#...##....","...#22#.#0sss1#..#0sss0#.#22#...","...#2g2#0sss1#....#0sss0#2g3#...","....#2g2sss1#......#0sss2g3#....",".....#2hhs1#........#0shh3#.....",".....#4hh3#..........#2hh5#.....","....#4h53g2#........#2g35h4#....","...#2g5##2g2#......#2g3##4g2#...","...#23#..#23#......#23#..#23#...","....##....##........##....##....","................................","................................","................................"],{"s":"#c8ccd8","g":"#c79c6e","h":"#5a3a22","0":"#dddfe7","1":"#7c7e86","2":"#dcc2a5","3":"#7b6144","4":"#998576","5":"#382415","#":"#120c08"}],
+    paladin: [["................................","................p...............",".....####...............####....","....#0000###############0000#...","....#0ggg000000000000000ggg1#...","....#0gggggggggwwgggggggggg1#...","....#0ggggggggwwwwggggggggg1#...","....#0gggggggwwwwwwgggggggg1#...","....#0gggggggwwwwwwgggggggg1#...","....#0ggggggggwwwwggggggggg1#...","....#0gggggggggwwgggggggggg1#...","....#0ggggggggggggggggggggg1#...","....#0ggg111111ggg111111ggg1#...","....#0111######2s3######0111#...",".....####.....#2s3#.....####....","..............#2s3#.............","..............#2s3#.............","..............#2s3#.............","...p..........#2s3#..........p..","..............#2s3#.............",".........p....#2s3#.............","..............#2s3#.............","..............#2s3#....p........","..............#2s3#.............","..............#2s3#.............","..............#2s3#.............","..............#2s3#.............",".............#0ggg0#............",".............#0ggg1#............",".............#01111#............","..............#####.............","................................"],{"g":"#e8c050","s":"#d8dce4","w":"#fffbe0","p":"#f58cba","0":"#f1d892","1":"#907732","2":"#e7e9ee","3":"#86888d","#":"#120c08"}],
+    hunter: [["........#.......................",".......#0###....................",".......#0w00#...................",".......#0whh0#..................","........#w11h0#.................","........#w##0h0#................","........#w#.#0h0#...............","........#w#..#0h0#..............","........#w#...#0h0#.............","........#w#...#0h1#.............","........#w#....#01#.............","...#....#w#....#0h0#............","..#2#...#w#.....#01#.....#......","...#2#..#w#.....#01#....#3##....","...#22###w#######4k4#####333##..","....#2255a5555555aaa55555sss33#.","....#2677a7777777aaa77777sss88#.","...#26###w#######4k9#####388##..","...#2#..#w#.....#4k9#...#3##....","..#2#...#w#.....#01#.....#......","...#....#w#....#0h1#............","........#w#....#01#.............","........#w#...#0h1#.............","........#w#...#0h1#.............","........#w#..#0h1#..............","........#w#.#0h1#...............","........#w##0h1#................","........#w00h1#.................",".......#0whh1#..................",".......#0w11#...................",".......#0###....................","........#......................."],{"h":"#8a5a2a","a":"#c8a070","s":"#c8ccd8","k":"#3a2414","w":"#e8e6e1","0":"#b6997b","1":"#56381a","2":"#dd897b","3":"#dddfe7","4":"#85776d","5":"#ddc4a6","6":"#7c281a","7":"#7c6345","8":"#7c7e86","9":"#24160c","#":"#120c08"}],
+    rogue: [["................................","................................","................................","..........................##....",".........................#00#...","........................#0s1#...",".......................#0s1#....",".....................##0s1#.....","....................#00s1#......","...................#0pp1#.......","..................#0pss1#.......",".................#0pss1#........","................#0pss1#...p.....","...............#0pss1#...ppp....",".......##.....#0pss1#.....p.....","......#22#...#0pss1#............","......#2k2#.#0sps1#.............",".......#2k2#0sss1#......p.......","........#2k2sss1#.......p.......",".........#2kks1#................",".........#2kk3#.................","........#2k33k2#................",".......#2k3##2k2#...............",".....##2k3#..#2k2#..............","....#44k3#....#23#..............","...#4gg5#......##...............","...#4gg5#.......................","....#45#........................",".....##.........................","................................","................................","................................"],{"s":"#c8ccd8","g":"#fff569","k":"#2a2228","p":"#7dff5a","0":"#dddfe7","1":"#7c7e86","2":"#7b767a","3":"#1a1519","4":"#fff9a2","5":"#9e9841","#":"#120c08"}],
+    priest: [["...............##...............","..............#00#..............","..............#01#..............","..............#01#..............","..............#01#..............","..............#01#..............","........#.....#01#.....#........",".......#0#....#01#....#0#.......","......#0g0#...#01#...#0g0#......",".......#0g0#.##01##.#0g1#.......","........#0g0#22yy22#0g1#........",".........#0y2yyyyyy2y1#.........","..........#2yyywwyyy3#..........",".........#2yyyywwyyyy2#.........",".#########2yywwwwwwyy3#########.","#000000000yyywwwwwwyyy000000000#","#011111111yyyyywwyyyyy111111111#",".#########2yyyywwyyyy3#########.",".........#2yyyywwyyyy3#.........","..........#2yyywwyyy3#..........",".........#0y3yyyyyy3y0#.........","........#0g1#23yy33#0g0#........",".......#0g1#.##01##.#0g0#.......","......#0g1#...#01#...#0g0#......",".......#0#....#01#....#0#.......","........#.....#01#.....#........","..............#01#..............","..............#01#..............","..............#01#..............","..............#01#..............","..............#01#..............","...............##..............."],{"g":"#ffd84a","y":"#fff2b0","w":"#ffffff","0":"#ffe78f","1":"#9e862e","2":"#fff7ce","3":"#9e966d","#":"#120c08"}],
+    shaman: [["...#...........##...........#...","..#0##........#yy#........##0#..","..#000###..###yyyy###..###00#...","...#0r000##111hhhh111##000r2#...","...#0rrrr00hhhhhhhhhh00rrrr2#...","...#0rrrrrrhhhhhhhhhhrrrrr2#....","....#0rrrrrhhhhhhhhhhrrrrr2#....","...#0rrrrrrhhkkhhkkhhrrrrrr0#...","..#0222rrrrhhkkhhkkhhrrrr2220#..","...####0222hhhhhhhhhh2222####...",".......####1hhhhhhhh3####.......","..........#1hhkkkkhh3#..........","..........#1hhhhhhhh3#..........","..........#1hhhhhhhh3#..........","..........#4bbbbbbbb5#..........","..........#4bbbbbbbb5#..........","..........#1hhhhhhhh3#..........","..........#1hhhhhhhh3#..........","..........#1hkkhhkkh3#..........","..........#1hkkhhkkh3#..........","..........#1hhhhhhhh3#..........","..........#1hhhhhhhh3#..........","..........#1hhkkkkhh3#..........","..........#1hhhhhhhh3#..........","..........#1hhhhhhhh3#..........","..........#4bbbbbbbb5#..........","..........#4bbbbbbbb5#..........","........###1hhhhhhhh3###........",".......#111hhhhhhhhhh111#.......",".......#1hhhhhhhhhhhhhh3#.......",".......#1333333333333333#.......","........################........"],{"h":"#8a5a2a","b":"#0070de","r":"#c8402a","k":"#2a1a10","y":"#ffd84a","0":"#dd897b","1":"#b6997b","2":"#7c281a","3":"#56381a","4":"#61a6eb","5":"#00458a","#":"#120c08"}],
+    mage: [["................................",".............................c..","....................####........","...................#0000#.......","..................#0bbbb0#......",".................#0bbbb1#.......","................#0bbbb1#........","...............#0bbbbb1#......c.","..............#0bbbyb1#.........","..............#0bbyyy#..........",".............#0bbbby1#..........",".............#0bbbb1#...........","............#0bbbbb1#...........","............#0bbbbb1#...........","....c......#0bbbybbb0#..........","...........#0bbyyybb1#..........","..........#0bbbbybbb1#..........","..........#0bbbbbbbb1#..........","..........#0bbbbbbbbb0#.........",".........#0bbbbbbbbbb1#.........",".........#0bbbbbbbbbb1#.........","......####2ggggggggggg2###......","...###0000ggggggggggggg000###...","..#000bbbbgggggggggggggbbb000#..",".#0bbbbbbbbbbbbbbbbbbbbbbbbbb0#.",".#0bbbbbbbbbbbbbbbbbbbbbbbbbb1#.","..#011bbbbbbbbbbbbbbbbbbbb111#..","...###0111111bbbbbb1111111###...","......#######011111#######......",".............######.............","................................","................................"],{"b":"#2a4fb0","g":"#e0a83a","y":"#ffe27a","c":"#69ccf0","0":"#7b92ce","1":"#1a316d","2":"#ecc985","#":"#120c08"}],
+    warlock: [["................................","................................","...............##...............","..............#0P#..............",".............#0pP0#........f....","......f.....#0ppPp0#............",".....f.....#0pppPpp0#...........","..........#0ppppPppp0#..........",".........#0pppppPpppp0#.........","........#0ppppppPppppp0#........","........#0PPppppPpppPPP#........","........#0pPPpppPppPPp1#........","........#0pppPPpPPPppp1#........",".........#0pppPPPPppp1#.........",".........#0ppccpPpppp1#....f....",".........#0pccccPpppp1#.........",".........#0pccccPpppp1#.........",".........#0ppccpPpppp1#.........",".........#0pppppPpppp1#.........","..........#0ppppPppp1#..........","..........#0ppppPppp1#....f.....","..........#0ppppPppp1#..........",".....f....#0ppppPppp1#..........","....f.....#0ppppPppp1#..........","..........#0ppppPppp1#..........","...........#0pppPpp1#...........","...........#0pppPpp1#...........","...........#0111P111#...........","............########............","................................","................................","................................"],{"p":"#7a3ad0","P":"#4a1a8a","c":"#c58cff","f":"#8cff4a","0":"#ad85e2","1":"#4c2481","#":"#120c08"}],
+    druid: [["................................","............#......#............","...........#w#....#w#...........","...........#w#....#w#...........","..........#0w0#..#0w0#..........",".........#0bbb0##0bbb0#.........",".......##0bbbbb00bbbbb0#.#......","......#w#0bbbbbbbbbbbb1##w#.....",".....##w#0bbbbb11bbbbb1##w#.....","....#00b0#0bbb1##0bbb1#00b0#....","...#0bbbb0#011#..#011#0bbbb0#...","...#0bbbb1####....####0bbbb1#...","...#0bbbb1#..........#0bbbb1#...","...#0bbbb1#..........#0bbbb1#...","....#0111#..########..#0111#....",".....####..#00000000#..####.....","..........#0bbbbbbbb0#..........",".........#0bbbbbbbbbb0#.........","........#0bbbbbbbbbbbb0#........","........#0bbbbbbbbbbbb1#........","........#0bbbbbbbbbbbb1#........","........#0bbbbbbbbbbbb1#...###..","........#0bbbbbbbbbbbb1####222#.","........#0bbbbbbbbbbbbb2222g3#..",".........#0bbbbbbbbbb1gggggg3#..","..........#0bbbbbbbb1#2ggggg3#..","...........#01111111#.#2ggg3#...","............########...#2gg3#...","........................#2g3#...",".........................#2#....","..........................#.....","................................"],{"b":"#b8662a","w":"#e8dcc0","g":"#3a8a3a","0":"#d3a07b","1":"#723f1a","2":"#85b685","3":"#245624","#":"#120c08"}],
     crest: [["......#yy#......", ".######hh######.", ".#gggg#hh#gggg#.", ".#gr#yyyyyy#rg#.", ".#gr###ss###rg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", "..#grr#sw#rrg#..", "..#ggr#sw#rgg#..", "...#gg#sw#gg#...", "....#g#ss#g#....", ".....##ss##.....", ".......##......."], { "#": "#000", g: "#ffb02e", r: "#8c1c10", y: "#ffd27a", h: "#6b3e1d", s: "#b8c4cc", w: "#fff" }],
   };
   function sprite(name, px = 3) {
@@ -1785,7 +1882,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       ["spring", tr("Jumps"), num(t.jumps), t.played ? tr("{0} per hour", num((t.jumps || 0) / Math.max(1, t.played / 3600))) : ""],
       ["gate", tr("Dungeon runs"), num(t.dungeons), t.hearth ? tr("{0} hearthstones", num(t.hearth)) : ""],
     ];
-    $("tiles").innerHTML = tiles.map(([icon, l, v, f, red]) => `<div class="frame tile"><span class="lbl">${sprite(icon, 2)}${l}</span><span class="val${red ? " red" : ""}">${v}</span><span class="foot">${f || "&nbsp;"}</span></div>`).join("");
+    $("tiles").innerHTML = tiles.map(([icon, l, v, f, red]) => `<div class="frame tile"><span class="lbl">${sprite(icon, 1)}${l}</span><span class="val${red ? " red" : ""}">${v}</span><span class="foot">${f || "&nbsp;"}</span></div>`).join("");
     $("deedsRange").textContent = rangeLabel();
   }
 
@@ -1817,7 +1914,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     { t: "Frequent Flyer", pts: 10, k: s => s.taxi, v: s => tr("{0} on flight paths", dur(s.taxi)) },
     { t: "Professional AFK", pts: 10, k: s => s.afk, v: s => tr("{0} away from keyboard", dur(s.afk)), shame: true },
   ];
-  const shieldSVG = shame => sprite(shame ? "shieldBad" : "shield", 6);
+  const shieldSVG = shame => sprite(shame ? "shieldBad" : "shield", 2);
 
   function renderAchievements(rows) {
     const cards = [];
@@ -1829,18 +1926,43 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       }
       if (!best) continue;
       const w = winners[0];
-      cards.push(`<div class="ach${a.shame ? " shame" : ""}"><div class="shield">${shieldSVG(a.shame)}<b>${a.pts}</b></div>
+      cards.push(`<div data-pts="${a.pts}" class="ach${a.shame ? " shame" : ""}"><div class="shield">${shieldSVG(a.shame)}<b>${a.pts}</b></div>
         <div><div class="t">${tr(a.t)}</div><div class="who">${nameHTML(w.p)}${winners.length > 1 ? `<span class="muted" style="font-weight:400;font-size:13px">${tr("+{0} tied", winners.length - 1)}</span>` : ""}</div><div class="d">${a.v(w.s)}</div></div></div>`);
     }
     const played = rows.filter(r => (r.s.played || 0) >= 3600);
     if (played.length > 1) {
       const min = Math.min(...played.map(r => r.s.deaths || 0));
       const w = played.find(r => (r.s.deaths || 0) === min);
-      cards.splice(1, 0, `<div class="ach"><div class="shield">${shieldSVG(false)}<b>50</b></div><div><div class="t">${tr("Unkillable")}</div><div class="who">${nameHTML(w.p)}</div>
+      cards.splice(1, 0, `<div data-pts="50" class="ach"><div class="shield">${shieldSVG(false)}<b>50</b></div><div><div class="t">${tr("Unkillable")}</div><div class="who">${nameHTML(w.p)}</div>
         <div class="d">${tr("{0} in {1}", min ? tr("Only {0} deaths", num(min)) : tr("Didn't die once"), dur(w.s.played))}</div></div></div>`);
     }
+    // Biggest achievements first (the sort keeps the list order among equals).
+    const pts = c => +c.match(/data-pts="(\d+)"/)[1];
+    cards.sort((a, b) => pts(b) - pts(a));
     $("achievements").innerHTML = cards.join("") || `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
+    showSome("achievements", cards.length);
   }
+
+  // Shows the first few cards of a list, with a button for the rest (remembered while the page is open).
+  function showSome(id, n, shown = 6) {
+    const open = (state.openLists ||= new Set()).has(id);
+    $(id).classList.toggle("open", open);
+    [...$(id).children].forEach((el, i) => el.classList.toggle("extra", i >= shown));
+    const btn = $(id + "More");
+    btn.hidden = n <= shown;
+    btn.textContent = open ? tr("Show fewer") : tr("Show all {0}", n);
+  }
+  document.addEventListener("click", e => {
+    const j = e.target.closest("[data-jump]");
+    if (j) $(j.dataset.jump).scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+  });
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".btn.more");
+    if (!b) return;
+    const id = b.dataset.more, set = (state.openLists ||= new Set());
+    set.has(id) ? set.delete(id) : set.add(id);
+    showSome(id, $(id).children.length);
+  });
 
   function renderMeter(rows) {
     const m = METRICS.find(x => x.k === state.metric) || METRICS[0];
@@ -2187,9 +2309,33 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   }
 
   function renderFame(people) {
-    $("fame").innerHTML = recordsHTML(fameRecords(people)) || `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
+    const recs = fameRecords(people).sort((a, b) => !!b.fresh - !!a.fresh); // new records first
+    const fresh = recs.filter(r => r.fresh);
+    $("recNews").hidden = !fresh.length;
+    $("recNews").innerHTML = fresh.length ? `${sprite("sulfuras", 1)}<b>${tr(fresh.length === 1 ? "A record fell!" : "{0} records fell!", fresh.length)}</b><small>${state.view === "all" ? tr("last 7 days") : rangeLabel()}</small>` +
+      fresh.map(r => `<button type="button" class="recchip" data-jump="s-fame">${esc(r.p.name)} · ${r.t} · <b>${r.v}</b></button>`).join("") : "";
+    $("fame").innerHTML = recordsHTML(recs) || `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
+    showSome("fame", recs.length);
   }
-  const recordsHTML = recs => recs.map(r => `<div class="rec" style="--c:${r.p.color}"><span class="t">${r.t}</span><span class="v">${r.v}</span><span class="w">${nameHTML(r.p)}<span class="muted">· ${r.when}</span></span></div>`).join("");
+  const recordsHTML = recs => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}" style="--c:${r.p.color}">${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}<span class="t">${r.t}</span><span class="v">${r.v}</span><span class="w">${nameHTML(r.p)}<span class="muted">· ${r.when}</span></span>${r.fresh ? `<span class="beat">${beatText(r)}</span>` : ""}</div>`).join("");
+  const beatText = r => r.beat.p === r.p
+    ? tr("Topped their own {0} from {1}", r.beat.v, shortDate(r.beat.k))
+    : tr("Beat {0}'s {1} from {2}", esc(r.beat.p.name), r.beat.v, shortDate(r.beat.k));
+
+  // Every time a daily record was raised, oldest first: who set it, on which day, and what it beat.
+  function recordHistory(people, f) {
+    const days = [];
+    people.forEach(p => Object.entries(p.days).forEach(([k, d]) => { if ((d[f] || 0) > 0) days.push({ p, k, v: d[f] }); }));
+    days.sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0));
+    const out = [];
+    let best = null;
+    for (const x of days) if (!best || x.v > best.v) { out.push({ ...x, prev: best }); best = x; }
+    return out;
+  }
+  // A record is new when it was beaten in the chosen week (the last 7 days on "all time").
+  // The very first holder of a record beat nobody, so that doesn't count.
+  const freshDay = k => state.view === "all" ? k >= addDays(todayKey(), -6) : inRange(k);
+  const newRecord = (k, prev) => (k && prev && freshDay(k) ? { fresh: true, beat: prev } : {});
 
   function fameRecords(people) {
     const DAY = [
@@ -2200,12 +2346,16 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     ];
     const recs = [];
     DAY.forEach(([f, t, fmt]) => {
-      let best = null;
-      people.forEach(p => Object.entries(p.days).forEach(([k, d]) => { const v = d[f] || 0; if (v > 0 && (!best || v > best.v)) best = { p, k, v }; }));
-      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k) });
+      const hist = recordHistory(people, f), best = hist[hist.length - 1];
+      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
     });
-    const hit = people.map(p => ({ p, h: p.bestHit })).filter(x => x.h).sort((a, b) => b.h.amt - a.h.amt)[0];
-    if (hit) recs.unshift({ t: tr("Hardest hit ever"), v: num(hit.h.amt), p: hit.p, when: esc(hit.h.spell || "") + (hit.h.target ? tr(" on {0}", esc(hit.h.target)) : "") });
+    // Only each character's best hit is kept, so the hit it beat is the biggest one landed before it.
+    const hits = people.map(p => ({ p, h: p.bestHit })).filter(x => x.h).sort((a, b) => b.h.amt - a.h.amt), hit = hits[0];
+    if (hit) {
+      const before = hit.h.t && hits.find(x => x.h.t && x.h.t < hit.h.t);
+      recs.unshift({ t: tr("Hardest hit ever"), v: num(hit.h.amt), p: hit.p, when: esc(hit.h.spell || "") + (hit.h.target ? tr(" on {0}", esc(hit.h.target)) : ""),
+        ...newRecord(hit.h.t && localKey(hit.h.t), before && { p: before.p, v: num(before.h.amt), k: localKey(before.h.t) }) });
+    }
     const rich = people.filter(p => p.peakGold).sort((a, b) => b.peakGold - a.peakGold)[0];
     if (rich) recs.push({ t: tr("Deepest pockets"), v: goldText(rich.peakGold), p: rich, when: tr("most gold held at once") });
     let mob = null;
@@ -2360,6 +2510,24 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     return `<div class="slot" style="--qc:${qc}"><span class="ic">${slotName.slice(0, 2)}</span><span class="it">${name}<small>${slotName}${it.il ? " · " + tr("item level {0}", esc(it.il)) : ""}</small></span></div>`;
   }
 
+  // Blizzard's face render, pixelated to match the site (drawn by drawFaces); the class icon when there is none.
+  function portraitHTML(ch) {
+    const lvl = `<b class="lvl">${esc(ch.level || "?")}</b>`;
+    if (!ch.avatar && !CLASS[ch.class]) return `<div class="emblem">${esc(ch.level || "?")}</div>`;
+    const icon = CLASS[ch.class] ? classIcon(ch, 2) : "";
+    if (!ch.avatar) return `<div class="emblem portrait">${icon}${lvl}</div>`;
+    return `<div class="emblem portrait"><canvas class="face" width="32" height="32" data-src="${esc(ch.avatar)}" role="img" aria-label="${esc(ch.name)}"></canvas><span class="alt" hidden>${icon}</span>${lvl}</div>`;
+  }
+  function drawFaces(root) {
+    root.querySelectorAll("canvas.face[data-src]").forEach(cv => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => { const g = cv.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(img, 0, 0, 32, 32); };
+      img.onerror = () => { cv.hidden = true; cv.nextElementSibling.hidden = false; };
+      img.src = cv.dataset.src;
+    });
+  }
+
   function sheetHTML(ch, color) {
     const gear = ch.gear && typeof ch.gear === "object" ? ch.gear : {};
     const items = Object.entries(gear).filter(([s, it]) => it && it.il && s !== "s4" && s !== "s19");
@@ -2369,16 +2537,16 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     const profs = Array.isArray(ch.professions) ? ch.professions.filter(x => x && x.n) : [];
     const [cname] = classOf(ch);
     const head = `<div class="sheet-head">
-        <span><b>${esc(ch.name)}</b> <span class="muted">${tr("Level {0} {1} {2}", esc(ch.level || "?"), esc(RACE[ch.race] || ch.race || ""), cname)}${ch.realm ? " · " + esc(ch.realm) : ""}${ch.guild ? " · &lt;" + esc(ch.guild) + "&gt;" : ""}</span></span>
+        <span>${classIcon(ch)} <b>${esc(ch.name)}</b> <span class="muted">${tr("Level {0} {1} {2}", esc(ch.level || "?"), esc(RACE[ch.race] || ch.race || ""), cname)}${ch.realm ? " · " + esc(ch.realm) : ""}${ch.guild ? " · &lt;" + esc(ch.guild) + "&gt;" : ""}</span></span>
         ${talents.length ? `<span class="talents">${spec && spec.p ? `<span class="spec">${esc(spec.n)} ${esc(cname)}</span>` : ""}${talents.map(t => `<span class="talent">${esc(t.n)} <b>${num(t.p)}</b></span>`).join("")}</span>` : ""}
       </div>`;
     if (!Object.keys(gear).length) {
-      return head + `<p class="empty">${ch.self ? tr("Gear appears after this character logs in with the latest FunStats.") : tr("Gear appears once this character has the Ledger app, or after the next armory update.")}</p>`;
+      return head + `<div class="mid solo" style="--c:${color}">${portraitHTML(ch)}</div><p class="empty">${ch.self ? tr("Gear appears after this character logs in with the latest FunStats.") : tr("Gear appears once this character has the Ledger app, or after the next armory update.")}</p>`;
     }
     const left = [1, 2, 3, 15, 5, 4, 19, 9], right = [10, 6, 7, 8, 11, 12, 13, 14];
     return head + `<div class="doll" style="--c:${color}">
         <div class="slots">${left.map(s => slotHTML(gear, s)).join("")}</div>
-        <div class="mid"><div class="emblem">${esc(ch.level || "?")}</div><div class="ilvl"><b>${avgIlvl || ch.ilvl || "–"}</b><span>${tr("avg item level")}</span></div></div>
+        <div class="mid">${portraitHTML(ch)}<div class="ilvl"><b>${avgIlvl || ch.ilvl || "–"}</b><span>${tr("avg item level")}</span></div></div>
         <div class="slots">${right.map(s => slotHTML(gear, s)).join("")}</div>
       </div>
       <div class="weapons">${[16, 17, 18].map(s => slotHTML(gear, s)).join("")}</div>
@@ -2407,7 +2575,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     const otherChars = (state.allChars || []).filter(c => main && main.owner && !String(main.owner).startsWith("char:") && c.owner === main.owner && c.key !== main.key);
     $("pHero").innerHTML = `
       <span class="eyebrow">${main ? `${tr("Lvl {0}", esc(main.level || "?"))} ${esc(RACE[main.race] || main.race || "")} ${classOf(main)[0]}` : tr("Adventurer")}${main && main.guild ? ` · ${guildLink(main)}` : ""} · ${esc(realmLabel())}</span>
-      <h2 id="pName">${esc(p.name)}</h2>
+      <h2 id="pName">${main ? classIcon(main, 2) : ""}${esc(p.name)}</h2>
       ${sig[0] ? `<p class="known">${tr("Known for: {0}", esc(sig[0].tag))}</p>` : ""}
       <div class="facts">
         <div><b>${top ? esc(top.level || "?") : "–"}</b><span>${tr("highest level")}</span></div>
@@ -2415,7 +2583,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
         <div><b>${compact(s.dmg)}</b><span>${tr("damage")}</span></div>
         <div><b>${num(p.deaths.length || s.deaths)}</b><span>${tr("deaths")}</span></div>
       </div>
-      ${otherChars.length ? `<div style="display:grid;gap:6px"><span class="eyebrow">${tr("Other characters by this player")}</span><div class="chips">${otherChars.map(c => `<a class="chip" href="${charHref(c.key)}"><span class="dot" style="background:${classOf(c)[1]}"></span>${esc(c.name)} <span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} · ${esc(c.realm || "")}</span></a>`).join("")}</div></div>` : ""}`;
+      ${otherChars.length ? `<div style="display:grid;gap:6px"><span class="eyebrow">${tr("Other characters by this player")}</span><div class="chips">${otherChars.map(c => `<a class="chip" href="${charHref(c.key)}">${classIcon(c)}${esc(c.name)} <span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} · ${esc(c.realm || "")}</span></a>`).join("")}</div></div>` : ""}`;
     renderCompare(p, people);
 
     $("pSigSub").textContent = people.length < 2 ? tr("{0}'s biggest numbers so far", p.name)
@@ -2428,9 +2596,10 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 
     // character sheet with a picker for alts
     if (!p.chars.some(ch => ch.key === state.profileChar)) state.profileChar = main && main.key;
-    $("pCharPick").innerHTML = p.chars.length > 1 ? p.chars.map(ch => `<button type="button" class="chip" data-key="${esc(ch.key)}" aria-pressed="${ch.key === state.profileChar}"><span class="dot" style="background:${classOf(ch)[1]}"></span>${esc(ch.name)}</button>`).join("") : "";
+    $("pCharPick").innerHTML = p.chars.length > 1 ? p.chars.map(ch => `<button type="button" class="chip" data-key="${esc(ch.key)}" aria-pressed="${ch.key === state.profileChar}">${classIcon(ch)}${esc(ch.name)}</button>`).join("") : "";
     const ch = p.chars.find(c => c.key === state.profileChar);
     $("pSheet").innerHTML = ch ? sheetHTML(ch, p.color) : `<p class="empty">${tr("No characters yet.")}</p>`;
+    drawFaces($("pSheet"));
 
     const held = achievementsHeld(p, rowsAll);
     $("pAch").innerHTML = held.map(({ a, s: hs, tied }) => `<div class="ach${a.shame ? " shame" : ""}"><div class="shield">${shieldSVG(a.shame)}<b>${a.pts}</b></div>
@@ -2524,7 +2693,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       const topKills = Object.entries(p.kills).sort((a, b) => b[1] - a[1]).slice(0, 3);
       const loot = p.notable.filter(x => x.q >= 3).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 4);
       const onlyObserved = p.chars.length && p.chars.every(ch => !ch.self);
-      const rowsHTML = p.chars.map((ch, i) => `<li><span class="cn"><span class="dot" style="background:${classOf(ch)[1]}"></span>${esc(ch.name)}</span>${p.chars.length > 1 && i === 0 ? `<span class="badge">${tr("Main")}</span>` : ""}<span class="meta">${charLine(ch)}${ch.guild ? " · " + guildLink(ch) : ""}${ch.self ? "" : " · " + tr("seen by friends")}</span></li>`).join("");
+      const rowsHTML = p.chars.map((ch, i) => `<li><span class="cn">${classIcon(ch)}${esc(ch.name)}</span>${p.chars.length > 1 && i === 0 ? `<span class="badge">${tr("Main")}</span>` : ""}<span class="meta">${charLine(ch)}${ch.guild ? " · " + guildLink(ch) : ""}${ch.self ? "" : " · " + tr("seen by friends")}</span></li>`).join("");
       return `<div class="frame char" style="--c:${p.color}">
         <div><h3><a class="plink" href="${profileHref(p)}"><span class="cname">${esc(p.name)}</span></a></h3><span class="muted">${tr(p.deaths.length === 1 ? "{0} death" : "{0} deaths", num(p.deaths.length))}${total.played ? " · " + tr("{0} played", dur(total.played)) : ""}</span></div>
         <ul class="alts">${rowsHTML}</ul>
@@ -2543,6 +2712,15 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   }
 
   // Guild overview: the roster beside the deeds, plus the guild's newest loot and deaths.
+  // Who leads each stat in the chosen range.
+  const LEAD = [["sword", "Damage dealt", "dmg", compact], ["heart", "Healing done", "heal", compact], ["axe", "Killing blows", "kb", num],
+    ["skull", "Deaths", "deaths", num], ["scroll", "Quests completed", "quests", num], ["coin", "Gold looted", "goldIn", goldHTML],
+    ["clock", "Time played", "played", dur], ["spring", "Jumps", "jumps", num], ["boot", "Distance", "dist", yards]];
+  const leadsHTML = (rows, n = LEAD.length) => LEAD.slice(0, n).map(([icon, label, f, fmt]) => {
+    const best = rows.slice().sort((a, b) => (b.s[f] || 0) - (a.s[f] || 0))[0];
+    return best && best.s[f] ? `<div class="glead">${sprite(icon, 1)}<span class="lbl">${tr(label)}</span><a class="plink" href="${profileHref(best.p)}"><span class="cname">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
+  }).join("");
+
   function renderGuildSide(rows, people) {
     $("gRosterSub").textContent = rangeLabel();
     const list = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0) || (b.p.chars[0].level || 0) - (a.p.chars[0].level || 0));
@@ -2550,20 +2728,13 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       const ch = p.chars[0];
       const deaths = p.deaths.filter(d => d.t && inRange(localKey(d.t))).length || s.deaths || 0;
       return `<div class="grow">
-        <span class="who"><a class="plink" href="${profileHref(p)}"><span class="dot" style="background:${classOf(ch)[1]}"></span><span class="cname">${esc(p.name)}</span></a>
+        <span class="who"><a class="plink" href="${profileHref(p)}">${classIcon(ch)}<span class="cname">${esc(p.name)}</span></a>
           <small>${[tr("Lvl {0}", esc(ch.level || "?")), esc(RACE[ch.race] || ch.race || ""), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
         <span class="n">${compact(s.dmg)}<small>${tr("damage")}</small></span>
         <span class="n${deaths ? " red" : ""}">${num(deaths)}<small>${tr("deaths")}</small></span>
       </div>`;
     }).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
-    // Who leads each stat in the chosen range.
-    const LEAD = [["sword", "Damage dealt", "dmg", compact], ["heart", "Healing done", "heal", compact], ["axe", "Killing blows", "kb", num],
-      ["skull", "Deaths", "deaths", num], ["scroll", "Quests completed", "quests", num], ["coin", "Gold looted", "goldIn", goldHTML],
-      ["clock", "Time played", "played", dur], ["spring", "Jumps", "jumps", num], ["boot", "Distance", "dist", yards]];
-    const leads = LEAD.map(([icon, label, f, fmt]) => {
-      const best = rows.slice().sort((a, b) => (b.s[f] || 0) - (a.s[f] || 0))[0];
-      return best && best.s[f] ? `<div class="glead">${sprite(icon, 2)}<span class="lbl">${tr(label)}</span><a class="plink" href="${profileHref(best.p)}"><span class="cname">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
-    }).join("");
+    const leads = leadsHTML(rows);
     if (leads && rows.length > 1) $("gRoster").innerHTML += `<div class="lh">${tr("Leaders")}</div><div class="gleads">${leads}</div>`;
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
@@ -2609,7 +2780,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     }
     state.backHref = route.kind === "char" && focus && focus.guild ? guildHref(realmKey(focus), focus.guild) : "";
 
-    const theme = document.documentElement.dataset.theme || "horde";
+    const theme = document.documentElement.dataset.theme || "fel";
     document.querySelectorAll(".theme-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.theme === theme)));
     document.querySelectorAll(".lang-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
 
@@ -2645,7 +2816,11 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     const active = rows.filter(r => Object.keys(r.s).length > 5);
     renderTiles(rows, people);
     if (route.kind === "guild") renderGuildSide(rows, people);
-    if (route.kind === "main") renderGuilds(realmChars);
+    if (route.kind === "main") {
+      renderGuilds(realmChars);
+      $("oLeads").innerHTML = leadsHTML(rows, 7) || `<p class="empty">${tr("No stats yet.")}</p>`;
+      $("oLeadsSub").textContent = rangeLabel();
+    }
     renderAchievements(active);
     renderMeter(active.length ? active : rows);
     renderDaily(people);
@@ -2701,27 +2876,39 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     const cards = Object.entries(groups).map(([g, list]) => {
       const tot = {};
       const dmgOf = c => Object.entries(c.days).reduce((a, [k, d]) => a + (inRange(k) ? d.dmg || 0 : 0), 0);
-      list.forEach(c => { for (const [k, d] of Object.entries(c.days)) { if (!inRange(k)) continue; for (const f of ["dmg", "deaths", "played"]) tot[f] = (tot[f] || 0) + (d[f] || 0); } });
+      list.forEach(c => { for (const [k, d] of Object.entries(c.days)) { if (!inRange(k)) continue; for (const f of ["dmg", "heal", "deaths", "quests", "goldIn", "played"]) tot[f] = (tot[f] || 0) + (d[f] || 0); } });
       const top = list.map(c => ({ c, v: dmgOf(c) })).sort((a, b) => b.v - a.v)[0];
       return { g, list: list.slice().sort((a, b) => dmgOf(b) - dmgOf(a)), tot, top };
     }).sort((a, b) => (a.g === "") - (b.g === "") || b.list.length - a.list.length || a.g.localeCompare(b.g));
     $("guildsSub").textContent = rangeLabel();
     $("guilds").innerHTML = cards.map(({ g, list, tot, top }) => {
       const name = g ? `&lt;${esc(g)}&gt;` : esc(tr("No guild"));
+      const lvl = Math.max(0, ...list.map(c => c.level || 0));
+      const stat = (v, label) => `<div><b>${v}</b><span>${tr(label)}</span></div>`;
       return `<div class="frame gcard">
-        ${g ? `<a class="gname" href="${guildHref(state.realm, g)}">${name}</a>` : `<span class="gname">${name}</span>`}
-        <span class="muted">${tr(list.length === 1 ? "{0} member" : "{0} members", list.length)}</span>
-        <dl class="kv">
-          <dt>${tr("Damage dealt")}</dt><dd>${compact(tot.dmg)}</dd>
-          <dt>${tr("Deaths")}</dt><dd>${num(tot.deaths)}</dd>
-          <dt>${tr("Time played")}</dt><dd>${dur(tot.played)}</dd>
-          ${top && top.v ? `<dt>${tr("Top damage")}</dt><dd>${esc(top.c.name)}</dd>` : ""}
-        </dl>
-        <div class="gmembers">${list.slice(0, 12).map(c => `<a class="plink" href="${charHref(c.key)}"><span class="dot" style="background:${classOf(c)[1]}"></span><span class="cname">${esc(c.name)}</span></a>`).join("")}${list.length > 12 ? `<span class="muted">+${list.length - 12}</span>` : ""}</div>
+        <div class="ghead">${g ? `<a class="gname" href="${guildHref(state.realm, g)}">${name}</a>` : `<span class="gname">${name}</span>`}
+          <span class="muted">${[tr(list.length === 1 ? "{0} member" : "{0} members", list.length), lvl ? tr("Top level {0}", lvl) : ""].filter(Boolean).join(" · ")}</span></div>
+        <div class="gstats">${stat(compact(tot.dmg), "Damage")}${stat(compact(tot.heal), "Healing")}${stat(num(tot.deaths), "Deaths")}
+          ${stat(num(tot.quests), "Quests")}${stat(goldHTML(tot.goldIn), "Gold")}${stat(dur(tot.played), "Played")}</div>
+        ${top && top.v ? `<div class="gmvp">${tr("Top damage")}: <a class="plink" href="${charHref(top.c.key)}">${classIcon(top.c)}<span class="cname">${esc(top.c.name)}</span></a></div>` : ""}
+        <div class="gfaces">${list.slice(0, 8).map(c => `<a href="${charHref(c.key)}" title="${esc(c.name)}">${classIcon(c)}</a>`).join("")}${list.length > 8 ? `<span class="muted" style="align-self:center">+${list.length - 8}</span>` : ""}</div>
         ${g ? `<a class="btn" href="${guildHref(state.realm, g)}">${tr("Open guild page")}</a>` : ""}
       </div>`;
     }).join("") || `<p class="empty">${tr("No guilds yet.")}</p>`;
+    guildArrows();
   }
+  // The arrows (and "1 / 3") only show when there is more than one guild to flip through.
+  const guildArrows = () => {
+    const g = $("guilds"), n = g.children.length;
+    $("guildsNav").hidden = g.scrollWidth <= g.clientWidth + 2;
+    $("guildsPos").textContent = `${Math.min(n, Math.round(g.scrollLeft / (g.clientWidth + 14)) + 1)} / ${n}`;
+  };
+  $("guilds").addEventListener("scroll", guildArrows, { passive: true });
+  if (window.ResizeObserver) new ResizeObserver(guildArrows).observe($("guilds"));
+  $("guildsNav").addEventListener("click", e => {
+    const b = e.target.closest("[data-car]"), card = $("guilds").firstElementChild;
+    if (b && card) $("guilds").scrollBy({ left: +b.dataset.car * (card.offsetWidth + 14), behavior: reduceMotion ? "auto" : "smooth" });
+  });
 
   // ---------- loading from Supabase ----------
   const CONFIG = window.LEDGER_CONFIG || {};
@@ -2783,10 +2970,10 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   // Pages: [id, label, icon]. Each page shows only the sections tagged with its data-pg.
   const MAIN_PAGES = [
     ["overview", "Overview", "scroll"], ["meters", "Meters & Combat", "sword"], ["deaths", "Deaths", "skull"],
-    ["loot", "Loot & World", "coin"], ["characters", "Characters", "heart"], ["join", "Add stats", "spring"],
+    ["loot", "Loot & World", "loot"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
   ];
   const PROFILE_PAGES = [
-    ["p-overview", "Character", "heart"], ["p-activity", "Activity", "clock"], ["p-records", "Records", "shield"], ["p-compare", "Compare", "sword"],
+    ["p-overview", "Character", "ashbringer"], ["p-activity", "Activity", "clock"], ["p-records", "Records", "shield"], ["p-compare", "Compare", "sword"],
   ];
   const remembered = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
   state.page = remembered("ledger-page", "overview");
@@ -2811,13 +2998,13 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     // the browser tab icon follows the theme too
     const fav = crestHTML(1).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
     if (fav !== state.favSvg) { state.favSvg = fav; $("favicon").href = "data:image/svg+xml," + encodeURIComponent(fav); }
-    $("gearIcon").innerHTML = sprite("gear", 2);
+    $("gearIcon").innerHTML = sprite("gear", 1);
     const pages = kind === "profile" ? PROFILE_PAGES : MAIN_PAGES;
     if (kind === "profile" && !pages.some(x => x[0] === state.ppage)) state.ppage = pages[0][0];
     if (kind !== "profile" && !pages.some(x => x[0] === state.page)) state.page = pages[0][0];
     const cur = kind === "profile" ? state.ppage : state.page;
     $("pageTabs").innerHTML = pages.map(([id, label, icon]) =>
-      `<button type="button" class="pagetab" role="tab" data-pg="${id}" aria-selected="${id === cur}">${sprite(icon, 2)}${esc(tr(label))}</button>`).join("");
+      `<button type="button" class="pagetab" role="tab" data-pg="${id}" aria-selected="${id === cur}">${sprite(icon, 1)}${esc(tr(label))}</button>`).join("");
     $("pageSel").innerHTML = pages.map(([id, label]) => `<option value="${id}">${esc(tr(label))}</option>`).join("");
     $("pageSel").value = cur;
     $("navBack").textContent = tr(kind === "profile" && state.backHref ? "‹ Guild" : "‹ Ledger");
@@ -2875,7 +3062,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       .sort((a, b) => String(a.name).toLowerCase().startsWith(q) ? -1 : String(b.name).toLowerCase().startsWith(q) ? 1 : 0).slice(0, 8);
     box.innerHTML = [
       ...gl.map(g => `<a class="sr" href="${guildHref(g.realm, g.guild)}"><span class="sr-k">${tr("Guild")}</span><b>&lt;${esc(g.guild)}&gt;</b><span class="muted">${esc(g.realm.replace("|", " · "))} · ${tr(g.n === 1 ? "{0} member" : "{0} members", g.n)}</span></a>`),
-      ...cl.map(c => `<a class="sr" href="${charHref(c.key)}"><span class="dot" style="background:${classOf(c)[1]}"></span><b>${esc(c.name)}</b><span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} ${classOf(c)[0]} · ${esc(c.realm || "")}${c.guild ? " · &lt;" + esc(c.guild) + "&gt;" : ""}</span></a>`),
+      ...cl.map(c => `<a class="sr" href="${charHref(c.key)}">${classIcon(c)}<b>${esc(c.name)}</b><span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} ${classOf(c)[0]} · ${esc(c.realm || "")}${c.guild ? " · &lt;" + esc(c.guild) + "&gt;" : ""}</span></a>`),
     ].join("") || `<p class="empty" style="padding:8px 10px">${tr("No characters or guilds match.")}</p>`;
     box.hidden = false;
   }

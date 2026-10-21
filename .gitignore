@@ -6,6 +6,7 @@ sync/.published.json
 .chrome-shots/
 site/_art.html
 .claude/
+supabase/.temp/
 __pycache__/
 *.pyc
 Thumbs.db
