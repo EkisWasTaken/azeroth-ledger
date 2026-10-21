@@ -172,9 +172,11 @@ local function GameInfo()
 end
 ns.GameInfo = GameInfo
 
-local function UpdateGuild()
+-- While logging in or out the game briefly reports "not in a guild", so the guild is only
+-- cleared when asked to (canClear), well after login.
+local function UpdateGuild(canClear)
   local g = GetGuildInfo("player")
-  if g then C.guild = g elseif not IsInGuild() then C.guild = nil end
+  if g then C.guild = g elseif canClear and not IsInGuild() then C.guild = nil end
 end
 
 local function UpdateProfile()
@@ -799,8 +801,10 @@ end
 ---------------------------------------------------------------------------
 
 local handlers = {}
+local loginTime = 0
 
 function handlers.PLAYER_LOGIN()
+  loginTime = GetTime()
   InitCharacter()
   C_Timer.NewTicker(1, Tick)
   C_Timer.After(5, SnapshotSheet)
@@ -810,6 +814,8 @@ function handlers.PLAYER_LOGIN()
     if C_GuildInfo and C_GuildInfo.GuildRoster then C_GuildInfo.GuildRoster() elseif GuildRoster then GuildRoster() end
   end
   C_Timer.After(12, RequestRoster)
+  -- By now guild info has loaded, so a character that left its guild while offline loses it.
+  C_Timer.After(30, function() UpdateGuild(true) end)
   C_Timer.NewTicker(900, RequestRoster)
   hooksecurefunc("JumpOrAscendStart", function()
     if C and not IsFalling() then Add("jumps") end
@@ -887,7 +893,7 @@ end
 
 -- Guild info often arrives a few seconds after login; keep the character's guild current.
 function handlers.PLAYER_GUILD_UPDATE()
-  UpdateGuild()
+  UpdateGuild(GetTime() - loginTime > 30)
 end
 function handlers.GUILD_ROSTER_UPDATE()
   UpdateGuild()
