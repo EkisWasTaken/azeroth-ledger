@@ -16,3 +16,4 @@ desktop.ini
 design/map-trace/.cache/
 design/map-trace/*-reference.png
 design/map-trace/*-check.png
+design/map-trace/*.ase

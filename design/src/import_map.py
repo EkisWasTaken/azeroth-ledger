@@ -69,11 +69,54 @@ def read_png(path):
     return w, h, rows
 
 
-def write_png(path, w, h, rows):
-    raw = b"".join(b"\x00" + bytes(v for p in row for v in p[:3]) for row in rows)
+def write_png(path, w, h, rows, alpha=False):
+    n = 4 if alpha else 3
+    raw = b"".join(b"\x00" + bytes(v for p in row for v in (tuple(p) + (255,))[:n]) for row in rows)
     chunk = lambda t, d: struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
-    open(path, "wb").write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+    open(path, "wb").write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6 if alpha else 2, 0, 0, 0))
                            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
+# ---------------------------------------------------------------- LibreSprite / Aseprite (.ase)
+
+def read_ase(path):
+    """The 'Zones' layer of an RGBA .ase file, as (width, height, rows of (r, g, b, a))."""
+    data = open(path, "rb").read()
+    size, magic, frames, w, h, depth = struct.unpack("<IHHHHH", data[:14])
+    if magic != 0xA5E0:
+        sys.exit(f"{os.path.basename(path)} is not a LibreSprite/Aseprite file")
+    if depth != 32:
+        sys.exit(f"{os.path.basename(path)}: keep the sprite in RGB colour mode (Sprite > Color Mode > RGB) and save again")
+    layers, cels, pos = [], {}, 128
+    if frames:  # only the first frame matters: it's the map
+        fsize, fmagic, old_n, _, _, new_n = struct.unpack("<IHHHHI", data[pos:pos + 16])
+        p = pos + 16
+        for _ in range(new_n or old_n):
+            csize, kind = struct.unpack("<IH", data[p:p + 6])
+            body = data[p + 6:p + csize]
+            if kind == 0x2004:  # layer: its name is after 18 bytes of settings
+                ln = struct.unpack("<H", body[16:18])[0]
+                layers.append(body[18:18 + ln].decode("utf8", "replace"))
+            elif kind == 0x2005:  # cel: raw (0) or zlib-compressed (2) pixels, placed at x, y
+                li, x, y, _op, ctype = struct.unpack("<HhhBH", body[:9])
+                if ctype in (0, 2) and li not in cels:
+                    cw, ch = struct.unpack("<HH", body[16:20])
+                    px = body[20:] if ctype == 0 else zlib.decompress(body[20:])
+                    cels[li] = (x, y, cw, ch, px)
+            p += csize
+    zi = next((i for i, n in enumerate(layers) if n.strip().lower().startswith("zones")), None)
+    if zi is None:
+        sys.exit(f"{os.path.basename(path)}: no layer called 'Zones' (rename your painting layer to Zones)")
+    rows = [[(0, 0, 0, 0)] * w for _ in range(h)]
+    if zi in cels:
+        x0, y0, cw, ch, px = cels[zi]
+        for y in range(ch):
+            if 0 <= y0 + y < h:
+                for x in range(cw):
+                    if 0 <= x0 + x < w:
+                        k = (y * cw + x) * 4
+                        rows[y0 + y][x0 + x] = tuple(px[k:k + 4])
+    return w, h, rows
 
 
 # ---------------------------------------------------------------- map coordinates
@@ -104,9 +147,18 @@ def era_to_tbc(cont, u, v):
 
 # ---------------------------------------------------------------- import
 
+def ase_touched(path):
+    """False while a kit .ase is exactly as the kit made it (still only the draft, so not a painting)."""
+    import hashlib
+    made = json.load(open(os.path.join(KIT, "zones.json"), encoding="utf8")).get("ase_made", {})
+    return hashlib.sha1(open(path, "rb").read()).hexdigest() != made.get(os.path.basename(path))
+
+
 def labels_of(path, cont):
     """The painting as a full-size grid of zone indices (-1 water), plus counts of odd colours."""
-    w, h, rows = read_png(path)
+    w, h, rows = read_ase(path) if path.endswith(".ase") else read_png(path)
+    if path.endswith(".ase"):  # keep a plain copy of the zones layer (the .ase holds the game art, so it isn't committed)
+        write_png(path[:-4] + ".png", w, h, rows, alpha=True)
     if abs(w / h - 1.5) > .01:
         sys.exit(f"{os.path.basename(path)} is {w}x{h}; it should be 3:2, like the reference (900x600)")
     pal = [tuple(z["color"]) for z in cont["zones"]]
@@ -220,9 +272,14 @@ def main():
     traced = {"tbc": {}, "era": {}}
     ok = True
     for name, cont in kit["continents"].items():
-        path = os.path.join(KIT, f"{name}.png")
-        if not os.path.exists(path):
-            print(f"{name}: no {name}.png yet, skipped")
+        # the LibreSprite file or an exported PNG, whichever was saved last
+        found = [p for p in (os.path.join(KIT, f"{name}.ase"), os.path.join(KIT, f"{name}.png")) if os.path.exists(p)]
+        if not found:
+            print(f"{name}: nothing painted yet, skipped")
+            continue
+        path = max(found, key=os.path.getmtime)
+        if path.endswith(".ase") and not ase_touched(path):
+            print(f"{name}: {name}.ase hasn't been painted in yet, skipped")
             continue
         w, h, full, odd = labels_of(path, cont)
         if odd:

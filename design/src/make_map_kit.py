@@ -4,6 +4,8 @@ For each continent, from the game client's own data (via the wago.tools DB2 and 
   <name>-reference.png   the in-game continent map, 900x600, to trace over (git-ignored: Blizzard's art)
   <name>-guides.png      each zone's exact rectangle and name, from UiMapAssignment (transparent layer)
   <name>.gpl             one named colour per zone (Aseprite, LibreSprite, Pixelorama, GIMP)
+  <name>.ase             ready to paint in LibreSprite: the reference, the zones (from the draft) and the
+                         guides as layers, with the palette (made once, never overwritten; git-ignored)
 and zones.json, which design/src/import_map.py uses to read the paintings.
 
 The paintings are done on the Anniversary (TBC) maps, which include everything the Classic Era maps have
@@ -98,11 +100,49 @@ def reference(build, cont):
     return im.crop((0, 0) + FRAME).resize(SIZE, Image.LANCZOS)
 
 
+def write_ase(path, size, layers, palette):
+    """A LibreSprite/Aseprite file (RGBA, one frame) following the published .ase format: layers bottom to
+    top as (name, image or None, opacity, visible, editable), and a palette of (rgb, name) entries."""
+    import struct
+    import zlib
+
+    def string(s):
+        b = s.encode("utf8")
+        return struct.pack("<H", len(b)) + b
+
+    def chunk(kind, data):
+        return struct.pack("<IH", len(data) + 6, kind) + data
+
+    w, h = size
+    chunks = []
+    # old palette chunk (for older readers) and the new one, which carries the zone names
+    chunks.append(chunk(0x0004, struct.pack("<HBB", 1, 0, len(palette) % 256) + b"".join(bytes(c) for c, _ in palette)))
+    entries = b"".join(struct.pack("<HBBBB", 1, *c, 255) + string(n) for c, n in palette)
+    chunks.append(chunk(0x2019, struct.pack("<III", len(palette), 0, len(palette) - 1) + bytes(8) + entries))
+    for name, _, opacity, visible, editable in layers:
+        flags = (1 if visible else 0) | (2 if editable else 0)
+        chunks.append(chunk(0x2004, struct.pack("<HHHHHHB", flags, 0, 0, 0, 0, 0, opacity) + bytes(3) + string(name)))
+    for i, (_, im, _, _, _) in enumerate(layers):
+        if im is None:
+            continue
+        pixels = zlib.compress(im.convert("RGBA").tobytes(), 9)
+        chunks.append(chunk(0x2005, struct.pack("<HhhBH", i, 0, 0, 255, 2) + bytes(7) + struct.pack("<HH", w, h) + pixels))
+    body = b"".join(chunks)
+    frame = struct.pack("<IHHHH", 16 + len(body), 0xF1FA, min(len(chunks), 0xFFFF), 100, 0) + struct.pack("<I", len(chunks)) + body
+    header = struct.pack("<IHHHHHIHII", 128 + len(frame), 0xA5E0, 1, w, h, 32, 1, 100, 0, 0)
+    header += struct.pack("<B3xHBBhhHH", 0, len(palette), 1, 1, 0, 0, 16, 16) + bytes(84)
+    assert len(header) == 128
+    open(path, "wb").write(header + frame)
+
+
 def main():
     os.makedirs(CACHE, exist_ok=True)
     tbc, era = frames_and_zones("tbc"), frames_and_zones("era")
     font = ImageFont.load_default(size=13)
     kit = {"size": SIZE, "continents": {}}
+    old = os.path.join(KIT, "zones.json")
+    if os.path.exists(old):  # keep the fingerprints of .ase files made earlier (they aren't remade)
+        kit["ase_made"] = json.load(open(old, encoding="utf8")).get("ase_made", {})
     for cont, name in CONTINENTS.items():
         if cont not in tbc:
             continue
@@ -119,6 +159,20 @@ def main():
             cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
             g.text((cx, cy), z["n"], font=font, fill=z["color"] + (255,), anchor="mm", stroke_width=2, stroke_fill=(0, 0, 0, 255))
         guides.save(os.path.join(KIT, f"{name}-guides.png"))
+
+        # A ready-to-paint LibreSprite file, made once: rebuilding the kit never overwrites a painting.
+        ase = os.path.join(KIT, f"{name}.ase")
+        if not os.path.exists(ase):
+            draft = os.path.join(KIT, f"{name}-draft.png")
+            zones_layer = Image.open(draft).convert("RGBA") if os.path.exists(draft) else Image.new("RGBA", SIZE)
+            write_ase(ase, SIZE, [
+                ("Reference (game map)", Image.open(os.path.join(KIT, f"{name}-reference.png")), 128, True, False),
+                ("Zones", zones_layer, 255, True, True),
+                ("Guides (zone areas)", guides, 255, False, False),
+            ], [(tuple(z["color"]), z["n"]) for z in zones])
+            # the importer skips a file that's still exactly this (only the draft, not painted yet)
+            import hashlib
+            kit.setdefault("ase_made", {})[f"{name}.ase"] = hashlib.sha1(open(ase, "rb").read()).hexdigest()
 
         with open(os.path.join(KIT, f"{name}.gpl"), "w", encoding="utf8", newline="\n") as f:
             f.write(f"GIMP Palette\nName: {tbc[cont]['n']} zones\nColumns: 4\n#\n")
