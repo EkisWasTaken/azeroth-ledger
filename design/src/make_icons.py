@@ -1,14 +1,16 @@
-"""Draws the 32x32 pixel icons and writes design/pixel-icons.html (a preview sheet).
+"""Draws the 16x16 pixel icons and writes design/pixel-icons.html (a preview sheet).
 
-Each icon is drawn from simple shapes on a 32x32 grid, then gets a dark outline and
-top-left lighting automatically. The output uses the same format as SPRITES in
+Each icon is drawn from simple shapes in a 32x32 design space and rasterized onto a
+16x16 grid, then gets a dark outline and top-left lighting automatically. The output uses the same format as SPRITES in
 site/index.html: one string per row, one character per pixel, plus a palette.
 """
 import json
 import math
 from pathlib import Path
 
-W = 32
+W = 16          # pixels per side
+D = 32          # the drawing coordinates below use a 32x32 design space
+S = W / D
 OUTLINE = "#120c08"
 POOL = [c for c in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@$%&*+=?"]
 
@@ -26,14 +28,14 @@ class Icon:
         self.flat = set(flat)  # chars that get no lighting (glows, gems, sparks)
 
     def px(self, x, y, c):
-        x, y = int(math.floor(x)), int(math.floor(y))
+        x, y = int(math.floor(x * S)), int(math.floor(y * S))
         if 0 <= x < W and 0 <= y < W:
             self.g[y][x] = c
 
     def each(self, test, c):
         for y in range(W):
             for x in range(W):
-                if test(x + 0.5, y + 0.5):
+                if test((x + 0.5) / S, (y + 0.5) / S):
                     self.g[y][x] = c
 
     def rect(self, x0, y0, x1, y1, c):
@@ -223,21 +225,21 @@ def atiesh():
 
 
 def ashbringer():
-    i = Icon({"s": "#d0d6e4", "f": "#ffffff", "g": "#e8b440", "r": "#c02030", "h": "#4a2a5a", "y": "#fff2a8"}, flat="fry")
-    i.poly([(12.5, 20), (12.5, 5), (16, 0.5), (19.5, 5), (19.5, 20)], "s")
-    i.line(16, 4, 16, 18, "f")
-    # Winged crossguard.
-    i.poly([(4, 16), (10, 19), (16, 20), (22, 19), (28, 16), (27, 22), (20, 24), (12, 24), (5, 22)], "g")
-    i.line(4, 17, 3, 12, "g", 2)
-    i.line(28, 17, 29, 12, "g", 2)
-    i.circle(16, 22, 1.7, "r")
-    i.rect(15, 25, 17, 28, "h")
-    i.circle(16, 29.5, 1.7, "g")
+    """Broad glowing blade, golden wings swept toward the tip, red gem."""
+    i = Icon({"s": "#dfe4ee", "f": "#ffffff", "g": "#e8b440", "r": "#d0202e", "h": "#3a2a3a", "y": "#fff2a8"}, flat="fry")
+    i.line(13, 19, 27, 5, "s", 7)
+    i.poly([(24, 4), (31, 1), (28, 8)], "s")
+    i.line(14, 18, 28, 4, "f")
+    # Wings rise from the guard toward the tip on both sides of the blade.
+    i.poly([(11, 21), (4, 17), (1, 8), (7, 11), (14, 18)], "g")
+    i.poly([(11, 21), (15, 28), (24, 31), (21, 25), (14, 18)], "g")
+    i.circle(11, 21, 2, "r")
+    i.line(10, 22, 5, 27, "h", 2.6)
+    i.circle(4, 28, 2, "g")
 
     def glow(i):
-        for cx, cy in [(8, 6), (24, 9), (9, 12)]:
-            for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
-                i.px(cx + dx, cy + dy, "y")
+        for x, y in [(20, 1), (31, 12), (2, 4)]:
+            i.px(x, y, "y")
     return i.after(glow)
 
 
@@ -308,15 +310,16 @@ def skull():
     i = Icon({"w": "#e8e0c8", "k": "#24161a", "e": "#7dff5a"}, flat="ke")
     i.circle(16, 13, 10.5, "w")
     i.rect(10, 19, 22, 27, "w")
-    i.circle(11.5, 15, 2.8, "k")
-    i.circle(20.5, 15, 2.8, "k")
-    i.rect(11, 14, 12, 15, "e")
+    # Coordinates sit on even numbers so each detail lands on whole 16x16 pixels.
+    i.rect(10, 12, 13, 15, "k")
+    i.rect(18, 12, 21, 15, "k")
+    i.rect(10, 14, 11, 15, "e")
     i.rect(20, 14, 21, 15, "e")
-    i.poly([(16, 17.5), (14, 21.5), (18, 21.5)], "k")
-    i.line(11, 24, 21, 24, "k")
-    for x in (12, 14, 16, 18, 20):
-        i.line(x, 23, x, 26.5, "k")
-    i.path([(17, 3), (15, 6), (17.5, 8), (16, 10)], "k")
+    i.rect(14, 18, 17, 19, "k")
+    i.rect(12, 22, 21, 23, "k")
+    i.rect(14, 22, 15, 23, "w")
+    i.rect(18, 22, 19, 23, "w")
+    i.rect(16, 4, 17, 7, "k")
     return i.finish()
 
 
@@ -336,18 +339,16 @@ def scroll():
 
 
 def coins():
-    i = Icon({"y": "#ffd84a", "Y": "#c8901a", "w": "#fff6c8"}, flat="w")
-    for cy in (27, 24, 21, 18):
-        i.ellipse(10, cy + 1.2, 7.5, 2.8, "Y")
-        i.ellipse(10, cy, 7.5, 2.6, "y")
-    i.circle(21.5, 18.5, 9, "Y")
-    i.circle(21, 18, 8.4, "y")
-    i.ring(21, 18, 5, 6.2, "Y")
-    i.circle(21, 18, 2.4, "Y")
-    i.px(20, 17, "w")
+    """A pile of gold coin stacks."""
+    i = Icon({"y": "#ffd84a", "Y": "#b07a10", "w": "#fff6c8"}, flat="w")
+    # Two separate stacks, the tall one behind.
+    for cx, tops in ((22, (27, 23, 19, 15, 11, 7)), (8, (27, 23, 19))):
+        for cy in tops:
+            i.ellipse(cx, cy + 2, 6.5, 3.2, "Y")
+            i.ellipse(cx, cy, 6.5, 3.2, "y")
 
     def shine(i):
-        for x, y in [(27, 5), (27, 3), (26, 4), (28, 4), (3, 12)]:
+        for x, y in [(28, 4), (4, 12)]:
             i.px(x, y, "w")
     return i.after(shine)
 
@@ -368,23 +369,16 @@ def hourglass():
 
 
 def horseshoe():
-    i = Icon({"s": "#c8ccd8", "k": "#3a3a48", "g": "#ffd84a", "w": "#ffffff"}, flat="kw")
-    i.each(lambda x, y: 36 < (x - 16) ** 2 + (y - 14) ** 2 <= 121 and not (y > 14 and abs(x - 16) < 6), "s")
-    i.rect(5, 14, 10, 25, "s")
-    i.rect(22, 14, 27, 25, "s")
-    i.rect(4, 25, 10, 27, "g")
-    i.rect(22, 25, 28, 27, "g")
-    for x, y in [(8, 9), (12, 5), (20, 5), (24, 9), (7, 15), (25, 15), (7, 21), (25, 21)]:
-        i.px(x, y, "k")
-
-    def speed(i):
-        for y, x0 in ((29, 1), (30, 5), (31, 2)):
-            pass
-        i.line(0, 18, 2, 18, "w")
-        i.line(0, 22, 2, 22, "w")
-        i.line(29, 18, 31, 18, "w")
-        i.line(29, 22, 31, 22, "w")
-    return i.after(speed)
+    """A horse head in profile (riding mounts): mane, ear, eye and a bridle."""
+    i = Icon({"b": "#9a6236", "m": "#3a2418", "k": "#140c08", "g": "#e0a83a"}, flat="k")
+    i.path([(21, 3), (28, 12), (31, 22), (31, 31)], "m", 6)
+    i.poly([(3, 22), (5, 16), (11, 9), (17, 4), (22, 5), (27, 12), (29, 20), (29, 31), (14, 31), (14, 24), (10, 23), (6, 25)], "b")
+    i.poly([(17, 6), (20, 0), (22, 6)], "b")
+    i.rect(14, 10, 15, 11, "k")
+    i.rect(6, 20, 7, 21, "k")
+    i.line(8, 18, 18, 12, "g", 1.6)
+    i.line(18, 12, 17, 24, "g", 1.6)
+    return i.finish()
 
 
 def rocketboots():
@@ -450,15 +444,13 @@ def hearthstone():
 
 
 def bag():
-    i = Icon({"b": "#8a2a22", "k": "#4a1410", "g": "#d9a43a", "y": "#ffd84a"}, flat="ky")
-    i.circle(16, 20, 10.5, "b")
-    i.poly([(11, 4), (21, 4), (19, 10), (13, 10)], "b")
-    i.line(11, 10.5, 21, 10.5, "g", 2.2)
-    i.circle(22, 10, 1.5, "g")
-    for y in range(14, 29, 3):
-        for x in range(8 + (y // 3) % 2 * 2, 26, 4):
-            i.px(x, y, "k")
-    i.circle(16, 4, 2, "y")
+    """A classic leather backpack with a flap and a gold buckle."""
+    i = Icon({"b": "#8a5a30", "B": "#6a3e1e", "g": "#e0a83a", "k": "#3a2414"}, flat="k")
+    i.ring(16, 7, 3, 5.5, "B")
+    i.poly([(6, 12), (9, 9), (23, 9), (26, 12), (27, 29), (5, 29)], "b")
+    i.poly([(5, 11), (9, 8), (23, 8), (27, 11), (27, 18), (16, 22), (5, 18)], "B")
+    i.rect(14, 17, 17, 22, "g")
+    i.rect(8, 24, 23, 25, "k")
     return i.finish()
 
 
@@ -509,16 +501,15 @@ def hunter():
 
 
 def rogue():
-    i = Icon({"s": "#c8ccd8", "g": "#fff569", "k": "#2a2228", "p": "#7dff5a"}, flat="p")
-    i.line(12, 20, 23, 9, "s", 3)
-    i.line(22, 10, 27, 5, "s", 1.6)
-    i.line(8, 16, 16, 24, "k", 2)
-    i.line(12, 20, 7, 25, "k", 2.2)
-    i.circle(6, 26, 1.6, "g")
-    i.line(15, 16, 22, 9, "p")
+    """Two crossed daggers in a reverse grip (points down, unlike the warrior's swords), dripping poison."""
+    i = Icon({"s": "#d0d4de", "k": "#2a2228", "g": "#fff569", "p": "#7dff5a"}, flat="p")
+    sword_at(i, 5, 4, 25, 25, "s", "k", "k")
+    sword_at(i, 27, 4, 7, 25, "s", "k", "k")
+    i.circle(5, 4, 1.8, "g")
+    i.circle(27, 4, 1.8, "g")
 
     def drops(i):
-        for x, y in [(26, 12), (25, 13), (26, 13), (27, 13), (26, 14), (24, 17), (24, 18)]:
+        for x, y in [(4, 28), (4, 30), (28, 28), (28, 30)]:
             i.px(x, y, "p")
     return i.after(drops)
 
@@ -581,12 +572,11 @@ def warlock():
 
 
 def druid():
-    i = Icon({"b": "#b8662a", "w": "#e8dcc0", "g": "#3a8a3a"}, flat="w")
-    i.poly([(20, 24), (30, 22), (27, 30)], "g")
-    i.ellipse(16, 21, 7.5, 6.5, "b")
-    for cx, cy in ((7, 12), (12.5, 7.5), (19.5, 7.5), (25, 12)):
+    i = Icon({"b": "#b8662a"})
+    i.ellipse(16, 22, 9, 7, "b")
+    # Spaced so each toe gets its own pixels with a dark gap between.
+    for cx, cy in ((5, 13), (11, 7), (21, 7), (27, 13)):
         i.circle(cx, cy, 3.2, "b")
-        i.line(cx, cy - 3.5, cx, cy - 5, "w")
     return i.finish()
 
 
@@ -597,16 +587,16 @@ STATS = [
     ("heart", benediction, "Staff of Blessing", "Benediction", "epic", "heart · Healing done"),
     ("axe", orcaxe, "Warchief's Cleaver", "Orcish war axes", "epic", "axe · Killing blows"),
     ("scroll", scroll, "Sealed Orders", "Quest scrolls", "uncommon", "scroll · Quests completed"),
-    ("coin", coins, "Hoard of the Ledger", "Gold, silver, copper", "rare", "coin · Gold looted"),
+    ("coin", coins, "Hoard of the Ledger", "Stacks of gold coins", "rare", "coin · Gold looted"),
     ("clock", hourglass, "Bronze Hourglass", "Hourglass Sand", "rare", "clock · Time played"),
-    ("boot", horseshoe, "Swift Horseshoe", "Riding mounts", "rare", "boot · Distance"),
+    ("boot", horseshoe, "Swift Steed", "Riding mounts", "rare", "boot · Distance"),
     ("spring", rocketboots, "Rocket Treads", "Goblin Rocket Boots", "rare", "spring · Jumps"),
     ("gate", key, "Key of the Deep Halls", "Dungeon keys", "epic", "gate · Dungeon runs"),
     ("shield", shield, "Bulwark of Glory", "Heroic shields", "epic", "shield · Hall of Fame"),
     ("shieldBad", lambda: shield("#8c1c10"), "Bulwark of Shame", "Heroic shields", "poor", "shieldBad · Hall of Shame"),
     ("gear", cog, "Arcane Cog", "Gnomish engineering", "uncommon", "gear · Settings"),
     ("hearth", hearthstone, "Hearthstone", "Hearthstone", "common", "new · hearthstones"),
-    ("loot", bag, "Dragonhide Pack", "Onyxia Hide Backpack", "epic", "new · Loot"),
+    ("loot", bag, "Traveler's Pack", "Traveler's Backpack", "rare", "Loot"),
 ]
 LEGENDS = [
     ("sulfuras", sulfuras, "Hand of the Firelord", "Sulfuras, Hand of Ragnaros", "legendary", "legendary loot, top ranks"),
@@ -619,7 +609,7 @@ CLASSES = [
     ("warrior", warrior, "Warrior", "Crossed blades", "#c79c6e", "class"),
     ("paladin", paladin, "Paladin", "Holy hammer", "#f58cba", "class"),
     ("hunter", hunter, "Hunter", "Bow and arrow", "#abd473", "class"),
-    ("rogue", rogue, "Rogue", "Poisoned dagger", "#fff569", "class"),
+    ("rogue", rogue, "Rogue", "Two poisoned daggers", "#fff569", "class"),
     ("priest", priest, "Priest", "Holy light", "#ffffff", "class"),
     ("shaman", shaman, "Shaman", "Totem", "#0070de", "class"),
     ("mage", mage, "Mage", "Wizard's hat", "#69ccf0", "class"),
@@ -641,7 +631,7 @@ def main():
             sprites[key_] = [rows, pal]
             meta.append({"group": group, "key": key_, "name": name, "inspired": inspired, "rarity": rarity,
                          "color": RARITY.get(rarity, rarity), "replaces": replaces})
-    (root / "icons32.json").write_text(json.dumps(sprites, separators=(",", ":")), encoding="utf8")
+    (root / "icons16.json").write_text(json.dumps(sprites, separators=(",", ":")), encoding="utf8")
     html = (root / "src" / "pixel-icons.template.html").read_text(encoding="utf8")
     html = html.replace("/*SPRITES*/", json.dumps(sprites, separators=(",", ":")))
     html = html.replace("/*META*/", json.dumps(meta))

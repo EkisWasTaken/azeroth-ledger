@@ -50,7 +50,7 @@
 <div class="shell">
   <header>
     <h1>Legendary Pixel Icons</h1>
-    <p class="lede">32×32 icons for Azeroth Ledger, inspired by legendary and memorable Classic gear. All are original pixel art with their own names, drawn in the site's existing sprite format so they drop straight into <code>SPRITES</code>. The border colour is the item's rarity.</p>
+    <p class="lede">16×16 icons for Azeroth Ledger, inspired by legendary and memorable Classic gear. All are original pixel art with their own names, drawn in the site's existing sprite format so they drop straight into <code>SPRITES</code>. The border colour is the item's rarity.</p>
   </header>
 
   <div id="groups" style="display:grid;gap:40px"></div>
@@ -58,7 +58,7 @@
   <section>
     <h2>Sizes</h2>
     <div class="sizes" id="sizes"></div>
-    <p class="note">32×32 should be shown at whole multiples (32, 64 or 96 px) to stay crisp. The current stat tiles show 8×8 sprites at 16 px, so they'd grow to 32 px.</p>
+    <p class="note">16×16 should be shown at whole multiples (16, 32 or 64 px) to stay crisp. The site uses 16 px next to text, 32 px in tiles and cards, and 64 px for shields and portraits.</p>
   </section>
 
   <section>
@@ -79,19 +79,19 @@
   }
   const card = m => `
     <div class="card" style="--r:${m.color}">
-      <div class="slot">${sprite(m.key, 3)}</div>
+      <div class="slot">${sprite(m.key, 6)}</div>
       <div><b>${m.name}</b><i>${m.group === "Classes" ? m.inspired : "Inspired by " + m.inspired}</i><small>${RARITY[m.rarity] ? m.rarity[0].toUpperCase() + m.rarity.slice(1) + " · " : ""}${m.replaces}</small></div>
     </div>`;
   document.getElementById("groups").innerHTML = [...new Set(META.map(m => m.group))].map(g =>
     `<section><h2>${g}</h2><div class="grid">${META.filter(m => m.group === g).map(card).join("")}</div></section>`).join("");
-  document.getElementById("sizes").innerHTML = [[1, "1× · 32 px"], [2, "2× · 64 px"]].map(([px, l]) =>
+  document.getElementById("sizes").innerHTML = [[1, "1× · 16 px"], [2, "2× · 32 px"], [4, "4× · 64 px"]].map(([px, l]) =>
     `<div class="row"><span>${l}</span>${META.map(m => sprite(m.key, px)).join("")}</div>`).join("");
   const tiles = [["skull", "Deaths", "47", true], ["sword", "Damage dealt", "2.4M"], ["heart", "Healing done", "880K"], ["axe", "Killing blows", "1,203"],
     ["scroll", "Quests completed", "214"], ["coin", "Gold looted", "312g"], ["clock", "Time played", "6d 4h"], ["boot", "Distance", "412K yd"],
     ["spring", "Jumps", "18,204"], ["gate", "Dungeon runs", "38"]];
   document.getElementById("themes").innerHTML = [["horde", "Horde"], ["alliance", "Alliance"], ["felfire", "Felfire"]].map(([cls, name]) => `
     <div class="theme ${cls}"><h3>${name}</h3><div class="tiles">${tiles.map(([k, l, v, red]) =>
-      `<div class="tile"><span class="lbl">${sprite(k, 1)}${l}</span><span class="val${red ? " red" : ""}">${v}</span></div>`).join("")}</div></div>`).join("");
+      `<div class="tile"><span class="lbl">${sprite(k, 2)}${l}</span><span class="val${red ? " red" : ""}">${v}</span></div>`).join("")}</div></div>`).join("");
 </script>
 </body>
 </html>
