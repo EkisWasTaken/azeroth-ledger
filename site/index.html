@@ -460,7 +460,12 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 @media (min-width: 1200px) { .pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .deeds-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-@media (min-width: 1000px) { #app[data-route="main"] .deeds-row .tiles { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); } }
+/* wide screens: the tiles in a tidy 3-wide block with the leaders listed beside them */
+@media (min-width: 1000px) {
+  #app[data-route="main"] .deeds-row { grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); grid-template-rows: none; align-items: start; }
+  #app[data-route="main"] .deeds-row .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #app[data-route="main"] .oleads .gleads { grid-template-columns: minmax(0, 1fr); }
+}
 #oLeads { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0 18px; }
 .oleads { gap: 4px; padding: 12px 16px; }
 .oleads .glead { padding: 2px 0; }
@@ -470,6 +475,9 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 }
 .ach.shame { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bad) 40%, var(--line)); }
 .achic { width: 36px; height: 36px; display: grid; place-items: center; background: var(--track); border-radius: 0; clip-path: var(--cut1); box-shadow: inset 0 0 0 1px var(--tc); }
+.achic { position: relative; overflow: hidden; }
+.achic .face { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.achic:has(.face:not([hidden]))::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 2px var(--tc); pointer-events: none; }
 .achic.gold { --tc: #e8b440; }
 .achic.silver { --tc: #c3c7d3; }
 .achic.copper { --tc: #c0763a; }
@@ -652,8 +660,9 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .phero .facts b { font: 800 22px var(--nf); color: var(--ink); }
 .phero .facts span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
 .sig { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-/* Character view: gear on the left, signature stats on the right */
+/* Character view: name and gear on the left, signature stats on the right */
 .pside { display: grid; gap: 22px; }
+.pside-main { display: grid; gap: 22px; align-content: start; min-width: 0; }
 .pside-stats { display: grid; gap: 12px; align-content: start; }
 .plately { display: none; }
 #app:not([data-route="guild"]) .guild-only { display: none !important; }
@@ -685,7 +694,7 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
   #app[data-route="guild"] .deeds-main .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #app[data-route="guild"] .deeds-main .tile .val { font-size: 24px; }
   #app[data-route="guild"] .deeds-main .plately { display: block; contain: size; min-height: 120px; overflow-y: auto; }
-  .pside > #p-sheet { align-self: start; }
+  .pside > .pside-main { align-self: start; }
   .pside-stats { grid-template-rows: auto auto 1fr; }
   /* size-contained: it takes only the height left beside the gear (at least 120px) and scrolls inside */
   .plately { display: block; contain: size; min-height: 120px; overflow-y: auto; }
@@ -812,12 +821,13 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   <div class="banner" id="demoBanner" hidden><p id="bannerText"></p></div>
 
   <section id="profile" aria-labelledby="pName">
-    <div class="frame phero" id="pHero" data-pg="p-overview"></div>
-
     <div class="pside" data-pg="p-overview">
+    <div class="pside-main">
+    <div class="frame phero" id="pHero"></div>
     <div class="frame" id="p-sheet">
       <div class="frame-title"><span>Character Sheet</span><span class="chips" id="pCharPick"></span></div>
       <div id="pSheet" style="display:grid;gap:12px"></div>
+    </div>
     </div>
 
     <div class="pside-stats">
@@ -2471,6 +2481,14 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   // Each achievement shows its icon in a frame coloured by how big it is: gold, silver or copper (red for shame).
   const TIER = { 50: "gold", 25: "silver", 10: "copper" };
   const achIcon = a => `<div class="achic ${a.shame ? "shame" : TIER[a.pts]}">${sprite(a.i, 2)}</div>`;
+  // On the overview the frame shows the winner's face instead (their class icon until it loads, or without one).
+  function achFace(a, p) {
+    const ch = (state.allChars || []).find(c => c.key === p.id);
+    if (!ch || (!ch.avatar && !CLASS[ch.class])) return achIcon(a);
+    const icon = CLASS[ch.class] ? classIcon(ch, 2) : sprite(a.i, 2);
+    const face = ch.avatar ? `<canvas class="face" width="32" height="32" data-src="${esc(ch.avatar)}" role="img" aria-label="${esc(ch.name)}"></canvas><span class="alt" hidden>${icon}</span>` : icon;
+    return `<div class="achic ${a.shame ? "shame" : TIER[a.pts]}">${face}</div>`;
+  }
 
   function renderAchievements(rows) {
     const cards = [];
@@ -2482,20 +2500,21 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       }
       if (!best) continue;
       const w = winners[0];
-      cards.push(`<div data-pts="${a.pts}" class="ach${a.shame ? " shame" : ""}">${achIcon(a)}
+      cards.push(`<div data-pts="${a.pts}" class="ach${a.shame ? " shame" : ""}">${achFace(a, w.p)}
         <div><div class="t">${tr(a.t)}</div><div class="who">${nameHTML(w.p)}${winners.length > 1 ? `<span class="muted" style="font-weight:400;font-size:13px">${tr("+{0} tied", winners.length - 1)}</span>` : ""}</div><div class="d">${a.v(w.s)}</div></div></div>`);
     }
     const played = rows.filter(r => (r.s.played || 0) >= 3600);
     if (played.length > 1) {
       const min = Math.min(...played.map(r => r.s.deaths || 0));
       const w = played.find(r => (r.s.deaths || 0) === min);
-      cards.splice(1, 0, `<div data-pts="50" class="ach">${achIcon({ i: "paladin", pts: 50 })}<div><div class="t">${tr("Unkillable")}</div><div class="who">${nameHTML(w.p)}</div>
+      cards.splice(1, 0, `<div data-pts="50" class="ach">${achFace({ i: "paladin", pts: 50 }, w.p)}<div><div class="t">${tr("Unkillable")}</div><div class="who">${nameHTML(w.p)}</div>
         <div class="d">${tr("{0} in {1}", min ? tr("Only {0} deaths", num(min)) : tr("Didn't die once"), dur(w.s.played))}</div></div></div>`);
     }
     // Biggest achievements first (the sort keeps the list order among equals).
     const pts = c => +c.match(/data-pts="(\d+)"/)[1];
     cards.sort((a, b) => pts(b) - pts(a));
     $("achievements").innerHTML = cards.join("") || `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
+    drawFaces($("achievements"));
     carUpdateAll();
   }
   document.addEventListener("click", e => {
