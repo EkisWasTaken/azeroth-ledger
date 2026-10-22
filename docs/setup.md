@@ -97,7 +97,7 @@ Visitors pick a colour theme (Horde, Alliance or Felfire) and a language (Englis
 
 Stats are always shown for **one realm at a time**. The **Realm** picker groups realms by game (WoW Forever, Hardcore Forever, Anniversary, Classic Era, ...) and starts on the busiest WoW Forever realm, or the busiest realm overall until WoW Forever has data.
 
-Which game a realm belongs to is set at the top of `site/index.html` under `games` and `defaultGame`. A rule can match realm names, a season id or a client version. Realms named in a rule are always listed in the Realm picker, even before anyone uploads; `hardcoreRealms` puts them under "<game> Hardcore". Anniversary is set up this way (Nightslayer, Dreamscythe, Thunderstrike, Spineshatter, plus Doomhowl and Soulseeker as hardcore).
+Which game a realm belongs to is set at the top of `site/index.html` under `games` and `defaultGame`. A rule can match realm names, a season id or a client version. Realms named in a rule are always listed in the Realm picker, even before anyone uploads; `hardcoreRealms` puts them under "<game> Hardcore". Anniversary is set up this way (Nightslayer, Dreamscythe, Thunderstrike, Spineshatter, plus Doomhowl and Soulseeker as hardcore). Other Blizzard clients (TBC, Wrath, Cata and MoP Classic, Retail) have their own version rules, so only clients that match nothing count as WoW Forever.
 
 The Anniversary realms run TBC Classic (client 2.5.6) since January 2026. On those realms the site links items to Wowhead's TBC database and plots levels up to 70.
 
