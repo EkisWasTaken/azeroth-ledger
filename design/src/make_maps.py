@@ -9,6 +9,11 @@ FunStats addon records deaths, level-ups and loot, so markers placed by percenta
   site/maps/era-1415.webp  Eastern Kingdoms   site/maps/tbc-1415.webp  Eastern Kingdoms (with Quel'Thalas)
                                               site/maps/tbc-1945.webp  Outland
 
+and every zone and capital on them the same way, fully explored: a zone's base art is mostly blank parchment,
+and the game fills in each area you discover with an overlay (WorldMapOverlay); all of them are drawn in.
+  site/maps/<build>-<zone map id>.webp, e.g. tbc-1429.webp (Elwynn Forest)
+A zone's map is its own 0-1 map space, the one zone positions (the addon's x, y) are in.
+
 It also writes design/maps-check/<build>-<continent>.png: the same art with every zone's rectangle from
 UiMapAssignment drawn on top, to check by eye that zones and art agree (git-ignored).
 
@@ -16,6 +21,7 @@ Usage: python design/src/make_maps.py   (needs Pillow: pip install pillow; downl
 The map art is Blizzard Entertainment's; the site credits it under the map.
 """
 import csv
+import json
 import os
 import time
 import urllib.request
@@ -73,20 +79,53 @@ def zone_rects(build, cont):
     return out
 
 
-def art(build, cont):
-    """The continent's map art, stitched from its tiles and cropped to the map frame (None if the build lacks it)."""
+def blp(build, file_id):
+    path = fetch(f"https://wago.tools/api/casc/{file_id}?version={BUILDS[build]}&download", os.path.join(CACHE, f"{build}_{file_id}.blp"))
+    return Image.open(path)
+
+
+def zone_ids(build, cont):
+    """The zones and capitals shown on a continent (the same ones zone_rects lists)."""
+    return [int(r["ID"]) for r in table(build, "UiMap") if int(r["ParentUiMapID"]) == cont and int(r["Type"]) == 3]
+
+
+def art(build, ui_map):
+    """A map's art (continent or zone), stitched from its tiles with every discovered-area overlay drawn in,
+    cropped to the map frame (None if the build lacks it)."""
     xart = {int(r["UiMapID"]): int(r["UiMapArtID"]) for r in table(build, "UiMapXMapArt")}
-    if cont not in xart:
+    if ui_map not in xart:
         return None
-    tiles = [r for r in table(build, "UiMapArtTile") if int(r["UiMapArtID"]) == xart[cont] and r["LayerIndex"] == "0"]
+    art_id = xart[ui_map]
+    tiles = [r for r in table(build, "UiMapArtTile") if int(r["UiMapArtID"]) == art_id and r["LayerIndex"] == "0"]
     if not tiles:
         return None
     im = Image.new("RGB", (1024, 768))
     for r in tiles:
-        f = int(r["FileDataID"])
-        path = fetch(f"https://wago.tools/api/casc/{f}?version={BUILDS[build]}&download", os.path.join(CACHE, f"{build}_{f}.blp"))
-        im.paste(Image.open(path).convert("RGB"), (int(r["ColIndex"]) * 256, int(r["RowIndex"]) * 256))
+        im.paste(blp(build, int(r["FileDataID"])).convert("RGB"), (int(r["ColIndex"]) * 256, int(r["RowIndex"]) * 256))
+    pieces = {}
+    for r in table(build, "WorldMapOverlayTile"):
+        if r["LayerIndex"] == "0":
+            pieces.setdefault(int(r["WorldMapOverlayID"]), []).append(r)
+    for o in table(build, "WorldMapOverlay"):
+        if int(o["UiMapArtID"]) != art_id:
+            continue
+        w, h = int(o["TextureWidth"]), int(o["TextureHeight"])
+        ov = Image.new("RGBA", (w + 256, h + 256))
+        for r in pieces.get(int(o["ID"]), []):
+            ov.paste(blp(build, int(r["FileDataID"])).convert("RGBA"), (int(r["ColIndex"]) * 256, int(r["RowIndex"]) * 256))
+        ov = ov.crop((0, 0, w, h))
+        im.paste(ov, (int(o["OffsetX"]), int(o["OffsetY"])), ov)
     return im.crop((0, 0) + FRAME)
+
+
+def write_index():
+    """site/maps/index.json: the zone maps that exist, per build, so the site only lets those be opened."""
+    index = {}
+    for f in sorted(os.listdir(OUT)):
+        build, _, rest = f.partition("-")
+        if f.endswith(".webp") and rest[:-5].isdigit() and int(rest[:-5]) not in CONTINENTS:
+            index.setdefault(build, []).append(int(rest[:-5]))
+    json.dump(index, open(os.path.join(OUT, "index.json"), "w"), separators=(",", ":"))
 
 
 def main():
@@ -108,6 +147,12 @@ def main():
                 g.text(((box[0] + box[2]) / 2, (box[1] + box[3]) / 2), n, font=font, fill=(255, 255, 0), anchor="mm", stroke_width=2, stroke_fill=(0, 0, 0))
             check.save(os.path.join(CHECK, f"{build}-{cont}.png"))
             print(f"{build} {name}: {os.path.getsize(path) // 1024} KB")
+            for zone in zone_ids(build, cont):
+                zim = art(build, zone)
+                if zim is not None:
+                    zim.save(os.path.join(OUT, f"{build}-{zone}.webp"), "WEBP", quality=86, method=6)
+                    write_index()
+            print(f"  {len(zone_ids(build, cont))} zones")
 
 
 if __name__ == "__main__":

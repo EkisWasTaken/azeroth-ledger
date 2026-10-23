@@ -438,6 +438,14 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .mapworld img, .maplabels, .mapmarks { position: absolute; inset: 0; width: 100%; height: 100%; }
 /* the game's map art fills the box exactly (same 3:2 frame), so marker percentages are map coordinates */
 .mapworld img { display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+/* the glide into a zone and back out */
+.mapworld.anim { transition: width .38s cubic-bezier(.3, .1, .25, 1), height .38s cubic-bezier(.3, .1, .25, 1), left .38s cubic-bezier(.3, .1, .25, 1), top .38s cubic-bezier(.3, .1, .25, 1); }
+.map.can-open:not(.dragging) { cursor: pointer; }
+/* the hovered zone's name, at the top of the map like in the game */
+.maphover { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; padding: 4px 14px; pointer-events: none;
+  font: 400 22px/1.2 var(--hf); color: #ffd36b; text-shadow: 0 1px 0 #000, 0 0 6px #000, 0 0 12px #000; white-space: nowrap; }
+.mapcrumbs { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 13px; color: var(--muted); }
+.mapcrumbs .linkbtn { padding: 6px 0; color: var(--accent); }
 .mapzoom { position: absolute; right: 8px; top: 8px; z-index: 4; display: grid; gap: 4px; }
 .mapzoom .pstep { width: 34px; height: 34px; padding: 0; background: var(--panel2); box-shadow: inset 0 0 0 1px var(--line); border-radius: 9px; font-size: 18px; }
 .maphint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; padding: 5px 10px; font-size: 13px;

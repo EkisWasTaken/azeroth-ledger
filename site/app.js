@@ -229,6 +229,8 @@
     "You are here": "Du är här", "Realm ledger": "Realmens liggare", "Go back": "Tillbaka", "Realm pages": "Realmens sidor", "Guild pages": "Gillets sidor",
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
     "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
+    "Atlas": "Atlas", "Loot & Gold": "Loot & guld", "Back to {0}": "Tillbaka till {0}",
+    "Click a zone to open its map. Right-click to zoom back out.": "Klicka på en zon för att öppna dess karta. Högerklicka för att zooma ut igen.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
     "Achievements": "Bedrifter", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
     "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Trollboken", "Bonds": "Band", "Full Ledger": "Hela liggaren",
@@ -700,13 +702,17 @@
   const CITY = /orgrimmar|thunder bluff|darnassus|stormwind|ironforge|undercity|silvermoon|exodar|shattrath/i;
 
   // ---------- map zoom and pan ----------
-  // Each continent keeps its own view; the first time it's shown it zooms in on where things happened.
-  const mapView = () => { const m = state.map; return ((m.views ||= {})[m.cont] ||= { z: 1, x: 0, y: 0, fitted: false }); };
-  function applyMapView() {
+  // Each map (continent, zone or city) keeps its own view; a continent's first view zooms in on where things happened.
+  const mapKey = () => state.map.zone || state.map.cont;
+  const mapView = () => { const m = state.map; return ((m.views ||= {})[mapKey()] ||= { z: 1, x: 0, y: 0, fitted: false }); };
+  // free: no limits, for the zoom into and out of a zone (which goes far past the usual 4x)
+  function applyMapView(free) {
     const v = mapView(), box = $("map"), W = box.clientWidth, H = box.clientHeight;
-    v.z = Math.min(4, Math.max(1, v.z));
-    v.x = Math.min(0, Math.max(W - W * v.z, v.x));
-    v.y = Math.min(0, Math.max(H - H * v.z, v.y));
+    if (!free) {
+      v.z = Math.min(4, Math.max(1, v.z));
+      v.x = Math.min(0, Math.max(W - W * v.z, v.x));
+      v.y = Math.min(0, Math.max(H - H * v.z, v.y));
+    }
     const w = $("mapWorld").style;
     w.width = v.z * 100 + "%"; w.height = v.z * 100 + "%"; w.left = v.x + "px"; w.top = v.y + "px";
     box.classList.toggle("z2", v.z >= 1.8);
@@ -731,6 +737,69 @@
     v.x = W / 2 - (x0 + x1) / 200 * W * v.z;
     v.y = H / 2 - (y0 + y1) / 200 * H * v.z;
   }
+  // ---------- zones: click one to zoom into its own map, right-click to zoom back out (as the game's map does) ----------
+  const zoneById = id => (((pickAtlas()[state.map.cont] || {}).zones) || []).find(z => z.id === +id);
+  // a zone's rectangle in the open map's 0-100 space (the continent's own, or relative to the open zone)
+  function rectOnOpen(z) {
+    const p = state.map.zone && zoneById(state.map.zone);
+    if (!p) return z;
+    const sx = 100 / (p.x1 - p.x0), sy = 100 / (p.y1 - p.y0);
+    return { x0: (z.x0 - p.x0) * sx, x1: (z.x1 - p.x0) * sx, y0: (z.y0 - p.y0) * sy, y1: (z.y1 - p.y0) * sy };
+  }
+  // What a click at x, y (0-100 on the open map) opens: on a continent the smallest zone there (capitals are
+  // opened from their zone, as in the game); in a zone, a capital inside it; in a capital, nothing.
+  function mapHit(x, y) {
+    const m = state.map, zones = ((pickAtlas()[m.cont] || {}).zones) || [], open = m.zone && zoneById(m.zone);
+    if (open && CITY.test(open.n)) return null;
+    const cx = open ? open.x0 + (open.x1 - open.x0) * x / 100 : x, cy = open ? open.y0 + (open.y1 - open.y0) * y / 100 : y;
+    const built = (state.mapIndex || {})[mapGame()] || [];
+    const hits = zones.filter(z => z !== open && built.includes(z.id) && CITY.test(z.n) === !!open && cx >= z.x0 && cx <= z.x1 && cy >= z.y0 && cy <= z.y1);
+    return hits.sort((a, b) => (a.x1 - a.x0) * (a.y1 - a.y0) - (b.x1 - b.x0) * (b.y1 - b.y0))[0] || null;
+  }
+  const mapSrc = id => `maps/${mapGame()}-${id}.webp`;
+  // which zone maps were built (site/maps/index.json, written by make_maps.py): only those can be opened
+  fetch("maps/index.json").then(r => (r.ok ? r.json() : {})).then(ix => { state.mapIndex = ix; }).catch(() => { state.mapIndex = {}; });
+  const loadArt = src => { const im = new Image(); im.src = src; return (im.decode ? im.decode() : Promise.resolve()).catch(() => {}); };
+  // Runs a change of view as a glide (or at once, with reduced motion or Settings > Animations off).
+  async function glide(change) {
+    const w = $("mapWorld"), still = reduceMotion || document.documentElement.classList.contains("calm");
+    if (!still) { w.classList.add("anim"); void w.offsetWidth; }
+    change();
+    if (!still) { await new Promise(r => setTimeout(r, 380)); w.classList.remove("anim"); }
+  }
+  // The view that makes a rectangle (0-100 on the open map) fill the box.
+  function viewOnto(r) {
+    const W = $("map").clientWidth, H = $("map").clientHeight, z = Math.min(100 / (r.x1 - r.x0), 100 / (r.y1 - r.y0));
+    return { z, x: W / 2 - (r.x0 + r.x1) / 200 * W * z, y: H / 2 - (r.y0 + r.y1) / 200 * H * z };
+  }
+  let mapBusy = false;
+  async function openZone(z) {
+    if (mapBusy) return;
+    mapBusy = true;
+    $("mapTip").hidden = true; $("mapHover").hidden = true;
+    const m = state.map;
+    await loadArt(mapSrc(z.id)); // straight in once its art is ready; the map underneath keeps its view for the way back
+    (m.trail ||= []).push(m.zone || "");
+    m.zone = String(z.id);
+    m.views[m.zone] = { z: 1, x: 0, y: 0, fitted: true };
+    mapBusy = false;
+    render();
+  }
+  async function closeZone() {
+    const m = state.map;
+    if (mapBusy || !m.zone) return;
+    mapBusy = true;
+    $("mapTip").hidden = true; $("mapHover").hidden = true;
+    const child = zoneById(m.zone);
+    m.zone = (m.trail || []).pop() || "";
+    const view = mapView(), back = { ...view };
+    render();
+    // start on the zone's rectangle, then glide back to where the map was before
+    if (child) { Object.assign(view, viewOnto(rectOnOpen(child))); applyMapView(true); }
+    await glide(() => { Object.assign(view, back); applyMapView(); });
+    mapBusy = false;
+  }
+
   // Drag, pinch, Ctrl + scroll and the zoom buttons (wired up once the page helpers exist).
   function initMapZoom() {
     const box = $("map"), pts = new Map();
@@ -776,7 +845,26 @@
       e.preventDefault();
       zoomMap(Math.exp(-e.deltaY * .0025), ...rel(e.clientX, e.clientY));
     }, { passive: false });
-    box.addEventListener("dblclick", e => { if (!e.target.closest(".mapzoom, .mk")) zoomMap(1.6, ...rel(e.clientX, e.clientY)); });
+    // where the pointer is on the open map, 0-100
+    const at = e => { const [rx, ry] = rel(e.clientX, e.clientY), v = mapView(); return [(rx - v.x) / (box.clientWidth * v.z) * 100, (ry - v.y) / (box.clientHeight * v.z) * 100]; };
+    let hovered = null;
+    box.addEventListener("mousemove", e => {
+      if (pts.size || mapBusy) return;
+      const z = e.target.closest(".mapzoom, .mk") ? null : mapHit(...at(e));
+      box.classList.toggle("can-open", !!z);
+      if (z === hovered) return;
+      hovered = z;
+      $("mapHover").hidden = !z;
+      if (z) { $("mapHover").textContent = z.n; loadArt(mapSrc(z.id)); }
+    });
+    box.addEventListener("mouseleave", () => { hovered = null; $("mapHover").hidden = true; box.classList.remove("can-open"); });
+    box.addEventListener("click", e => {
+      if (e.target.closest(".mapzoom, .mk")) return;
+      const z = mapHit(...at(e));
+      if (z) openZone(z);
+    });
+    box.addEventListener("contextmenu", e => { if (state.map.zone) { e.preventDefault(); closeZone(); } });
+    box.addEventListener("dblclick", e => { if (!e.target.closest(".mapzoom, .mk") && !mapHit(...at(e))) zoomMap(1.6, ...rel(e.clientX, e.clientY)); });
     box.querySelector(".mapzoom").addEventListener("click", e => {
       const b = e.target.closest("[data-zoom]");
       if (!b) return;
@@ -834,21 +922,37 @@
     if (!conts.includes(m.cont)) {
       const busiest = conts.map(c => [c, all.filter(e => e.cont === c).length]).sort((a, b) => b[1] - a[1])[0];
       m.cont = busiest ? busiest[0] : conts[0] || "";
+      m.zone = ""; m.trail = [];
     }
+    if (m.zone && !zoneById(m.zone)) { m.zone = ""; m.trail = []; }
+    const open = m.zone ? zoneById(m.zone) : null;
     $("mapConts").innerHTML = conts.map(c => `<button type="button" class="chip" data-cont="${c}" aria-pressed="${c === m.cont}">${esc(atlas[c].n)}</button>`).join("");
     document.querySelectorAll("#s-map [data-layer]").forEach(b => b.setAttribute("aria-pressed", String(!!m.layers[b.dataset.layer])));
     $("mapWho").innerHTML = `<option value="">${tr("Everyone")}</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
     $("mapWho").value = m.who;
 
-    const art = $("mapArt"), src = `maps/${game}-${m.cont}.webp`;
+    const art = $("mapArt"), src = mapSrc(m.zone || m.cont);
     if (art.getAttribute("src") !== src) art.src = src;
-    art.alt = tr("Map of {0}", atlas[m.cont].n);
-    // zone names (shown once zoomed in) in the middle of each zone's rectangle
-    $("mapLabels").innerHTML = (atlas[m.cont].zones || []).map(z => {
+    art.alt = tr("Map of {0}", open ? open.n : atlas[m.cont].n);
+    // the way back up: continent, zone, capital
+    const trail = [m.cont, ...(m.trail || []).filter(Boolean), m.zone].filter(Boolean);
+    $("mapCrumbs").innerHTML = trail.length > 1
+      ? `<button type="button" class="linkbtn" data-mapup="1">‹ ${esc(tr("Back to {0}", trail.length > 2 ? zoneById(trail[trail.length - 2]).n : atlas[m.cont].n))}</button><span>${trail.map((id, i) => esc(i ? zoneById(id).n : atlas[m.cont].n)).join(" › ")}</span>`
+      : "";
+    // zone names (shown once zoomed in) in the middle of each zone's rectangle; a zone's own map has its names in the art
+    $("mapLabels").innerHTML = open ? "" : (atlas[m.cont].zones || []).map(z => {
       const cls = CITY.test(z.n) ? "city" : z.x1 - z.x0 < 9 ? "small" : "";
       return `<span class="${cls}" style="left:${(z.x0 + z.x1) / 2}%;top:${(z.y0 + z.y1) / 2}%">${esc(z.n)}</span>`;
     }).join("");
-    const shown = all.filter(e => e.cont === m.cont && m.layers[e.kind]);
+    // On a zone's map: the zone position when it was recorded in that zone, else the continent position through the zone's rectangle.
+    const place = e => {
+      if (!open) return e.cont === m.cont ? e : null;
+      if (e.d.map != null && +e.d.map === open.id && e.d.x != null) return { ...e, x: e.d.x, y: e.d.y };
+      if (e.cont !== m.cont) return null;
+      const x = (e.x - open.x0) / (open.x1 - open.x0) * 100, y = (e.y - open.y0) / (open.y1 - open.y0) * 100;
+      return x >= 0 && x <= 100 && y >= 0 && y <= 100 ? { ...e, x, y } : null;
+    };
+    const shown = all.filter(e => m.layers[e.kind]).map(place).filter(Boolean);
     state.mapShown = shown;
     $("mapMarks").classList.remove("replaying");
     $("mapMarks").innerHTML = shown.map((e, i) =>
@@ -885,7 +989,8 @@
   }
   document.addEventListener("click", e => {
     const c = e.target.closest("#mapConts [data-cont]"), l = e.target.closest("#s-map [data-layer]"), mk = e.target.closest(".mk");
-    if (c) { state.map.cont = c.dataset.cont; render(); }
+    if (c) { state.map.cont = c.dataset.cont; state.map.zone = ""; state.map.trail = []; render(); }
+    if (e.target.closest("[data-mapup]")) closeZone();
     if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; render(); }
     if (mk) showMapTip(mk);
     else if (!e.target.closest("#mapTip")) { const t = document.getElementById("mapTip"); if (t) t.hidden = true; }
@@ -2419,7 +2524,7 @@
   // Pages: [id, label, icon]. Each page shows only the sections tagged with its data-pg.
   const MAIN_PAGES = [
     ["overview", "Overview", "scroll"], ["meters", "Meters & Combat", "sword"], ["deaths", "Deaths", "skull"],
-    ["loot", "Loot & World", "loot"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
+    ["atlas", "Atlas", "map"], ["loot", "Loot & Gold", "loot"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
   ];
   const PROFILE_PAGES = [
     ["p-overview", "Character", "ashbringer"], ["p-activity", "Activity", "clock"], ["p-records", "Records", "shield"], ["p-compare", "Compare", "sword"],

@@ -297,7 +297,7 @@
     </div>
   </section>
 
-  <section id="s-map" data-pg="deaths" aria-labelledby="h-map">
+  <section id="s-map" data-pg="atlas" aria-labelledby="h-map">
     <div class="sec-head"><h2 id="h-map">Map of the Fallen</h2></div>
     <div class="mapbar">
       <span class="maptabs" id="mapConts" role="group" aria-label="Continent"></span>
@@ -308,6 +308,7 @@
       </span>
       <label class="toggle" for="mapWho"><span>Who</span> <select id="mapWho" class="sel"></select></label>
       <button type="button" class="btn" id="mapReplay">Replay</button>
+      <span class="mapcrumbs" id="mapCrumbs"></span>
     </div>
     <div class="mapgrid">
       <div class="frame mapframe">
@@ -323,6 +324,7 @@
             <button type="button" class="pstep" data-zoom="fit" aria-label="Show the whole continent">⤢</button>
           </div>
           <div class="maphint" id="mapHint" hidden>Ctrl + scroll to zoom · drag to move</div>
+          <div class="maphover" id="mapHover" hidden></div>
           <div class="maptip" id="mapTip" hidden></div>
         </div>
       </div>
@@ -332,6 +334,7 @@
       </div>
     </div>
     <p class="muted mapnote" id="mapNote"></p>
+    <p class="muted mapnote">Click a zone to open its map. Right-click to zoom back out.</p>
     <p class="muted mapnote">Map art © Blizzard Entertainment.</p>
   </section>
 
@@ -381,7 +384,7 @@
     </div>
   </section>
 
-  <section id="s-world" data-pg="loot" aria-labelledby="h-world">
+  <section id="s-world" data-pg="atlas" aria-labelledby="h-world">
     <div class="sec-head"><h2 id="h-world">Atlas of Azeroth</h2></div>
     <div class="duo even">
     <div class="frame">
