@@ -486,7 +486,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .deeds-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 /* the stat cards in a row across the page, the leaders in columns under them */
 #app[data-route="main"] .deeds-row { grid-template-rows: none; }
-#oLeads { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0 18px; }
+#oLeads { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 28px; }
 .oleads { gap: 4px; padding: 12px 16px; }
 .oleads .glead { padding: 2px 0; }
 .ach {
@@ -516,7 +516,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .dot { width: 10px; height: 10px; flex: none; display: inline-block; box-shadow: none; border-radius: 0; }
 .cicon { display: inline-flex; flex: none; vertical-align: middle; }
 #pName .cicon { margin: -8px 14px -8px 0; }
-.cname { font-weight: 700; }
+.cname { font: 400 1.2em/1.1 var(--hf); letter-spacing: .01em; }
 a.plink { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 a.plink:hover .cname { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
@@ -700,10 +700,18 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .grow .n small { display: block; font: 400 11px var(--pf); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .grow .n.red { color: var(--bad); }
 .groster .lh { font: 400 13px var(--pf); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 6px; }
-.gleads { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 6px 18px; }
-.glead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 5px 0; font-size: 14px; }
-.glead .lbl { font: 600 14px var(--lf); color: color-mix(in srgb, var(--ink) 82%, var(--muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.glead .n { font: 800 14px var(--nf); font-variant-numeric: tabular-nums; }
+.gleads { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 6px 18px; }
+/* Fixed column shares, so names start at the same spot on every row; the <guild> tag sits right-aligned just in front. */
+.glead { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) 5.5em; gap: 8px; align-items: center; padding: 5px 0; font-size: 14px; }
+.glead .lbl { font: 500 14px var(--lf); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.glead .n { font: 800 14px var(--nf); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.glead.wg { grid-template-columns: auto minmax(0, 1fr) minmax(0, .8fr) minmax(0, 1fr) 5.5em; }
+.glead .plink { overflow: hidden; }
+/* The tag reads as part of the name: same font, size and baseline, a dimmer shade of the name colour, and a tighter gap. */
+.glead .gtag a.glink { font-weight: inherit; color: color-mix(in srgb, var(--accent) 50%, var(--muted)); }
+.glead .gtag { font: 400 16px/1.1 var(--hf); letter-spacing: .01em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: baseline; margin-right: -4px; }
+.glead.wg .plink { align-self: baseline; }
+.glead .cname { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plately .lh { font: 400 13px var(--pf); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 0 6px; }
 .plately .lh ~ .lh { margin-top: 14px; }
 .plately .clog { max-height: none; overflow: visible; padding-right: 0; }

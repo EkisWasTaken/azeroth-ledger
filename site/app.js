@@ -2222,9 +2222,11 @@
   const LEAD = [["sword", "Damage dealt", "dmg", compact], ["heart", "Healing done", "heal", compact], ["axe", "Killing blows", "kb", num],
     ["skull", "Deaths", "deaths", num], ["scroll", "Quests completed", "quests", num], ["coin", "Gold looted", "goldIn", goldHTML],
     ["clock", "Time played", "played", dur], ["spring", "Jumps", "jumps", num], ["boot", "Distance", "dist", yards]];
-  const leadsHTML = (rows, n = LEAD.length) => LEAD.slice(0, n).map(([icon, label, f, fmt]) => {
+  // The guild page leaves out the <guild> tag, since everyone there shares it.
+  const leadsHTML = (rows, n = LEAD.length, guilds = true) => LEAD.slice(0, n).map(([icon, label, f, fmt]) => {
     const best = rows.slice().sort((a, b) => (b.s[f] || 0) - (a.s[f] || 0))[0];
-    return best && best.s[f] ? `<div class="glead">${sprite(icon, 1)}<span class="lbl">${tr(label)}</span><a class="plink" href="${profileHref(best.p)}"><span class="cname">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
+    const g = guilds && best && best.p.chars[0] && best.p.chars[0].guild ? guildLink(best.p.chars[0]) : "";
+    return best && best.s[f] ? `<div class="glead${guilds ? " wg" : ""}">${sprite(icon, 1)}<span class="lbl">${tr(label)}</span>${guilds ? `<span class="gtag">${g}</span>` : ""}<a class="plink" href="${profileHref(best.p)}"><span class="cname">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
   }).join("");
 
   function renderGuildSide(rows, people) {
@@ -2239,7 +2241,7 @@
         <span class="n${deaths ? " red" : ""}">${num(deaths)}<small>${tr("deaths")}</small></span>
       </div>`;
     }).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
-    const leads = leadsHTML(rows);
+    const leads = leadsHTML(rows, LEAD.length, false);
     if (leads && rows.length > 1) $("gRoster").innerHTML += `<div class="lh">${tr("Leaders")}</div><div class="gleads">${leads}</div>`;
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
