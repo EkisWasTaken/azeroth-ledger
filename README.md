@@ -72,7 +72,7 @@ In-game commands are optional: `/funstats` shows today's numbers, and `/funstats
 
 <img src="docs/images/h-owners.png" alt="Run your own" width="100%">
 
-The website is a single HTML file you can host for free (Cloudflare Pages, Netlify or GitHub Pages), backed by a free Supabase project. The **[setup guide](docs/setup.md)** walks through the database, hosting, the Blizzard API and building the app. The **[testing checklist](TESTING.md)** covers a full test run on an Anniversary realm.
+The website is a static page, live at **[azeroth-ledger.pages.dev](https://azeroth-ledger.pages.dev)** on Cloudflare Pages, backed by a free Supabase project. Every push to `main` publishes it. The **[setup guide](docs/setup.md)** walks through the database, hosting, the Blizzard API and building the app. The **[testing checklist](TESTING.md)** covers a full test run on an Anniversary realm.
 
 <br>
 
@@ -82,9 +82,10 @@ The website is a single HTML file you can host for free (Cloudflare Pages, Netli
 |---|---|
 | [`FunStats/`](FunStats) | The WoW addon (Lua): `FunStats.lua` records, `Sync.lua` shares stats between players |
 | [`app/`](app) | The Windows app (C#, built with the compiler that ships with Windows: `app\build.cmd`) |
-| [`site/`](site) | The website: one `index.html` (vanilla JS, Chart.js, Wowhead tooltips), plus the downloads |
+| [`site/`](site) | The website: `index.html`, `app.js`, `styles.css` and `config.js` (vanilla JS, Chart.js, Wowhead tooltips), plus the downloads |
 | [`supabase/`](supabase) | Database setup (SQL) and the `armory` Edge Function for the Blizzard API |
 | [`sync/`](sync) | A Python uploader for Mac and Linux |
+| [`tests/`](tests) | Checks for the upload rules and the uploaders |
 | [`docs/`](docs) | The setup guide, and the README artwork (`docs/src/make_images.py` regenerates it) |
 
 The pixel logo lives in [`app/logo.py`](app/logo.py) as a 16×16 grid and is shared by the app icon, the website and this README.

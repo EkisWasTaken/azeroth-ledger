@@ -33,7 +33,7 @@ HEADINGS = {
 
 def build_art():
     """art.html with the site's pixel sprites filled in."""
-    site = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    site = (ROOT / "site" / "app.js").read_text(encoding="utf-8")
     a = site.index("  const SPRITES = {")
     b = site.index("\n  };", a)
     sprites = site[a + len("  const SPRITES = "):b + 4].strip().rstrip(";")

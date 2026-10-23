@@ -4,19 +4,19 @@ A checklist for trying FunStats, the Ledger app and the site on an Anniversary r
 
 The Anniversary realms run TBC Classic (client 2.5.6) since January 2026, so that's what this tests. Uploads go to the real Supabase database, so everything you upload shows on the site. Step 8 cleans it up before launch.
 
-## 1. Run the site on your PC
+## 1. Open the site
 
-The site isn't hosted yet. From the `Azeroth Ledger` folder:
+The site is live at https://azeroth-ledger.pages.dev. To test changes you haven't pushed yet, run it on your PC instead, from the `Azeroth Ledger` folder:
 
 ```bash
 python -m http.server 8000 --directory site
 ```
 
-Open http://localhost:8000. Keep that window running while you test.
+and open http://localhost:8000.
 
 ## 2. Install with the Ledger app
 
-1. Run `site\AzerothLedger.exe` (or download it from **Add stats** at http://localhost:8000). If Windows says it protected your PC, click **More info → Run anyway**.
+1. Run `site\AzerothLedger.exe` (or download it from **Add stats** on the site). If Windows says it protected your PC, click **More info → Run anyway**.
 2. A tray message says "Azeroth Ledger is running", and a small shield icon appears in the tray (it may be hidden under the **^** arrow).
 3. Right-click the shield and choose **Show log**. It should say it installed `FunStats.toc`, `FunStats.lua` and `Sync.lua` in `_anniversary_` (and `_classic_era_`).
 
@@ -42,7 +42,7 @@ Type `/funstats`. The numbers should be going up.
 
 Log out (or `/reload`). Within about 20 seconds the tray status (right-click the shield) should change to "Uploaded …", and **Show log** lists your character.
 
-**Check on the site** (reload http://localhost:8000):
+**Check on the site** (reload it):
 - [ ] The Realm menu shows your realm under Anniversary (or Anniversary Hardcore), with your character. The example data is gone.
 - [ ] **Character view:** gear with Wowhead icons (hover an item for its TBC tooltip), talents, professions, signature stats and Lately.
 - [ ] **Activity:** charts, recent deaths with the right cause, zones, loot. The level chart goes to 70.
@@ -75,7 +75,7 @@ If it says `"found": 0`, Blizzard probably doesn't serve these realms under the 
 
 ## 8. Before WoW Forever launches: clear the test data
 
-In Supabase, open **Table Editor**. Delete all rows in **entries**, then all rows in **claims**. Deleting the claims frees the test characters' names, so they can be claimed again.
+In Supabase, open **Table Editor**. Delete all rows in **entries**, then all rows in **claims** (and in **hidden** and **blocked_uploaders**, if you used them). Deleting the claims frees the test characters' names, so they can be claimed again.
 
 The app can stay installed: it picks up the WoW Forever folder by itself and installs the addon there too.
 

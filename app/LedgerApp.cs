@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
 
 namespace AzerothLedger
 {
@@ -32,8 +32,9 @@ namespace AzerothLedger
     {
         public const string SupabaseUrl = "https://nznnybzrqplsqyhotlnd.supabase.co";
         public const string PublishableKey = "sb_publishable_RNaALyd2OI4jthFr0FvFRA_2CCRxzRE";
-        // The website's address once it is online (empty: the "Open the Ledger" menu item is hidden).
-        public const string SiteUrl = "";
+        // The website's address (empty: no "Open the Ledger" menu item and no update checks).
+        // The app checks SiteUrl/app-version.txt for a newer version of itself; build.cmd writes that file.
+        public const string SiteUrl = "https://azeroth-ledger.pages.dev";
         public const string AppName = "Azeroth Ledger";
         public const string RunValue = "AzerothLedger";
         public const int MaxRowsPerBatch = 40;
@@ -575,6 +576,7 @@ namespace AzerothLedger
         readonly Dictionary<string, DateTime> seen = new Dictionary<string, DateTime>(); // file -> last write handled
         List<string> roots = new List<string>();
         DateTime lastScan = DateTime.MinValue;
+        DateTime lastUpdateCheck = DateTime.MinValue;
         int busy;
 
         [STAThread]
@@ -615,14 +617,14 @@ namespace AzerothLedger
             string me = Assembly.GetExecutingAssembly().Location;
             if (!string.Equals(Path.GetFullPath(me), Path.GetFullPath(InstalledExe), StringComparison.OrdinalIgnoreCase))
             {
-                // First run (or a newer download): replace the running copy, start with Windows, launch it.
+                // First run (or a newer download, or an update): replace the running copy, start with Windows, launch it.
                 try
                 {
                     foreach (var p in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(InstalledExe)))
                         if (p.Id != Process.GetCurrentProcess().Id) try { p.Kill(); p.WaitForExit(3000); } catch { }
                     File.Copy(me, InstalledExe, true);
                     SetAutostart(true);
-                    Process.Start(new ProcessStartInfo(InstalledExe, "--welcome") { UseShellExecute = false });
+                    Process.Start(new ProcessStartInfo(InstalledExe, args.Contains("--updated") ? "--updated" : "--welcome") { UseShellExecute = false });
                 }
                 catch (Exception e)
                 {
@@ -636,6 +638,7 @@ namespace AzerothLedger
             {
                 if (!first) return; // already running
                 Application.EnableVisualStyles();
+                if (args.Contains("--updated")) Log("Updated to version " + Assembly.GetExecutingAssembly().GetName().Version);
                 Application.Run(new App(args.Contains("--welcome")));
             }
         }
@@ -699,10 +702,40 @@ namespace AzerothLedger
                     }
                     if (roots.Count == 0) SetStatus("Looking for World of Warcraft…");
                     else if (files.Count == 0) SetStatus("Waiting for your first logout in WoW");
+                    CheckForUpdate();
                 }
                 catch (Exception e) { Log("Error: " + e.Message); }
                 finally { Interlocked.Exchange(ref busy, 0); }
             });
+        }
+
+        // Every 6 hours (and at start), asks the website for sitepp-version.txt ("<version> <sha256>", written by
+        // build.cmd). When it names a newer version, downloads the new app, checks it against the hash and starts it;
+        // like a fresh download, it closes this copy and installs itself in its place. The addon comes with it.
+        void CheckForUpdate()
+        {
+            if (Config.SiteUrl == "" || (DateTime.UtcNow - lastUpdateCheck).TotalHours < 6) return;
+            lastUpdateCheck = DateTime.UtcNow;
+            try
+            {
+                string site = Config.SiteUrl.TrimEnd('/');
+                string[] parts;
+                using (var wc = new WebClient()) parts = wc.DownloadString(site + "/app-version.txt?t=" + DateTime.UtcNow.Ticks).Trim().Split(' ');
+                Version latest;
+                if (parts.Length < 2 || !Version.TryParse(parts[0], out latest)) return;
+                if (latest <= Assembly.GetExecutingAssembly().GetName().Version) return;
+                byte[] exe;
+                using (var wc = new WebClient()) exe = wc.DownloadData(site + "/AzerothLedger.exe?v=" + latest);
+                string hash;
+                using (var sha = SHA256.Create()) hash = BitConverter.ToString(sha.ComputeHash(exe)).Replace("-", "");
+                if (!string.Equals(hash, parts[1], StringComparison.OrdinalIgnoreCase)) { Log("Update to " + latest + " skipped: the download didn't match app-version.txt"); return; }
+                string path = Path.Combine(DataDir, "update", "AzerothLedger.exe");
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllBytes(path, exe);
+                Log("Updating to version " + latest);
+                Process.Start(new ProcessStartInfo(path, "--updated") { UseShellExecute = false });
+            }
+            catch (Exception e) { Log("Update check failed: " + e.Message); }
         }
 
         // Copies the addon bundled in this app into a flavour's AddOns folder when it's missing or different.
