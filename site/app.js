@@ -717,6 +717,14 @@
   // the in-game map frame, so a position's percentages on it are the game's own map coordinates, the same ones the
   // addon records and the zone rectangles above use.
   const MAP_ART = { era: ["1414", "1415", "947"], tbc: ["1414", "1415", "1945", "947"], mop: ["947"] };
+  // The maps with a tab of their own: Azeroth (where every map starts), and Outland, which isn't on it.
+  // Kalimdor and the Eastern Kingdoms open from Azeroth, and right-clicking them goes back out to it.
+  const MAP_TABS = ["947", "1945"];
+  // The world map a continent opens from (Azeroth), if it has one.
+  const worldOf = id => {
+    const w = pickAtlas()["947"];
+    return id !== "947" && w && (w.zones || []).some(z => String(z.id) === id) ? "947" : null;
+  };
   const CITY = /orgrimmar|thunder bluff|darnassus|stormwind|ironforge|undercity|silvermoon|exodar|shattrath/i;
 
   // ---------- map zoom and pan ----------
@@ -799,13 +807,16 @@
     mapBusy = false;
     render();
   }
+  // Back out one level: a zone to its continent, a continent to Azeroth.
   async function closeZone() {
-    const m = state.map;
-    if (mapBusy || !m.zone) return;
+    const m = state.map, up = !m.zone && worldOf(m.cont);
+    if (mapBusy || (!m.zone && !up)) return;
     mapBusy = true;
     $("mapTip").hidden = true; $("mapHover").hidden = true;
-    const child = zoneById(m.zone);
-    m.zone = (m.trail || []).pop() || "";
+    const from = m.zone || m.cont;
+    if (m.zone) m.zone = (m.trail || []).pop() || "";
+    else Object.assign(m, { cont: up, trail: [] });
+    const child = zoneById(from);
     const view = mapView(), back = { ...view };
     render();
     // start on the zone's rectangle, then glide back to where the map was before
@@ -877,7 +888,7 @@
       const z = mapHit(...at(e));
       if (z) openZone(z);
     });
-    box.addEventListener("contextmenu", e => { if (state.map.zone) { e.preventDefault(); closeZone(); } });
+    box.addEventListener("contextmenu", e => { if (state.map.zone || worldOf(state.map.cont)) { e.preventDefault(); closeZone(); } });
     box.addEventListener("dblclick", e => { if (!e.target.closest(".mapzoom, .mk") && !mapHit(...at(e))) zoomMap(1.6, ...rel(e.clientX, e.clientY)); });
     box.querySelector(".mapzoom").addEventListener("click", e => {
       const b = e.target.closest("[data-zoom]");
@@ -939,14 +950,16 @@
     const conts = MAP_ART[game].filter(c => atlas[c] && (c !== "1945" || all.some(e => e.cont === c)));
     $("s-map").classList.toggle("nomap", !conts.length);
     if (!conts.length) return;
-    if (!conts.includes(m.cont)) {
+    // Each realm starts on Azeroth (or, without it, on the continent where most happened).
+    if (m.realm !== state.realm || !conts.includes(m.cont)) {
       const busiest = conts.map(c => [c, all.filter(e => e.cont === c).length]).sort((a, b) => b[1] - a[1])[0];
-      m.cont = busiest ? busiest[0] : conts[0] || "";
-      m.zone = ""; m.trail = [];
+      m.cont = conts.includes("947") ? "947" : busiest ? busiest[0] : conts[0] || "";
+      m.zone = ""; m.trail = []; m.realm = state.realm;
     }
     if (m.zone && !zoneById(m.zone)) { m.zone = ""; m.trail = []; }
     const open = m.zone ? zoneById(m.zone) : null;
-    $("mapConts").innerHTML = conts.map(c => `<button type="button" class="chip" data-cont="${c}" aria-pressed="${c === m.cont}">${esc(atlas[c].n)}</button>`).join("");
+    const tabs = conts.filter(c => MAP_TABS.includes(c) || !worldOf(c));
+    $("mapConts").innerHTML = tabs.map(c => `<button type="button" class="chip" data-cont="${c}" aria-pressed="${c === (worldOf(m.cont) || m.cont)}">${esc(atlas[c].n)}</button>`).join("");
     document.querySelectorAll("#s-map [data-layer]").forEach(b => b.setAttribute("aria-pressed", String(!!m.layers[b.dataset.layer])));
     $("mapWho").innerHTML = `<option value="">${tr("Everyone")}</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
     $("mapWho").value = m.who;
@@ -954,10 +967,11 @@
     const art = $("mapArt"), src = mapSrc(m.zone || m.cont);
     if (art.getAttribute("src") !== src) art.src = src;
     art.alt = tr("Map of {0}", open ? open.n : atlas[m.cont].n);
-    // the way back up: continent, zone, capital
-    const trail = [m.cont, ...(m.trail || []).filter(Boolean), m.zone].filter(Boolean);
-    $("mapCrumbs").innerHTML = trail.length > 1
-      ? `<button type="button" class="linkbtn" data-mapup="1">‹ ${esc(tr("Back to {0}", trail.length > 2 ? zoneById(trail[trail.length - 2]).n : atlas[m.cont].n))}</button><span>${trail.map((id, i) => esc(i ? zoneById(id).n : atlas[m.cont].n)).join(" › ")}</span>`
+    // the way back up: Azeroth, continent, zone, capital
+    const world = worldOf(m.cont);
+    const path = [...(world ? [atlas[world].n] : []), atlas[m.cont].n, ...[...(m.trail || []), m.zone].filter(Boolean).map(id => zoneById(id).n)];
+    $("mapCrumbs").innerHTML = path.length > 1
+      ? `<button type="button" class="linkbtn" data-mapup="1">‹ ${esc(tr("Back to {0}", path[path.length - 2]))}</button><span>${path.map(esc).join(" › ")}</span>`
       : "";
     // zone names (shown once zoomed in) in the middle of each zone's rectangle; a zone's own map has its names in the art
     $("mapLabels").innerHTML = open ? "" : (atlas[m.cont].zones || []).map(z => {
