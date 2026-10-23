@@ -23,7 +23,7 @@ A public stats site for WoW Forever (and the Anniversary / Classic Era realms wh
 - **Guild pages** (`#/g/...`): the roster with leaders, the guild's deeds and latest loot and deaths, plus its own leaderboards and Hall of Fame.
 - **Character pages** (`#/c/Name-Realm`): gear (Wowhead icons and tooltips) next to signature stats, then activity charts, records and a **Compare** panel. If the addon saw several characters on the same WoW account, the page lists "Other characters by this player".
 - **Search** in the navigation bar finds characters and guilds across all realms.
-- **Map of the Fallen** (on the Deaths view): every death, level-up and rare drop on pixel maps of Kalimdor, the Eastern Kingdoms and Outland, with a replay and the deadliest zones. Drag to move, Ctrl + scroll or pinch to zoom. FunStats 1.1 and newer save the positions (older deaths are converted at the next login). The continents are painted by hand over the game's own map art with the kit in [design/map-trace](../design/map-trace/README.md); the map appears on the site once a continent has been painted and imported.
+- **Map of the Fallen** (on the Deaths view): every death, level-up and rare drop on the game's own world maps of Kalimdor, the Eastern Kingdoms and Outland (Classic Era or TBC art, matching the realm's client), with a replay and the deadliest zones. Drag to move, Ctrl + scroll or pinch to zoom; zone names show once zoomed in. FunStats 1.1 and newer save the positions; older records that only have a zone position are placed through the zone's rectangle, as the game does. The maps are built from the client's map art on [wago.tools](https://wago.tools) by `python design/src/make_maps.py` (needs Pillow) into `site/maps/`; it also writes check images with every zone's rectangle drawn over the art to `design/maps-check/`. The art is Blizzard's, credited under the map.
 
 Each page is split into a few views: Overview, Meters & Combat, Deaths, Loot & World, Characters and Add stats on realm and guild pages; Character, Activity, Records and Compare on character pages. Pick them from the tab bar, or from the **View** menu on phones.
 
@@ -144,6 +144,7 @@ Once WoW Forever is out, check its version with `/run print(GetBuildInfo())`. Ad
 | `site/` | The website: `index.html`, `app.js` (code and Swedish text), `styles.css`, `config.js` (Supabase keys, games and realms), plus `AzerothLedger.exe`, `FunStats.zip` and `app-version.txt` (written by `app\build.cmd`) |
 | `sync/` | Python uploader, for Mac/Linux or anyone without the app |
 | `supabase/setup.sql`, `supabase/public-uploads.sql`, `supabase/hardening.sql` | Database setup, upload checks, moderation |
+| `design/src/make_maps.py`, `site/maps/` | The Map of the Fallen's continent maps, built from the game's map art |
 | `tests/` | Checks for the upload rules and the uploaders (see [Tests](#tests)) |
 | `supabase/functions/armory/`, `supabase/armory.sql` | Blizzard armory sync |
 | `TESTING.md` | Checklist for testing on Anniversary |

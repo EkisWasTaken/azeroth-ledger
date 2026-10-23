@@ -12,8 +12,8 @@ __pycache__/
 Thumbs.db
 desktop.ini
 
-# map tracing kit: Blizzard's map art and the download cache stay local
-design/map-trace/.cache/
-design/map-trace/*-reference.png
-design/map-trace/*-check.png
-design/map-trace/*.ase
+# map builder (design/src/make_maps.py): the download cache and the alignment check images
+design/.map-cache/
+design/maps-check/
+# the retired map tracing kit's local files (safe to delete)
+design/map-trace/

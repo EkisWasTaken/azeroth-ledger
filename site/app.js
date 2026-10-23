@@ -221,6 +221,14 @@
     "<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or upload your FunStats.lua under Add stats.": "<strong>Exempeldata.</strong> Karaktärerna är påhittade så att du kan se hur sidan fungerar. Välj din realm i Realm-menyn eller ladda upp din FunStats.lua under Lägg till.",
     "<strong>No stats on {0} yet.</strong> Be the first: upload your FunStats.lua under Add stats.": "<strong>Ingen statistik på {0} än.</strong> Bli först: ladda upp din FunStats.lua under Lägg till.",
     // navigation
+    "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
+    "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
+    "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Byte",
+    "Loot quality": "Bytets kvalitet", "Most wanted": "Mest efterlyst", "Responsible for {0} death": "Ansvarig för {0} dödsfall", "Responsible for {0} deaths": "Ansvarig för {0} dödsfall",
+    "Hero": "Hjälte", "{0} drop": "{0} fynd", "{0} drops": "{0} fynd", "Best drop": "Bästa fyndet", "death": "dödsfall", "deaths": "dödsfall",
+    "You are here": "Du är här", "Realm ledger": "Realmens liggare", "Go back": "Tillbaka", "Realm pages": "Realmens sidor", "Guild pages": "Gillets sidor",
+    "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
+    "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
     "Achievements": "Bedrifter", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
     "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Trollboken", "Bonds": "Band", "Full Ledger": "Hela liggaren",
@@ -679,120 +687,24 @@
   // A spot somewhere inside a zone (example data only).
   function fallbackSpot(zone, rnd) {
     for (const [cont, a] of Object.entries(ATLAS_ERA)) {
-      if (!a.zones) continue;
-      const z = a.zones.find(q => q.n === zone);
-      if (!z) continue;
-      const land = landOf(ATLAS_ERA, cont, "era"), zi = a.zones.indexOf(z);
-      for (let tries = 0; tries < 30; tries++) {
-        const cx = z.x0 + (z.x1 - z.x0) * rnd(), cy = z.y0 + (z.y1 - z.y0) * rnd();
-        if (!land || land.cells[Math.floor(cy / 100 * MH) * MW + Math.floor(cx / 100 * MW)] === zi) return { cont, cx, cy };
-      }
-      return { cont, cx: (z.x0 + z.x1) / 2, cy: (z.y0 + z.y1) / 2 };
+      const z = a.zones && a.zones.find(q => q.n === zone);
+      if (z) return { cont, cx: z.x0 + (z.x1 - z.x0) * (.3 + .4 * rnd()), cy: z.y0 + (z.y1 - z.y0) * (.3 + .4 * rnd()) };
     }
     return {};
   }
 
-  // The continents as painted over the game's own map art (see design/map-trace/README.md), on the site's
-  // 450x300 grid: each row is "zone*count" runs, an empty zone meaning water; zones are game zone ids.
-  // MAP-TRACED-START: the painted zone maps, written by design/src/import_map.py (don't edit by hand)
-  const TRACED = {"tbc":{},"era":{}};
-  // MAP-TRACED-END
-  const MW = 450, MH = 300, landCache = new Map();
-  const mapHash = (i, j) => { const x = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return x - Math.floor(x); };
-  const mapNoise = (x, y, k) => {
-    const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
-    const a = mapHash(i + k, j), b = mapHash(i + 1 + k, j), c = mapHash(i + k, j + 1), d = mapHash(i + 1 + k, j + 1);
-    return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
-  };
-  // A continent's cells (-1 water, else the index of its zone in the atlas), how far each water cell is
-  // from land (for shallow and deep water), and a spot inside each zone for its label. Null until painted.
-  function landOf(atlas, cont, game) {
-    const t = (TRACED[game] || {})[cont], key = `${game}:${cont}:${atlas.v}`;
-    if (!t) return null;
-    if (landCache.has(key)) return landCache.get(key);
-    const zones = (atlas[cont] || {}).zones || [], byId = new Map(zones.map((z, i) => [z.id, i]));
-    const N = MW * MH, cells = new Int16Array(N).fill(-1);
-    t.rle.split("/").forEach((row, j) => {
-      let i = 0;
-      for (const run of row.split(",")) {
-        const [v, n = "1"] = run.split("*"), count = +n;
-        const zi = v === "" ? undefined : byId.get(t.ids[+v]);
-        if (zi !== undefined) cells.fill(zi, j * MW + i, j * MW + i + count);
-        i += count;
-      }
-    });
-    // labels go on the zone's cell closest to its middle (the middle itself can be outside a curved zone)
-    const sum = zones.map(() => [0, 0, 0]);
-    for (let k = 0; k < N; k++) if (cells[k] >= 0) { const s = sum[cells[k]]; s[0] += k % MW; s[1] += (k - k % MW) / MW; s[2]++; }
-    const best = zones.map(() => [Infinity, -1]);
-    for (let k = 0; k < N; k++) {
-      const c = cells[k];
-      if (c < 0) continue;
-      const [x, y, n] = sum[c], d = (k % MW - x / n) ** 2 + ((k - k % MW) / MW - y / n) ** 2;
-      if (d < best[c][0]) best[c] = [d, k];
-    }
-    const centers = best.map(([, k], c) => (k < 0 ? null : { x: (k % MW + .5) / MW * 100, y: ((k - k % MW) / MW + .5) / MH * 100, size: sum[c][2] }));
-    const dist = new Uint8Array(N).fill(255), queue = [];
-    for (let k = 0; k < N; k++) if (cells[k] >= 0) { dist[k] = 0; queue.push(k); }
-    for (let q = 0; q < queue.length; q++) {
-      const k = queue[q], i = k % MW, j = (k - i) / MW, d = dist[k] + 1;
-      if (d > 12) continue;
-      for (const n of [i > 0 ? k - 1 : -1, i < MW - 1 ? k + 1 : -1, j > 0 ? k - MW : -1, j < MH - 1 ? k + MW : -1]) {
-        if (n >= 0 && dist[n] > d) { dist[n] = d; queue.push(n); }
-      }
-    }
-    const out = { zones, cells, dist, centers };
-    landCache.set(key, out);
-    return out;
-  }
-  const mapRgb = hex => { const h = (hex || "#000").replace("#", ""); const n = parseInt(h.length === 3 ? h.replace(/./g, c => c + c) : h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
-  const mapShade = ([r, g, b], t) => t >= 0 ? [r + (255 - r) * t, g + (255 - g) * t, b + (255 - b) * t] : [r * (1 + t), g * (1 + t), b * (1 + t)];
-  // Terrain by zone name: a type for the texture and a base colour (dimmed to sit in the dark theme).
+  // The continents' map art from the game client, built by design/src/make_maps.py into site/maps/. Each image is
+  // the in-game map frame, so a position's percentages on it are the game's own map coordinates, the same ones the
+  // addon records and the zone rectangles above use.
+  const MAP_ART = { era: ["1414", "1415"], tbc: ["1414", "1415", "1945"] };
   const CITY = /orgrimmar|thunder bluff|darnassus|stormwind|ironforge|undercity|silvermoon|exodar|shattrath/i;
-  const TERRAIN = [[CITY, "city", "#7a7068"], [/winter|morogh|alterac|everlook/i, "snow", "#9aa6b4"],
-    [/tanaris|silithus|barrens|desolace|badlands|thousand|hellfire|un.goro|durotar/i, "desert", "#8e7646"],
-    [/marsh|swamp|sorrows|zangar/i, "swamp", "#405a4a"],
-    [/searing|burning|steppes|blasted|blade|shadowmoon|netherstorm|deadwind|stonetalon/i, "rock", "#6e5040"],
-    [/plague|ghost|tirisfal|felwood|silverpine/i, "blight", "#545040"],
-    [/westfall|mulgore|nagrand|arathi|hillsbrad|loch|redridge|wetlands|azuremyst|bloodmyst/i, "grass", "#5a7438"],
-    [/./, "forest", "#3a5e36"]];
-  const terrainOf = z => { const t = TERRAIN.find(([re]) => re.test(z.n)); return { type: t[1], col: mapShade(mapRgb(t[2]), -.22) }; };
-  function drawLand(land) {
-    const cv = $("mapCanvas"), g = cv.getContext("2d"), img = g.createImageData(MW, MH), px = img.data;
-    const bg = mapRgb(css("--bg")), deep = bg.map((c, k) => c * .5 + [14, 32, 58][k] * .5);
-    const mid = mapShade(deep, .07), shallow = mapShade(deep, .16), foam = mapShade(deep, .38), glint = mapShade(deep, .3);
-    const ter = land.zones.map(terrainOf), { cells, dist } = land;
-    const at = (i, j) => (i < 0 || j < 0 || i >= MW || j >= MH ? -1 : cells[j * MW + i]);
-    for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) {
-      const k = j * MW + i, c = cells[k], h = mapHash(i, j);
-      let col;
-      if (c < 0) {
-        const d = dist[k];
-        col = d <= 1 ? foam : d <= 4 ? shallow : d <= 10 ? mid : (h < .0015 || (i > 0 && mapHash(i - 1, j) < .0015) ? glint : deep);
-      } else {
-        const { type, col: f } = ter[c];
-        if (at(i - 1, j) < 0 || at(i + 1, j) < 0 || at(i, j - 1) < 0 || at(i, j + 1) < 0) col = mapShade(f, -.55);
-        else if ((at(i + 1, j) !== c || at(i, j + 1) !== c) && (i + j) % 2 === 0) col = type === "city" ? mapShade(f, -.4) : mapShade(f, .25);
-        else if (type === "forest") col = h < .16 ? mapShade(f, -.3) : h > .965 ? mapShade(f, .14) : f;
-        else if (type === "grass") col = h < .05 ? mapShade(f, -.2) : h > .975 ? mapShade(f, .15) : f;
-        else if (type === "desert") col = (i + Math.round(mapNoise(i / 10, j / 10, 7) * 10)) % 9 === 0 ? mapShade(f, .12) : h < .03 ? mapShade(f, -.15) : f;
-        else if (type === "snow") col = h < .12 ? mapShade(f, .25) : h > .985 ? mapShade(f, -.2) : f;
-        else if (type === "swamp") col = h < .14 ? shallow : h > .97 ? mapShade(f, .12) : f;
-        else if (type === "rock") col = h < .1 ? mapShade(f, .16) : h > .9 ? mapShade(f, -.28) : f;
-        else if (type === "blight") col = h < .1 ? mapShade(f, -.28) : h > .985 ? [96, 118, 64] : f;
-        else col = i % 4 === 0 || j % 4 === 0 ? mapShade(f, -.32) : h < .2 ? mapShade(f, .1) : f;
-      }
-      px[k * 4] = col[0]; px[k * 4 + 1] = col[1]; px[k * 4 + 2] = col[2]; px[k * 4 + 3] = 255;
-    }
-    g.putImageData(img, 0, 0);
-  }
 
   // ---------- map zoom and pan ----------
   // Each continent keeps its own view; the first time it's shown it zooms in on where things happened.
   const mapView = () => { const m = state.map; return ((m.views ||= {})[m.cont] ||= { z: 1, x: 0, y: 0, fitted: false }); };
   function applyMapView() {
     const v = mapView(), box = $("map"), W = box.clientWidth, H = box.clientHeight;
-    v.z = Math.min(6, Math.max(1, v.z));
+    v.z = Math.min(4, Math.max(1, v.z));
     v.x = Math.min(0, Math.max(W - W * v.z, v.x));
     v.y = Math.min(0, Math.max(H - H * v.z, v.y));
     const w = $("mapWorld").style;
@@ -875,11 +787,22 @@
   }
 
   const MAP_ICON = { deaths: () => "skull", dings: () => "crit", loot: e => (e.d.q >= 4 ? "lotus" : "loot") };
+  // Where on its continent something happened: the addon's own continent position, or, for records uploaded
+  // without one, the zone position placed through the zone's rectangle (what C_Map.GetMapRectOnMap does in game).
+  function contSpot(d, atlas) {
+    if (d.cx != null) return { cont: String(d.cont), x: d.cx, y: d.cy };
+    if (d.map == null || d.x == null || d.y == null) return null;
+    for (const [cont, a] of Object.entries(atlas)) {
+      const z = a && a.zones && a.zones.find(q => q.id === +d.map);
+      if (z) return { cont, x: z.x0 + (z.x1 - z.x0) * d.x / 100, y: z.y0 + (z.y1 - z.y0) * d.y / 100 };
+    }
+    return null;
+  }
   // Everything with a continent position in the chosen range, oldest first.
   function mapEvents(people) {
-    const out = [], ok = t => t && inRange(localKey(t));
+    const out = [], ok = t => t && inRange(localKey(t)), atlas = pickAtlas();
     for (const p of people) {
-      for (const d of p.deaths) if (d.cx != null && ok(d.t)) out.push({ kind: "deaths", p, t: d.t, cont: String(d.cont), x: d.cx, y: d.cy, d });
+      for (const d of p.deaths) { const at = ok(d.t) && contSpot(d, atlas); if (at) out.push({ kind: "deaths", p, t: d.t, ...at, d }); }
       for (const n of p.notable) if (n.cx != null && ok(n.t)) out.push({ kind: "loot", p, t: n.t, cont: String(n.cont), x: n.cx, y: n.cy, d: n });
       for (const ch of p.chars) for (const [lvl, sp] of Object.entries(ch.dingAt || {})) {
         const t = (ch.levels || {})[lvl];
@@ -904,9 +827,8 @@
     const atlas = pickAtlas(), game = mapGame();
     if (!people.some(p => p.id === m.who)) m.who = "";
     const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people);
-    // Kalimdor and the Eastern Kingdoms always; Outland once something happened there.
-    // (only continents that have been painted; the section stays hidden until one has)
-    const conts = ["1414", "1415", "1945"].filter(c => atlas[c] && (TRACED[game] || {})[c] && (c !== "1945" || all.some(e => e.cont === c)));
+    // Kalimdor and the Eastern Kingdoms always; Outland (TBC clients only) once something happened there.
+    const conts = ["1414", "1415", "1945"].filter(c => atlas[c] && MAP_ART[game].includes(c) && (c !== "1945" || all.some(e => e.cont === c)));
     $("s-map").classList.toggle("nomap", !conts.length);
     if (!conts.length) return;
     if (!conts.includes(m.cont)) {
@@ -918,13 +840,13 @@
     $("mapWho").innerHTML = `<option value="">${tr("Everyone")}</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
     $("mapWho").value = m.who;
 
-    const land = landOf(atlas, m.cont, game);
-    drawLand(land);
-    $("mapLabels").innerHTML = land.zones.map((z, i) => {
-      const c = land.centers[i];
-      if (!c) return "";
-      const cls = CITY.test(z.n) ? "city" : c.size < 1500 ? "small" : "";
-      return `<span class="${cls}" style="left:${c.x}%;top:${c.y}%">${esc(z.n)}</span>`;
+    const art = $("mapArt"), src = `maps/${game}-${m.cont}.webp`;
+    if (art.getAttribute("src") !== src) art.src = src;
+    art.alt = tr("Map of {0}", atlas[m.cont].n);
+    // zone names (shown once zoomed in) in the middle of each zone's rectangle
+    $("mapLabels").innerHTML = (atlas[m.cont].zones || []).map(z => {
+      const cls = CITY.test(z.n) ? "city" : z.x1 - z.x0 < 9 ? "small" : "";
+      return `<span class="${cls}" style="left:${(z.x0 + z.x1) / 2}%;top:${(z.y0 + z.y1) / 2}%">${esc(z.n)}</span>`;
     }).join("");
     const shown = all.filter(e => e.cont === m.cont && m.layers[e.kind]);
     state.mapShown = shown;
@@ -946,7 +868,7 @@
       ? top.map(([z, n]) => `<div class="zl"><span>${esc(z)}</span><span class="n">${num(n)}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span></div>`).join("")
         + (foe ? `<p class="muted" style="margin-top:6px">${tr("Top killer: {0}", `<b style="color:var(--ink)">${esc(foe[0])}</b> (${num(foe[1])})`)}</p>` : "")
       : `<p class="empty">${tr("No deaths in this range. Impressive.")}</p>`;
-    const unplaced = deaths.filter(d => d.cx == null).length;
+    const unplaced = deaths.filter(d => !contSpot(d, pickAtlas())).length;
     $("mapNote").textContent = [
       unplaced ? tr("{0} deaths happened before positions were saved (FunStats 1.1), so they're only counted, not placed.", num(unplaced)) : "",
     ].filter(Boolean).join(" ");
@@ -984,22 +906,22 @@
     const C = window.Chart;
     C.defaults.color = css("--muted");
     C.defaults.borderColor = "rgba(255,255,255,.05)";
-    C.defaults.font.family = '"Inter", system-ui, sans-serif';
+    C.defaults.font.family = '"DM Sans", system-ui, sans-serif';
     C.defaults.font.size = 11;
     C.defaults.maintainAspectRatio = false;
     C.defaults.animation = false;          // instant updates; no lag when switching stats, weeks or themes
     C.defaults.resizeDelay = 120;          // don't redraw on every pixel while a window is being resized
     C.defaults.normalized = true;
     Object.assign(C.defaults.plugins.tooltip, {
-      backgroundColor: css("--panel2"), borderColor: css("--rim"), borderWidth: 1, cornerRadius: 8, padding: { x: 12, y: 9 },
-      caretSize: 0, caretPadding: 10, titleColor: css("--ink"), bodyColor: css("--ink"), titleMarginBottom: 6,
-      titleFont: { family: '"Inter", sans-serif', weight: "600", size: 12 }, bodyFont: { family: '"Inter", sans-serif', size: 12 },
+      backgroundColor: css("--ink"), borderWidth: 0, cornerRadius: 8, padding: { x: 12, y: 9 },
+      caretSize: 6, caretPadding: 8, titleColor: css("--bg"), bodyColor: css("--bg"), titleMarginBottom: 6,
+      titleFont: { family: '"DM Sans", sans-serif', weight: "700", size: 12 }, bodyFont: { family: '"DM Sans", sans-serif', size: 12 },
       boxWidth: 8, boxHeight: 8, boxPadding: 6, usePointStyle: true,
       filter: item => item.raw !== 0 && item.raw !== null,   // skip rows with nothing to say
     });
     Object.assign(C.defaults.plugins.legend.labels, {
       usePointStyle: true, pointStyle: "circle", boxWidth: 7, boxHeight: 7, padding: 14, color: css("--muted"),
-      font: { family: '"Inter", sans-serif', size: 12, weight: "500" },
+      font: { family: '"DM Sans", sans-serif', size: 12, weight: "500" },
     });
     C.defaults.plugins.legend.align = "start";
   }
@@ -1026,23 +948,24 @@
     for (const ds of sets) {
       if (type === "bar") {
         Object.assign(ds, {
-          borderSkipped: stacked ? "start" : false, borderRadius: stacked ? 0 : 2,
+          borderSkipped: stacked ? "start" : false, borderRadius: stacked ? 0 : 6,
           borderWidth: stacked ? 1 : 0, borderColor: css("--panel"),
           maxBarThickness: horizontal ? 16 : 36, categoryPercentage: .7, barPercentage: .9,
         });
         if (!ds.hoverBackgroundColor) ds.hoverBackgroundColor = ds.backgroundColor;
       } else if (type === "line") {
         ds._c = ds.borderColor;
-        const single = sets.length === 1;
+        const filled = sets.length === 1 || ds.area;
         Object.assign(ds, {
           // a series with only a point or two shows its dots, or there would be nothing to see
           tension: .35, cubicInterpolationMode: "monotone", borderWidth: 2, pointRadius: ds.data.length < 3 ? 4 : 0, pointHoverRadius: 5, pointHitRadius: 10,
           pointBackgroundColor: ds._c, pointBorderColor: css("--panel"), pointBorderWidth: 2,
-          fill: single ? "origin" : false, backgroundColor: single ? fadeFill(ds._c) : ds._c,
+          fill: filled ? "origin" : false, backgroundColor: filled ? fadeFill(ds._c) : ds._c,
+          borderWidth: ds.borderDash ? 1.8 : 2.5,
         });
       } else if (type === "doughnut") {
-        Object.assign(ds, { borderColor: css("--panel"), borderWidth: 2, hoverOffset: 4 });
-        o.cutout = "72%";
+        Object.assign(ds, { borderColor: css("--panel"), borderWidth: 3, hoverOffset: 4, borderRadius: 4 });
+        o.cutout = "76%";
       } else if (type === "radar") {
         Object.assign(ds, { borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, backgroundColor: alpha(ds.borderColor, "14") });
       }
@@ -1061,7 +984,7 @@
         chart.$hl = idx;
         chart.data.datasets.forEach((d, i) => {
           d.borderColor = idx < 0 || i === idx ? d._c : alpha(d._c, "38");
-          d.borderWidth = i === idx ? 3 : 2;
+          d.borderWidth = i === idx ? 3 : d.borderDash ? 1.8 : 2.5;
         });
         chart.update("none");
       };
@@ -1270,7 +1193,7 @@
     ];
     // Stats nobody has touched yet are left out; deaths always show (zero deaths is worth bragging about).
     const raw = [1, t.dmg, t.heal, t.kb, t.quests, t.goldIn, t.played, t.dist, t.jumps, t.dungeons];
-    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([icon, l, v, f]) => `<div class="frame tile"><span class="lbl">${sprite(icon, 1)}<span>${l}</span></span><span class="val">${v}</span><span class="foot">${f || ""}</span></div>`).join("");
+    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([icon, l, v, f]) => `<div class="frame tile"><span class="ticon">${sprite(icon, 2)}</span><span class="tbody"><span class="lbl">${l}</span><span class="val">${v}</span><span class="foot">${f || ""}</span></span></div>`).join("");
   }
 
   const ACH = [
@@ -1368,15 +1291,7 @@
   function renderDaily(people) {
     const m = METRICS.find(x => x.k === state.metric) || METRICS[0];
     $("dailyTitle").textContent = state.view === "all" ? tr("{0} per week", tr(m.label)) : tr("{0} per day", tr(m.label));
-    let labels, keys;
-    if (state.view === "all") {
-      const ws = weeksAvailable(people);
-      keys = ws.map(w => [...Array(7)].map((_, i) => addDays(w, i)));
-      labels = ws.map(shortDate);
-    } else {
-      keys = [...Array(7)].map((_, i) => [addDays(state.week, i)]);
-      labels = keys.map(([k]) => dow(parseDay(k).getUTCDay()) + " " + parseDay(k).getUTCDate());
-    }
+    const { labels, keys } = periodDays(people);
     if (!people.length || !labels.length) return drawChart("cDaily", null);
     const isGold = m.fmt === goldText, isDur = m.fmt === dur;
     const scale = v => isGold ? v / 10000 : isDur ? v / 3600 : v;
@@ -1396,6 +1311,61 @@
         plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${isGold ? goldText(c.raw * 10000) : isDur ? dur(c.raw * 3600) : num(c.raw)}` } } },
       },
     });
+  }
+
+  // The chart columns for the time range: one per day of the week, or one per week for all time (each a list of days).
+  function periodDays(people) {
+    if (state.view === "all") {
+      const ws = weeksAvailable(people);
+      return { keys: ws.map(w => [...Array(7)].map((_, i) => addDays(w, i))), labels: ws.map(shortDate) };
+    }
+    const keys = [...Array(7)].map((_, i) => [addDays(state.week, i)]);
+    return { keys, labels: keys.map(([k]) => dow(parseDay(k).getUTCDay()) + " " + parseDay(k).getUTCDate()) };
+  }
+
+  // Overview: everyone's damage (a filled line) and healing (dashed) across the time range.
+  function renderMomentum(people) {
+    const { labels, keys } = periodDays(people);
+    const sum = f => keys.map(ks => people.reduce((a, p) => a + ks.reduce((b, k) => b + ((p.days[k] && p.days[k][f]) || 0), 0), 0));
+    const dmg = sum("dmg"), heal = sum("heal");
+    drawChart("cMomentum", labels.length && (dmg.some(Boolean) || heal.some(Boolean)) ? {
+      type: "line",
+      data: { labels, datasets: [
+        { label: tr("Damage"), data: dmg, borderColor: css("--accent"), area: true },
+        { label: tr("Healing"), data: heal, borderColor: css("--good"), borderDash: [5, 5] },
+      ] },
+      options: { scales: { x: gridX, y: { ...gridY, beginAtZero: true, ticks: { ...gridY.ticks, callback: v => compact(v) } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${num(c.raw)}` } } } },
+    } : null);
+  }
+
+  // Overview: the characters ranked by damage, with level and deaths, each row opening the character.
+  function renderStandings(rows) {
+    const list = rows.filter(r => r.s.dmg || r.s.played).sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0));
+    $("standAll").hidden = list.length <= 6;
+    $("standings").innerHTML = list.length
+      ? `<div class="st-head"><span>${tr("Hero")}</span><span>${tr("Level")}</span><span>${tr("Damage")}</span><span>${tr("Deaths")}</span><span></span></div>` +
+        list.slice(0, 6).map((r, i) => {
+          const ch = r.p.chars[0] || {}, deaths = r.s.deaths || 0;
+          return `<a class="st-row" href="${profileHref(r.p)}"><span class="st-hero"><b>${i + 1}</b><span class="st-av" style="--c:${r.p.color}">${classIcon(ch, 2)}</span><span class="st-nm"><strong>${esc(r.p.name)}</strong><small>${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}</small></span></span><span class="st-lvl">${esc(ch.level || "–")}</span><strong class="st-n">${compact(r.s.dmg)}</strong><span class="st-n${deaths >= 5 ? " red" : ""}">${num(deaths)}</span><span class="st-go" aria-hidden="true">›</span></a>`;
+        }).join("")
+      : `<p class="empty">${tr("No stats yet.")}</p>`;
+  }
+
+  // Overview: green-or-better drops by quality as one bar, and the best drop of the time range.
+  function renderLootQuality(rows, people) {
+    const qs = [5, 4, 3, 2].map(q => ({ q, n: rows.reduce((a, r) => a + (r.s["q" + q] || 0), 0) })).filter(x => x.n);
+    const total = qs.reduce((a, x) => a + x.n, 0);
+    $("lootTotal").textContent = total ? tr(total === 1 ? "{0} drop" : "{0} drops", num(total)) : "";
+    const best = [];
+    people.forEach(p => p.notable.forEach(n => { if (n.t && n.q >= 3 && inRange(localKey(n.t))) best.push({ p, n }); }));
+    best.sort((a, b) => b.n.q - a.n.q || b.n.t - a.n.t);
+    const b = best[0];
+    $("lootQ").innerHTML = (total
+      ? `<div class="qbar">${qs.map(x => `<i style="width:${(x.n / total) * 100}%;background:${QUAL[x.q][1]}"></i>`).join("")}</div>
+        <div class="qlegend">${qs.map(x => `<div><i style="background:${QUAL[x.q][1]}"></i><span>${tr(QUAL[x.q][0])}</span><strong>${num(x.n)}</strong><small>${Math.round((x.n / total) * 100)}%</small></div>`).join("")}</div>`
+      : `<p class="empty">${tr("No rare drops yet. Keep rolling Need.")}</p>`)
+      + (b ? `<div class="bestdrop"><span class="bd-icon">${sprite("loot", 2)}</span><div><span>${tr("Best drop")}</span><strong class="q${b.n.q}">${esc(b.n.item)}</strong><p>${esc(b.p.name)}${b.n.zone ? " · " + esc(b.n.zone) : ""}</p></div><b class="q${b.n.q}">${tr(QUAL[b.n.q][0])}</b></div>` : "");
   }
 
   function renderRace(people, canvasId = "cRace", mode = state.raceMode) {
@@ -1455,10 +1425,13 @@
     const causes = {};
     deaths.forEach(d => { causes[d.cause || "unknown"] = (causes[d.cause || "unknown"] || 0) + 1; });
     const ck = Object.keys(causes).sort((a, b) => causes[b] - causes[a]);
+    const mid = $(canvasId + "Mid"), legend = $(canvasId + "Legend");
+    if (mid) mid.innerHTML = ck.length ? `<strong>${num(deaths.length)}</strong><span>${tr(deaths.length === 1 ? "death" : "deaths")}</span>` : "";
+    if (legend) legend.innerHTML = ck.map(c => `<div><i style="background:${(CAUSE[c] || CAUSE.unknown)[1]}"></i><span>${tr((CAUSE[c] || CAUSE.unknown)[0])}</span><strong>${num(causes[c])}</strong></div>`).join("");
     drawChart(canvasId, ck.length ? {
       type: "doughnut",
-      data: { labels: ck.map(c => tr((CAUSE[c] || CAUSE.unknown)[0])), datasets: [{ data: ck.map(c => causes[c]), backgroundColor: ck.map(c => (CAUSE[c] || CAUSE.unknown)[1]), borderColor: "#17141b", borderWidth: 2 }] },
-      options: { cutout: "62%", plugins: { legend: { position: legendPos } } },
+      data: { labels: ck.map(c => tr((CAUSE[c] || CAUSE.unknown)[0])), datasets: [{ data: ck.map(c => causes[c]), backgroundColor: ck.map(c => (CAUSE[c] || CAUSE.unknown)[1]) }] },
+      options: { plugins: { legend: { display: !legend, position: legendPos } } },
     } : null);
   }
 
@@ -1468,6 +1441,7 @@
     all.sort((a, b) => b.d.t - a.d.t);
     $("clog").innerHTML = all.slice(0, 80).map(({ p, d }) => deathLine(p, d)).join("") || `<p class="empty">${tr("Nobody died. Suspicious.")}</p>`;
     causeChart("cCause", all.map(x => x.d));
+    causeChart("cOCause", all.map(x => x.d));
 
     // deaths by level bracket, stacked by friend
     const brackets = state.cap === 70 ? ["1–9", "10–19", "20–29", "30–39", "40–49", "50–59", "60–69", "70"] : ["1–9", "10–19", "20–29", "30–39", "40–49", "50–59", "60"];
@@ -1492,6 +1466,8 @@
       k.n++; k.victims.add(p.name); if (d.zone) k.zones[d.zone] = (k.zones[d.zone] || 0) + 1;
     });
     const top = Object.entries(killers).sort((a, b) => b[1].n - a[1].n).slice(0, 8);
+    const mw = top[0];
+    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${sprite("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${tr(mw[1].n === 1 ? "Responsible for {0} death" : "Responsible for {0} deaths", num(mw[1].n))}</span></div><b>×${num(mw[1].n)}</b></div>` : "";
     $("wanted").innerHTML = top.map(([name, k], i) => {
       const zone = Object.entries(k.zones).sort((a, b) => b[1] - a[1])[0];
       return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
@@ -1993,12 +1969,12 @@
     // daily damage & healing, last 30 days played
     const days = Object.keys(p.days).sort().slice(-30);
     drawChart("cPDaily", days.length ? {
-      type: "bar",
+      type: "line",
       data: { labels: days.map(shortDate), datasets: [
-        { label: tr("Damage"), data: days.map(k => p.days[k].dmg || 0), backgroundColor: p.color, borderRadius: 3 },
-        { label: tr("Healing"), data: days.map(k => p.days[k].heal || 0), backgroundColor: "#4ade80", borderRadius: 3 },
+        { label: tr("Damage"), data: days.map(k => p.days[k].dmg || 0), borderColor: p.color, area: true },
+        { label: tr("Healing"), data: days.map(k => p.days[k].heal || 0), borderColor: "#4ade80", borderDash: [5, 5] },
       ] },
-      options: { interaction: { mode: "index", intersect: false }, scales: { x: gridX, y: { ...gridY, ticks: { callback: v => compact(v) } } },
+      options: { scales: { x: gridX, y: { ...gridY, beginAtZero: true, ticks: { ...gridY.ticks, callback: v => compact(v) } } },
         plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${num(c.raw)}` } } } },
     } : null);
     renderRace([p], "cPRace", "date");
@@ -2177,7 +2153,6 @@
       const mates = focus && focus.guild ? realmChars.filter(c => c.guild === focus.guild) : [];
       if (mates.length > 1) { scope = mates; state.scopeGuild = focus.guild; }
     }
-    state.backHref = route.kind === "char" && focus && focus.guild ? guildHref(realmKey(focus), focus.guild) : "";
 
     const theme = document.documentElement.dataset.theme || "fel";
     document.querySelectorAll(".theme-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.theme === theme)));
@@ -2219,6 +2194,9 @@
       renderGuilds(realmChars);
       $("oLeads").innerHTML = leadsHTML(rows, 7) || `<p class="empty">${tr("No stats yet.")}</p>`;
     }
+    renderMomentum(people);
+    renderStandings(rows);
+    renderLootQuality(rows, people);
     renderAchievements(active);
     renderMeter(active.length ? active : rows);
     renderDaily(people);
@@ -2501,7 +2479,26 @@
       `<button type="button" class="pagetab" role="tab" data-pg="${id}" aria-selected="${id === cur}">${sprite(icon, 1)}${esc(tr(label))}</button>`).join("");
     $("pageSel").innerHTML = pages.map(([id, label]) => `<option value="${id}">${esc(tr(label))}</option>`).join("");
     $("pageSel").value = cur;
-    $("navBack").textContent = tr(kind === "profile" && state.backHref ? "‹ Guild" : "‹ Ledger");
+    $("realmIcon").innerHTML = crestHTML(2);
+    const pageName = tr((pages.find(x => x[0] === cur) || pages[0])[1]);
+    const realmName = String(state.realm || "").split("|")[1] || "";
+
+    // Where you are: the realm's ledger, then the guild, then the character. The sidebar lists them top down with
+    // the current one highlighted; the ones above it, and the breadcrumbs in the top bar, link back up.
+    const focusChar = route.kind === "char" ? (state.allChars || []).find(c => c.key === route.key) : null;
+    const guildName = route.kind === "guild" ? route.guild : focusChar && focusChar.guild;
+    const levels = [{ label: tr("Realm ledger"), name: realmName, href: "#", icon: crestHTML(1) }];
+    if (guildName) levels.push({ label: tr("Guild"), name: `<${guildName}>`, href: guildHref(state.realm, guildName), icon: sprite("shield", 1) });
+    if (focusChar) levels.push({ label: tr("Character"), name: focusChar.name, href: charHref(route.key), icon: classIcon(focusChar, 1) });
+    const at = levels.length - 1;
+    const lvlInner = l => `<span class="lvl-ic">${l.icon}</span><span class="lvl-t"><small>${esc(l.label)}</small><b>${esc(l.name)}</b></span>`;
+    $("scope").innerHTML = `<span class="nav-label">${tr("You are here")}</span>` + levels.map((l, i) => i === at
+      ? `<span class="lvl here" aria-current="page">${lvlInner(l)}</span>`
+      : `<a class="lvl" href="${l.href}">${lvlInner(l)}<span class="lvl-back">‹ ${tr("Go back")}</span></a>`).join("");
+    $("navLabel").textContent = kind === "profile" ? tr("{0}'s pages", focusChar ? focusChar.name : "") : tr(kind === "guild" ? "Guild pages" : "Realm pages");
+    $("crumbs").innerHTML = levels.map((l, i) => i === at ? `<span>${esc(l.name)}</span>` : `<a href="${l.href}">${esc(l.name)}</a>`)
+      .concat(`<strong>${esc(pageName)}</strong>`).join('<span class="sep" aria-hidden="true">›</span>');
+    $("pageTitle").textContent = cur !== "overview" ? pageName : route.kind === "main" ? realmName : "";
     const pid = route.kind === "char" ? route.key : null;
     const i = people.findIndex(p => p.id === pid);
     const multi = pid && i >= 0 && people.length > 1;
@@ -2519,7 +2516,19 @@
     const a = e.target.closest('a[href="#join"]');
     if (a) { e.preventDefault(); setPage("join"); }
   });
-  $("pageTabs").addEventListener("click", e => { const b = e.target.closest(".pagetab"); if (b) setPage(b.dataset.pg); });
+  $("pageTabs").addEventListener("click", e => { const b = e.target.closest(".pagetab"); if (b) { setMenu(false); setPage(b.dataset.pg); } });
+  // "Details" and "View all" on the overview's cards open their page.
+  document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if (g) setPage(g.dataset.goto); });
+
+  // Phones: the sidebar slides in from the menu button and closes on a page, the dimmed backdrop or Escape.
+  function setMenu(open) {
+    document.body.classList.toggle("menu-open", open);
+    $("menuBtn").setAttribute("aria-expanded", String(open));
+  }
+  $("menuBtn").addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
+  $("scrim").addEventListener("click", () => setMenu(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+  window.addEventListener("hashchange", () => setMenu(false));
   $("pageSel").addEventListener("change", e => setPage(e.target.value));
 
   // Keep the sticky bar's height in a CSS variable.
@@ -2530,7 +2539,6 @@
   ["prevFriend", "nextFriend"].forEach(id => $(id).addEventListener("click", e => {
     location.hash = charHref(e.currentTarget.dataset.pid);
   }));
-  $("navBack").addEventListener("click", () => { location.hash = state.backHref || ""; });
   $("brandLink").addEventListener("click", e => {
     e.preventDefault();
     if (parseRoute().kind !== "main") location.hash = "";
@@ -2751,7 +2759,7 @@
   // ---------- static page text ----------
   // Elements whose whole content is a known English string get swapped for Swedish (and back).
   const staticText = [], staticAria = [];
-  document.querySelectorAll("#app *, #topnav *, footer").forEach(el => {
+  document.querySelectorAll("#app *, #topnav *, #sidebar *, footer").forEach(el => {
     if (el.closest("script, style")) return;
     const html = el.innerHTML.trim();
     if (html && SV[html]) staticText.push([el, html]);
@@ -2809,6 +2817,8 @@
   $("realmSel").addEventListener("change", e => {
     state.realm = e.target.value;
     try { localStorage.setItem("ledger-realm-v2", state.realm); } catch (err) { /* remembering is optional */ }
+    // a guild or character belongs to its own realm, so another realm opens that realm's ledger
+    if (parseRoute().kind !== "main") { location.hash = ""; return; }
     render();
   });
   // ---------- ambient motes ----------
@@ -2868,7 +2878,6 @@
   document.querySelectorAll(".theme-btn").forEach(b => b.addEventListener("click", () => {
     document.documentElement.dataset.theme = b.dataset.theme;
     try { localStorage.setItem("ledger-theme", b.dataset.theme); } catch (err) { /* remembering is optional */ }
-    segCache.clear();
     applyChartTheme();
     resetCharts();
     render();
