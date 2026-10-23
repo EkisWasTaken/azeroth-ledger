@@ -675,10 +675,12 @@
   // C_Map.GetMapRectOnMap. The addon also uploads them (ch.atlas); these are used until it has.
   const Z = (id, n, x0, x1, y0, y1) => ({ id, n, x0, x1, y0, y1 });
   const ATLAS_ERA = { v: "era-builtin",
+    "947": { n: "Azeroth", zones: [Z(1415, "Eastern Kingdoms", 37.1, 115.9, 8.2, 86.9), Z(1414, "Kalimdor", -18.6, 63.4, 6.8, 88.8)] },
     "1414": { n: "Kalimdor", zones: [Z(1440, "Ashenvale", 41.8, 57.4, 33.1, 48.8), Z(1447, "Azshara", 55.3, 69.1, 30.4, 44.2), Z(1439, "Darkshore", 38.4, 56.2, 18.2, 36.0), Z(1457, "Darnassus", 38.4, 41.3, 10.4, 13.3), Z(1443, "Desolace", 34.9, 47.1, 50.3, 62.6), Z(1411, "Durotar", 51.7, 66.1, 44.8, 59.2), Z(1445, "Dustwallow Marsh", 49.0, 63.3, 60.5, 74.7), Z(1448, "Felwood", 41.9, 57.5, 23.1, 38.7), Z(1444, "Feralas", 31.6, 50.5, 61.8, 80.7), Z(1450, "Moonglade", 50.1, 56.4, 17.6, 23.8), Z(1412, "Mulgore", 40.8, 54.8, 53.3, 67.2), Z(1454, "Orgrimmar", 56.4, 60.2, 42.9, 46.7), Z(1451, "Silithus", 39.5, 48.9, 76.5, 85.9), Z(1442, "Stonetalon Mountains", 37.6, 50.8, 40.3, 53.6), Z(1446, "Tanaris", 47.0, 65.7, 76.1, 94.9), Z(1438, "Teldrassil", 36.0, 49.8, 3.9, 17.8), Z(1413, "The Barrens", 39.2, 66.8, 45.6, 73.1), Z(1441, "Thousand Needles", 47.6, 59.5, 68.3, 80.3), Z(1456, "Thunder Bluff", 45.0, 47.8, 55.6, 58.5), Z(1449, "Un'Goro Crater", 44.9, 55.0, 76.5, 86.5), Z(1452, "Winterspring", 47.2, 66.5, 17.4, 36.7)] },
     "1415": { n: "Eastern Kingdoms", zones: [Z(1416, "Alterac Mountains", 43.2, 51.2, 25.4, 33.4), Z(1417, "Arathi Highlands", 47.9, 58.1, 32.4, 42.6), Z(1418, "Badlands", 51.4, 58.4, 56.9, 64.0), Z(1419, "Blasted Lands", 49.0, 58.5, 76.8, 86.4), Z(1428, "Burning Steppes", 46.2, 54.5, 61.8, 70.1), Z(1430, "Deadwind Pass", 47.8, 54.9, 73.9, 81.0), Z(1426, "Dun Morogh", 40.3, 54.3, 48.3, 62.3), Z(1431, "Duskwood", 43.1, 50.8, 73.2, 80.9), Z(1423, "Eastern Plaguelands", 51.7, 62.7, 15.6, 26.6), Z(1429, "Elwynn Forest", 41.1, 51.0, 65.7, 75.5), Z(1424, "Hillsbrad Foothills", 42.4, 51.5, 30.1, 39.2), Z(1455, "Ironforge", 47.5, 49.7, 51.3, 53.5), Z(1432, "Loch Modan", 51.1, 59.0, 50.9, 58.8), Z(1433, "Redridge Mountains", 49.9, 56.1, 68.4, 74.5), Z(1427, "Searing Gorge", 46.4, 52.7, 57.8, 64.2), Z(1421, "Silverpine Forest", 35.7, 47.6, 24.7, 36.6), Z(1453, "Stormwind City", 41.5, 45.4, 67.1, 70.9), Z(1434, "Stranglethorn Vale", 39.1, 57.3, 79.4, 97.5), Z(1435, "Swamp of Sorrows", 51.8, 58.3, 72.8, 79.3), Z(1425, "The Hinterlands", 49.9, 60.9, 25.6, 36.5), Z(1420, "Tirisfal Glades", 36.8, 49.7, 15.5, 28.3), Z(1458, "Undercity", 43.0, 45.7, 23.8, 26.5), Z(1422, "Western Plaguelands", 44.3, 56.5, 17.5, 29.7), Z(1436, "Westfall", 36.9, 46.8, 71.9, 81.8), Z(1437, "Wetlands", 46.6, 58.3, 41.0, 52.7)] },
   };
   const ATLAS_TBC = { v: "tbc-builtin",
+    "947": { n: "Azeroth", zones: [Z(1415, "Eastern Kingdoms", 32.5, 123.6, 1.0, 92.2), Z(1414, "Kalimdor", -18.6, 63.4, 6.8, 88.8)] },
     "1414": { n: "Kalimdor", zones: [Z(1440, "Ashenvale", 41.8, 57.4, 33.1, 48.8), Z(1447, "Azshara", 55.3, 69.1, 30.4, 44.2), Z(1943, "Azuremyst Isle", 27.1, 38.1, 21.8, 33.1), Z(1950, "Bloodmyst Isle", 25.9, 34.8, 13.4, 22.4), Z(1439, "Darkshore", 38.4, 56.2, 18.2, 36.0), Z(1457, "Darnassus", 38.4, 41.3, 10.4, 13.3), Z(1443, "Desolace", 34.9, 47.1, 50.3, 62.6), Z(1411, "Durotar", 51.7, 66.1, 44.8, 59.2), Z(1445, "Dustwallow Marsh", 49.0, 63.3, 60.5, 74.7), Z(1448, "Felwood", 41.9, 57.5, 23.1, 38.7), Z(1444, "Feralas", 31.6, 50.5, 61.8, 80.7), Z(1450, "Moonglade", 50.1, 56.4, 17.6, 23.8), Z(1412, "Mulgore", 40.8, 54.8, 53.3, 67.2), Z(1454, "Orgrimmar", 56.4, 60.2, 42.9, 46.7), Z(1451, "Silithus", 39.5, 48.9, 76.5, 85.9), Z(1442, "Stonetalon Mountains", 37.6, 50.8, 40.3, 53.6), Z(1446, "Tanaris", 47.0, 65.7, 76.1, 94.9), Z(1438, "Teldrassil", 36.0, 49.8, 3.9, 17.8), Z(1413, "The Barrens", 39.2, 66.8, 45.6, 73.1), Z(1947, "The Exodar", 28.6, 31.5, 25.2, 28.1), Z(1441, "Thousand Needles", 47.6, 59.5, 68.3, 80.3), Z(1456, "Thunder Bluff", 45.0, 47.8, 55.6, 58.5), Z(1449, "Un'Goro Crater", 44.9, 55.0, 76.5, 86.5), Z(1452, "Winterspring", 47.2, 66.5, 17.4, 36.7)] },
     "1415": { n: "Eastern Kingdoms", zones: [Z(1416, "Alterac Mountains", 42.7, 49.6, 35.6, 42.5), Z(1417, "Arathi Highlands", 46.7, 55.6, 41.7, 50.5), Z(1418, "Badlands", 49.7, 55.8, 62.9, 69.0), Z(1419, "Blasted Lands", 47.7, 55.9, 80.1, 88.3), Z(1428, "Burning Steppes", 45.3, 52.4, 67.1, 74.3), Z(1430, "Deadwind Pass", 46.6, 52.8, 77.5, 83.6), Z(1426, "Dun Morogh", 40.2, 52.3, 55.4, 67.5), Z(1431, "Duskwood", 42.6, 49.2, 77.0, 83.6), Z(1423, "Eastern Plaguelands", 50.0, 59.5, 27.2, 36.7), Z(1429, "Elwynn Forest", 40.8, 49.4, 70.4, 78.9), Z(1941, "Eversong Woods", 49.8, 62.1, 9.3, 21.4), Z(1942, "Ghostlands", 51.8, 60.0, 19.6, 27.7), Z(1424, "Hillsbrad Foothills", 42.0, 49.8, 39.7, 47.6), Z(1455, "Ironforge", 46.4, 48.3, 58.0, 59.9), Z(1957, "Isle of Quel'Danas", 51.8, 60.1, 0.0, 8.2), Z(1432, "Loch Modan", 49.5, 56.3, 57.7, 64.5), Z(1433, "Redridge Mountains", 48.5, 53.8, 72.7, 78.1), Z(1427, "Searing Gorge", 45.4, 50.9, 63.6, 69.1), Z(1954, "Silvermoon City", 54.6, 57.6, 12.6, 15.6), Z(1421, "Silverpine Forest", 36.1, 46.4, 35.0, 45.3), Z(1453, "Stormwind City", 41.2, 44.5, 71.7, 75.0), Z(1434, "Stranglethorn Vale", 39.2, 54.8, 82.3, 98.0), Z(1435, "Swamp of Sorrows", 50.1, 55.7, 76.6, 82.2), Z(1425, "The Hinterlands", 48.5, 57.9, 35.8, 45.2), Z(1420, "Tirisfal Glades", 37.2, 48.2, 27.0, 38.1), Z(1458, "Undercity", 42.5, 44.8, 34.2, 36.6), Z(1422, "Western Plaguelands", 43.6, 54.1, 28.8, 39.3), Z(1436, "Westfall", 37.2, 45.8, 75.8, 84.4), Z(1437, "Wetlands", 45.6, 55.7, 49.1, 59.2)] },
     "1945": { n: "Outland", zones: [Z(1949, "Blade's Edge Mountains", 23.8, 54.8, 12.1, 43.2), Z(1944, "Hellfire Peninsula", 42.7, 72.3, 37.3, 66.9), Z(1951, "Nagrand", 15.5, 47.1, 49.6, 81.3), Z(1953, "Netherstorm", 43.0, 74.9, 3.1, 35.1), Z(1948, "Shadowmoon Valley", 50.2, 81.7, 66.7, 98.2), Z(1955, "Shattrath City", 39.3, 46.8, 62.7, 70.1), Z(1952, "Terokkar Forest", 33.9, 64.8, 58.6, 89.5), Z(1946, "Zangarmarsh", 20.2, 48.9, 33.4, 62.2)] },
@@ -689,16 +691,18 @@
     "947": { n: "Azeroth", zones: [Z(13, "Eastern Kingdoms", 49.2, 120.6, 12.1, 83.4), Z(12, "Kalimdor", -11.7, 50.7, 17.1, 79.5), Z(113, "Northrend", 36.7, 68.3, 2.3, 33.9), Z(424, "Pandaria", 37.5, 66.7, 67.9, 97.1)] },
   };
   // The realm's own uploaded atlas if there is one with this game's maps, otherwise the built-in one for its game.
+  // Maps the upload lacks (Azeroth, on Classic Era and Anniversary) come from the built-in one.
   const mapGame = () => {
     const vs = (state.allChars || []).filter(realmMatch).map(c => String((c.game || {}).version || ""));
     return vs.some(v => v.startsWith("5.")) ? "mop" : vs.some(v => v.startsWith("2.")) ? "tbc" : "era";
   };
   const pickAtlas = () => {
     const game = mapGame(), fits = a => a && MAP_ART[game].some(c => a[c] && (a[c].zones || []).length);
+    const builtin = { era: ATLAS_ERA, tbc: ATLAS_TBC, mop: ATLAS_MOP }[game];
     const shared = (state.atlases || {})[String(state.realm || "").split("|")[1]];
-    if (fits(shared)) return shared;
+    if (fits(shared)) return { ...builtin, ...shared };
     const up = (state.allChars || []).filter(c => realmMatch(c) && fits(c.atlas)).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0))[0];
-    return up ? up.atlas : { era: ATLAS_ERA, tbc: ATLAS_TBC, mop: ATLAS_MOP }[game];
+    return up ? { ...builtin, ...up.atlas } : builtin;
   };
   // A spot somewhere inside a zone (example data only).
   function fallbackSpot(zone, rnd) {
@@ -712,13 +716,13 @@
   // The continents' map art from the game client, built by design/src/make_maps.py into site/maps/. Each image is
   // the in-game map frame, so a position's percentages on it are the game's own map coordinates, the same ones the
   // addon records and the zone rectangles above use.
-  const MAP_ART = { era: ["1414", "1415"], tbc: ["1414", "1415", "1945"], mop: ["947"] };
+  const MAP_ART = { era: ["1414", "1415", "947"], tbc: ["1414", "1415", "1945", "947"], mop: ["947"] };
   const CITY = /orgrimmar|thunder bluff|darnassus|stormwind|ironforge|undercity|silvermoon|exodar|shattrath/i;
 
   // ---------- map zoom and pan ----------
-  // Each map (continent, zone or city) keeps its own view; a continent's first view zooms in on where things happened.
+  // Each map (continent, zone or city) keeps its own view, starting fully zoomed out.
   const mapKey = () => state.map.zone || state.map.cont;
-  const mapView = () => { const m = state.map; return ((m.views ||= {})[mapKey()] ||= { z: 1, x: 0, y: 0, fitted: false }); };
+  const mapView = () => { const m = state.map; return ((m.views ||= {})[mapKey()] ||= { z: 1, x: 0, y: 0 }); };
   // free: no limits, for the zoom into and out of a zone (which goes far past the usual 4x)
   function applyMapView(free) {
     const v = mapView(), box = $("map"), W = box.clientWidth, H = box.clientHeight;
@@ -740,17 +744,6 @@
     $("mapTip").hidden = true;
     applyMapView();
   }
-  function fitMapView(evs) {
-    const v = mapView(), W = $("map").clientWidth, H = $("map").clientHeight;
-    if (!W) return;
-    v.fitted = true;
-    if (!evs.length) { v.z = 1; v.x = v.y = 0; return; }
-    const xs = evs.map(e => e.x), ys = evs.map(e => e.y);
-    const x0 = Math.min(...xs) - 10, x1 = Math.max(...xs) + 10, y0 = Math.min(...ys) - 10, y1 = Math.max(...ys) + 10;
-    v.z = Math.min(3, Math.max(1, Math.min(100 / (x1 - x0), 100 / (y1 - y0))));
-    v.x = W / 2 - (x0 + x1) / 200 * W * v.z;
-    v.y = H / 2 - (y0 + y1) / 200 * H * v.z;
-  }
   // ---------- zones: click one to zoom into its own map, right-click to zoom back out (as the game's map does) ----------
   const zoneById = id => (((pickAtlas()[state.map.cont] || {}).zones) || []).find(z => z.id === +id);
   // a zone's rectangle in the open map's 0-100 space (the continent's own, or relative to the open zone)
@@ -766,9 +759,11 @@
     const m = state.map, zones = ((pickAtlas()[m.cont] || {}).zones) || [], open = m.zone && zoneById(m.zone);
     if (open && CITY.test(open.n)) return null;
     const cx = open ? open.x0 + (open.x1 - open.x0) * x / 100 : x, cy = open ? open.y0 + (open.y1 - open.y0) * y / 100 : y;
-    const built = (state.mapIndex || {})[mapGame()] || [];
+    const built = ((state.mapIndex || {})[mapGame()] || []).concat(MAP_ART[mapGame()].map(Number));
     const hits = zones.filter(z => z !== open && built.includes(z.id) && CITY.test(z.n) === !!open && cx >= z.x0 && cx <= z.x1 && cy >= z.y0 && cy <= z.y1);
-    return hits.sort((a, b) => (a.x1 - a.x0) * (a.y1 - a.y0) - (b.x1 - b.x0) * (b.y1 - b.y0))[0] || null;
+    // continents' rectangles on Azeroth overlap over the sea, so there the nearest one wins; elsewhere the smallest
+    const size = z => m.cont === "947" && !open ? Math.hypot((z.x0 + z.x1) / 2 - cx, (z.y0 + z.y1) / 2 - cy) : (z.x1 - z.x0) * (z.y1 - z.y0);
+    return hits.sort((a, b) => size(a) - size(b))[0] || null;
   }
   const mapSrc = id => `maps/${mapGame()}-${id}.webp`;
   // which zone maps were built (site/maps/index.json, written by make_maps.py): only those can be opened
@@ -789,13 +784,18 @@
   let mapBusy = false;
   async function openZone(z) {
     if (mapBusy) return;
+    if (MAP_ART[mapGame()].includes(String(z.id))) {
+      Object.assign(state.map, { cont: String(z.id), zone: "", trail: [] });
+      render();
+      return;
+    }
     mapBusy = true;
     $("mapTip").hidden = true; $("mapHover").hidden = true;
     const m = state.map;
     await loadArt(mapSrc(z.id)); // straight in once its art is ready; the map underneath keeps its view for the way back
     (m.trail ||= []).push(m.zone || "");
     m.zone = String(z.id);
-    m.views[m.zone] = { z: 1, x: 0, y: 0, fitted: true };
+    m.views[m.zone] = { z: 1, x: 0, y: 0 };
     mapBusy = false;
     render();
   }
@@ -885,7 +885,7 @@
       if (b.dataset.zoom === "fit") { Object.assign(mapView(), { z: 1, x: 0, y: 0 }); applyMapView(); }
       else zoomMap(b.dataset.zoom === "in" ? 1.5 : 1 / 1.5);
     });
-    if (window.ResizeObserver) new ResizeObserver(() => { if (state.map) { if (!mapView().fitted) fitMapView(state.mapShown || []); applyMapView(); } }).observe(box);
+    if (window.ResizeObserver) new ResizeObserver(() => { if (state.map) applyMapView(); }).observe(box);
   }
 
   const MAP_ICON = { deaths: () => "skull", dings: () => "crit", loot: e => (e.d.q >= 4 ? "lotus" : "loot") };
@@ -966,7 +966,11 @@
     }).join("");
     // On a zone's map: the zone position when it was recorded in that zone, else the continent position through the zone's rectangle.
     const place = e => {
-      if (!open) return e.cont === m.cont ? e : null;
+      if (!open) {
+        if (e.cont === m.cont) return e;
+        const c = (atlas[m.cont].zones || []).find(z => String(z.id) === e.cont);
+        return c ? { ...e, x: c.x0 + (c.x1 - c.x0) * e.x / 100, y: c.y0 + (c.y1 - c.y0) * e.y / 100 } : null;
+      }
       if (e.d.map != null && +e.d.map === open.id && e.d.x != null) return { ...e, x: e.d.x, y: e.d.y };
       if (e.cont !== m.cont) return null;
       const x = (e.x - open.x0) / (open.x1 - open.x0) * 100, y = (e.y - open.y0) / (open.y1 - open.y0) * 100;
@@ -979,7 +983,6 @@
       `<button type="button" class="mk" data-i="${i}" style="left:${e.x}%;top:${e.y}%;--d:${(i / Math.max(1, shown.length) * 6).toFixed(2)}s" aria-label="${esc(e.d._char || e.p.name)}">${sprite(MAP_ICON[e.kind](e), 1)}</button>`).join("");
     $("mapTip").hidden = true;
     $("mapReplay").hidden = shown.length < 2;
-    if (!mapView().fitted) fitMapView(shown);
     applyMapView();
 
     // Deadliest zones, counting every death in range (with or without a position).

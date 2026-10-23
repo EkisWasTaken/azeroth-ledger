@@ -9,8 +9,9 @@ FunStats addon records deaths, level-ups and loot, so markers placed by percenta
   site/maps/era-1415.webp  Eastern Kingdoms   site/maps/tbc-1415.webp  Eastern Kingdoms (with Quel'Thalas)
                                               site/maps/tbc-1945.webp  Outland
 
-For Mists of Pandaria Classic (5.5) the site shows one world map instead, Azeroth, with Kalimdor, the Eastern
-Kingdoms, Northrend and Pandaria on it (each opens as its own map):
+Both also get Azeroth, with Kalimdor and the Eastern Kingdoms side by side on it (era-947.webp, tbc-947.webp).
+For Mists of Pandaria Classic (5.5) the site shows only that world map, with Kalimdor, the Eastern Kingdoms,
+Northrend and Pandaria on it (each opens as its own map):
 
   site/maps/mop-947.webp  Azeroth             site/maps/mop-12.webp, mop-13.webp, mop-113.webp, mop-424.webp
 
@@ -22,7 +23,7 @@ A zone's map is its own 0-1 map space, the one zone positions (the addon's x, y)
 It also writes design/maps-check/<build>-<continent>.png: the same art with every zone's rectangle from
 UiMapAssignment drawn on top, to check by eye that zones and art agree (git-ignored).
 
-Usage: python design/src/make_maps.py [era] [tbc] [mop]   (all builds when none is named; needs Pillow: pip install pillow; downloads are cached in design/.map-cache)
+Usage: python design/src/make_maps.py [era] [tbc] [mop] [map id ...]   (all builds and top maps when none is named; needs Pillow: pip install pillow; downloads are cached in design/.map-cache)
 The map art is Blizzard Entertainment's; the site credits it under the map.
 """
 import csv
@@ -39,11 +40,11 @@ CACHE = os.path.join(ROOT, "design", ".map-cache")
 CHECK = os.path.join(ROOT, "design", "maps-check")
 OUT = os.path.join(ROOT, "site", "maps")
 BUILDS = {"tbc": "2.5.6.70006", "era": "1.15.9.70003", "mop": "5.5.4.70531"}
-# The top maps the site draws per build, and the type of map shown on them: zones (3) or, on Azeroth, continents (2).
+# The top maps the site draws per build, and the type of map shown on each: zones (3) or, on Azeroth, continents (2).
 TOP = {
-    "era": ({1414: "Kalimdor", 1415: "Eastern Kingdoms"}, 3),
-    "tbc": ({1414: "Kalimdor", 1415: "Eastern Kingdoms", 1945: "Outland"}, 3),
-    "mop": ({947: "Azeroth"}, 2),
+    "era": {1414: ("Kalimdor", 3), 1415: ("Eastern Kingdoms", 3), 947: ("Azeroth", 2)},
+    "tbc": {1414: ("Kalimdor", 3), 1415: ("Eastern Kingdoms", 3), 1945: ("Outland", 3), 947: ("Azeroth", 2)},
+    "mop": {947: ("Azeroth", 2)},
 }
 FRAME = (1002, 668)  # the in-game world map frame inside the 1024 x 768 tile grid: map coordinates 0-1
 
@@ -143,7 +144,7 @@ def write_index():
     index = {}
     for f in sorted(os.listdir(OUT)):
         build, _, rest = f.partition("-")
-        if f.endswith(".webp") and rest[:-5].isdigit() and build in TOP and int(rest[:-5]) not in TOP[build][0]:
+        if f.endswith(".webp") and rest[:-5].isdigit() and build in TOP and int(rest[:-5]) not in TOP[build]:
             index.setdefault(build, []).append(int(rest[:-5]))
     json.dump(index, open(os.path.join(OUT, "index.json"), "w"), separators=(",", ":"))
 
@@ -152,9 +153,12 @@ def main():
     for d in (CACHE, CHECK, OUT):
         os.makedirs(d, exist_ok=True)
     font = ImageFont.load_default(size=12)
+    only = [int(a) for a in sys.argv[1:] if a.isdigit()]
     for build in [b for b in BUILDS if b in sys.argv[1:]] or BUILDS:
-        tops, kind = TOP[build]
-        for cont, name in tops.items():
+        tops = TOP[build]
+        for cont, (name, kind) in tops.items():
+            if only and cont not in only:
+                continue
             im = art(build, cont)
             if im is None:
                 continue
@@ -169,6 +173,8 @@ def main():
             check.save(os.path.join(CHECK, f"{build}-{cont}.png"))
             print(f"{build} {name}: {os.path.getsize(path) // 1024} KB")
             for zone in zone_ids(build, cont, kind):
+                if zone in tops:
+                    continue  # a continent on Azeroth that is built as a top map of its own
                 zim = art(build, zone)
                 if zim is not None:
                     zim.save(os.path.join(OUT, f"{build}-{zone}.webp"), "WEBP", quality=86, method=6)
