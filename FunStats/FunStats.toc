@@ -1,8 +1,8 @@
-## Interface: 11507, 20506
+## Interface: 11509, 20506, 50504
 ## Title: FunStats
 ## Notes: Tracks fun group stats (deaths, damage, jumps, loot...) for your friends' leaderboard site.
 ## Author: eliaspown
-## Version: 1.1.0
+## Version: 1.2.0
 ## SavedVariables: FunStatsDB
 
 FunStats.lua

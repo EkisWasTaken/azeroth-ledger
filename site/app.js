@@ -254,8 +254,9 @@
     WARRIOR: ["Warrior", "#c79c6e"], PALADIN: ["Paladin", "#f58cba"], HUNTER: ["Hunter", "#abd473"],
     ROGUE: ["Rogue", "#fff569"], PRIEST: ["Priest", "#f2f2f2"], SHAMAN: ["Shaman", "#2a8cf0"],
     MAGE: ["Mage", "#69ccf0"], WARLOCK: ["Warlock", "#9482c9"], DRUID: ["Druid", "#ff7d0a"],
+    DEATHKNIGHT: ["Death Knight", "#c41f3b"], MONK: ["Monk", "#00ff96"],
   };
-  const RACE = { Human: "Human", Dwarf: "Dwarf", NightElf: "Night Elf", Gnome: "Gnome", Orc: "Orc", Scourge: "Undead", Tauren: "Tauren", Troll: "Troll", BloodElf: "Blood Elf", Draenei: "Draenei" };
+  const RACE = { Human: "Human", Dwarf: "Dwarf", NightElf: "Night Elf", Gnome: "Gnome", Orc: "Orc", Scourge: "Undead", Tauren: "Tauren", Troll: "Troll", BloodElf: "Blood Elf", Draenei: "Draenei", Goblin: "Goblin", Worgen: "Worgen", Pandaren: "Pandaren" };
   const CAUSE = {
     mob: ["Slain by creatures", "#c0392b"], fall: ["Fell to their death", "#a78bfa"], drown: ["Drowned", "#3b82f6"],
     fire: ["Burned", "#f97316"], lava: ["Lava", "#fb923c"], slime: ["Slime", "#84cc16"], fatigue: ["Fatigue", "#14b8a6"],
@@ -385,7 +386,11 @@
   // and several observers of the same day are combined with max (not sum) so nothing is counted twice.
   function characters(src) {
     const out = {};
-    for (const [id, c] of Object.entries(src.chars || {})) out[id] = { ...c, id, days: {}, deaths: (c.deaths || []).filter(Boolean), self: true };
+    for (const [id, c] of Object.entries(src.chars || {})) {
+      // the highest level reached counts even if the upload's level lags behind it (older FunStats on Mists of Pandaria)
+      const dinged = Math.max(0, ...Object.keys(c.levels && typeof c.levels === "object" ? c.levels : {}).map(Number).filter(n => n > 0 && n < 200));
+      out[id] = { ...c, id, level: Math.max(+c.level || 0, dinged) || c.level, days: {}, deaths: (c.deaths || []).filter(Boolean), self: true };
+    }
     for (const d of Object.values(src.days || {})) {
       const ch = out[d.char];
       if (ch && d.days) Object.assign(ch.days, d.days);
@@ -678,13 +683,22 @@
     "1415": { n: "Eastern Kingdoms", zones: [Z(1416, "Alterac Mountains", 42.7, 49.6, 35.6, 42.5), Z(1417, "Arathi Highlands", 46.7, 55.6, 41.7, 50.5), Z(1418, "Badlands", 49.7, 55.8, 62.9, 69.0), Z(1419, "Blasted Lands", 47.7, 55.9, 80.1, 88.3), Z(1428, "Burning Steppes", 45.3, 52.4, 67.1, 74.3), Z(1430, "Deadwind Pass", 46.6, 52.8, 77.5, 83.6), Z(1426, "Dun Morogh", 40.2, 52.3, 55.4, 67.5), Z(1431, "Duskwood", 42.6, 49.2, 77.0, 83.6), Z(1423, "Eastern Plaguelands", 50.0, 59.5, 27.2, 36.7), Z(1429, "Elwynn Forest", 40.8, 49.4, 70.4, 78.9), Z(1941, "Eversong Woods", 49.8, 62.1, 9.3, 21.4), Z(1942, "Ghostlands", 51.8, 60.0, 19.6, 27.7), Z(1424, "Hillsbrad Foothills", 42.0, 49.8, 39.7, 47.6), Z(1455, "Ironforge", 46.4, 48.3, 58.0, 59.9), Z(1957, "Isle of Quel'Danas", 51.8, 60.1, 0.0, 8.2), Z(1432, "Loch Modan", 49.5, 56.3, 57.7, 64.5), Z(1433, "Redridge Mountains", 48.5, 53.8, 72.7, 78.1), Z(1427, "Searing Gorge", 45.4, 50.9, 63.6, 69.1), Z(1954, "Silvermoon City", 54.6, 57.6, 12.6, 15.6), Z(1421, "Silverpine Forest", 36.1, 46.4, 35.0, 45.3), Z(1453, "Stormwind City", 41.2, 44.5, 71.7, 75.0), Z(1434, "Stranglethorn Vale", 39.2, 54.8, 82.3, 98.0), Z(1435, "Swamp of Sorrows", 50.1, 55.7, 76.6, 82.2), Z(1425, "The Hinterlands", 48.5, 57.9, 35.8, 45.2), Z(1420, "Tirisfal Glades", 37.2, 48.2, 27.0, 38.1), Z(1458, "Undercity", 42.5, 44.8, 34.2, 36.6), Z(1422, "Western Plaguelands", 43.6, 54.1, 28.8, 39.3), Z(1436, "Westfall", 37.2, 45.8, 75.8, 84.4), Z(1437, "Wetlands", 45.6, 55.7, 49.1, 59.2)] },
     "1945": { n: "Outland", zones: [Z(1949, "Blade's Edge Mountains", 23.8, 54.8, 12.1, 43.2), Z(1944, "Hellfire Peninsula", 42.7, 72.3, 37.3, 66.9), Z(1951, "Nagrand", 15.5, 47.1, 49.6, 81.3), Z(1953, "Netherstorm", 43.0, 74.9, 3.1, 35.1), Z(1948, "Shadowmoon Valley", 50.2, 81.7, 66.7, 98.2), Z(1955, "Shattrath City", 39.3, 46.8, 62.7, 70.1), Z(1952, "Terokkar Forest", 33.9, 64.8, 58.6, 89.5), Z(1946, "Zangarmarsh", 20.2, 48.9, 33.4, 62.2)] },
   };
-  // The realm's own uploaded atlas if there is one, otherwise the built-in one for its game.
-  const mapGame = () => ((state.allChars || []).filter(realmMatch).some(c => String((c.game || {}).version || "").startsWith("2.")) ? "tbc" : "era");
+  // Mists of Pandaria Classic (5.5): one map of Azeroth with the continents on it, from the client's UiMapAssignment
+  // (5.5.4) like the ones above. Positions recorded on a continent are carried onto it through the continent's rectangle.
+  const ATLAS_MOP = { v: "mop-builtin",
+    "947": { n: "Azeroth", zones: [Z(13, "Eastern Kingdoms", 49.2, 120.6, 12.1, 83.4), Z(12, "Kalimdor", -11.7, 50.7, 17.1, 79.5), Z(113, "Northrend", 36.7, 68.3, 2.3, 33.9), Z(424, "Pandaria", 37.5, 66.7, 67.9, 97.1)] },
+  };
+  // The realm's own uploaded atlas if there is one with this game's maps, otherwise the built-in one for its game.
+  const mapGame = () => {
+    const vs = (state.allChars || []).filter(realmMatch).map(c => String((c.game || {}).version || ""));
+    return vs.some(v => v.startsWith("5.")) ? "mop" : vs.some(v => v.startsWith("2.")) ? "tbc" : "era";
+  };
   const pickAtlas = () => {
+    const game = mapGame(), fits = a => a && MAP_ART[game].some(c => a[c] && (a[c].zones || []).length);
     const shared = (state.atlases || {})[String(state.realm || "").split("|")[1]];
-    if (shared) return shared;
-    const up = (state.allChars || []).filter(c => realmMatch(c) && c.atlas).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0))[0];
-    return up ? up.atlas : mapGame() === "tbc" ? ATLAS_TBC : ATLAS_ERA;
+    if (fits(shared)) return shared;
+    const up = (state.allChars || []).filter(c => realmMatch(c) && fits(c.atlas)).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0))[0];
+    return up ? up.atlas : { era: ATLAS_ERA, tbc: ATLAS_TBC, mop: ATLAS_MOP }[game];
   };
   // A spot somewhere inside a zone (example data only).
   function fallbackSpot(zone, rnd) {
@@ -698,7 +712,7 @@
   // The continents' map art from the game client, built by design/src/make_maps.py into site/maps/. Each image is
   // the in-game map frame, so a position's percentages on it are the game's own map coordinates, the same ones the
   // addon records and the zone rectangles above use.
-  const MAP_ART = { era: ["1414", "1415"], tbc: ["1414", "1415", "1945"] };
+  const MAP_ART = { era: ["1414", "1415"], tbc: ["1414", "1415", "1945"], mop: ["947"] };
   const CITY = /orgrimmar|thunder bluff|darnassus|stormwind|ironforge|undercity|silvermoon|exodar|shattrath/i;
 
   // ---------- map zoom and pan ----------
@@ -878,11 +892,17 @@
   // Where on its continent something happened: the addon's own continent position, or, for records uploaded
   // without one, the zone position placed through the zone's rectangle (what C_Map.GetMapRectOnMap does in game).
   function contSpot(d, atlas) {
-    if (d.cx != null) return { cont: String(d.cont), x: d.cx, y: d.cy };
+    if (d.cx != null) return onTop(d.cont, d.cx, d.cy, atlas);
     if (d.map == null || d.x == null || d.y == null) return null;
+    return onTop(d.map, d.x, d.y, atlas);
+  }
+  // A position on map `id` (0-100) as a position on one of the drawn maps: as is when `id` is one of them,
+  // else through its rectangle there (a zone on a continent, or a continent on Azeroth).
+  function onTop(id, x, y, atlas) {
+    if (atlas[String(id)] && atlas[String(id)].zones) return { cont: String(id), x, y };
     for (const [cont, a] of Object.entries(atlas)) {
-      const z = a && a.zones && a.zones.find(q => q.id === +d.map);
-      if (z) return { cont, x: z.x0 + (z.x1 - z.x0) * d.x / 100, y: z.y0 + (z.y1 - z.y0) * d.y / 100 };
+      const z = a && a.zones && a.zones.find(q => q.id === +id);
+      if (z) return { cont, x: z.x0 + (z.x1 - z.x0) * x / 100, y: z.y0 + (z.y1 - z.y0) * y / 100 };
     }
     return null;
   }
@@ -891,10 +911,10 @@
     const out = [], ok = t => t && inRange(localKey(t)), atlas = pickAtlas();
     for (const p of people) {
       for (const d of p.deaths) { const at = ok(d.t) && contSpot(d, atlas); if (at) out.push({ kind: "deaths", p, t: d.t, ...at, d }); }
-      for (const n of p.notable) if (n.cx != null && ok(n.t)) out.push({ kind: "loot", p, t: n.t, cont: String(n.cont), x: n.cx, y: n.cy, d: n });
+      for (const n of p.notable) { const at = n.cx != null && ok(n.t) && onTop(n.cont, n.cx, n.cy, atlas); if (at) out.push({ kind: "loot", p, t: n.t, ...at, d: n }); }
       for (const ch of p.chars) for (const [lvl, sp] of Object.entries(ch.dingAt || {})) {
-        const t = (ch.levels || {})[lvl];
-        if (sp && sp.cx != null && ok(t)) out.push({ kind: "dings", p, t, cont: String(sp.cont), x: sp.cx, y: sp.cy, d: { ...sp, lvl: +lvl, _char: ch.name } });
+        const t = (ch.levels || {})[lvl], at = sp && sp.cx != null && ok(t) && onTop(sp.cont, sp.cx, sp.cy, atlas);
+        if (at) out.push({ kind: "dings", p, t, ...at, d: { ...sp, lvl: +lvl, _char: ch.name } });
       }
     }
     return out.sort((a, b) => a.t - b.t);
@@ -915,8 +935,8 @@
     const atlas = pickAtlas(), game = mapGame();
     if (!people.some(p => p.id === m.who)) m.who = "";
     const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people);
-    // Kalimdor and the Eastern Kingdoms always; Outland (TBC clients only) once something happened there.
-    const conts = ["1414", "1415", "1945"].filter(c => atlas[c] && MAP_ART[game].includes(c) && (c !== "1945" || all.some(e => e.cont === c)));
+    // Kalimdor and the Eastern Kingdoms always; Outland (TBC clients only) once something happened there; Azeroth on Mists of Pandaria.
+    const conts = MAP_ART[game].filter(c => atlas[c] && (c !== "1945" || all.some(e => e.cont === c)));
     $("s-map").classList.toggle("nomap", !conts.length);
     if (!conts.length) return;
     if (!conts.includes(m.cont)) {
@@ -1549,7 +1569,7 @@
     causeChart("cOCause", all.map(x => x.d));
 
     // deaths by level bracket, stacked by friend
-    const brackets = state.cap === 70 ? ["1–9", "10–19", "20–29", "30–39", "40–49", "50–59", "60–69", "70"] : ["1–9", "10–19", "20–29", "30–39", "40–49", "50–59", "60"];
+    const brackets = [...Array(state.cap / 10)].map((_, i) => i ? `${i * 10}–${i * 10 + 9}` : "1–9").concat(String(state.cap));
     const bIdx = l => Math.min(brackets.length - 1, Math.floor((l || 1) / 10));
     drawChart("cDeathLvl", all.length ? {
       type: "bar",
@@ -1856,13 +1876,16 @@
   }
 
   // ---------- games & realms ----------
-  // TBC clients (2.x, e.g. the Anniversary realms since 2026) use Wowhead's TBC database and level 70.
+  // TBC clients (2.x, e.g. the Anniversary realms since 2026) use Wowhead's TBC database and level 70;
+  // Mists of Pandaria Classic (5.x) its MoP Classic database and level 90.
   const isTBC = ch => /^2\./.test(String(ch && ch.game && ch.game.version || ""));
+  const isMoP = ch => /^5\./.test(String(ch && ch.game && ch.game.version || ""));
   function realmExpansion(realmChars) {
-    state.tbc = realmChars.some(isTBC);
-    state.cap = state.tbc || realmChars.some(c => (c.level || 0) > 60) ? 70 : 60;
+    state.mop = realmChars.some(isMoP);
+    state.tbc = !state.mop && realmChars.some(isTBC);
+    state.cap = state.mop || realmChars.some(c => (c.level || 0) > 70) ? 90 : state.tbc || realmChars.some(c => (c.level || 0) > 60) ? 70 : 60;
   }
-  const whDomain = () => state.tbc ? "tbc" : "classic";
+  const whDomain = () => state.mop ? "mop-classic" : state.tbc ? "tbc" : "classic";
   const whItem = id => `href="https://www.wowhead.com/${whDomain()}/item=${encodeURIComponent(id)}" data-wowhead="item=${encodeURIComponent(id)}&domain=${whDomain()}"`;
 
   function gameName(g, realm) {
@@ -2005,7 +2028,8 @@
     const [cname] = classOf(ch);
     const head = `<div class="sheet-head">
         <span>${classIcon(ch)} <b>${esc(ch.name)}</b> <span class="muted">${tr("Level {0} {1} {2}", esc(ch.level || "?"), esc(RACE[ch.race] || ch.race || ""), cname)}${ch.realm ? " · " + esc(ch.realm) : ""}${ch.guild ? " · &lt;" + esc(ch.guild) + "&gt;" : ""}</span></span>
-        ${talents.length ? `<span class="talents">${spec && spec.p ? `<span class="spec">${esc(spec.n)} ${esc(cname)}</span>` : ""}${talents.map(t => `<span class="talent">${esc(t.n)} <b>${num(t.p)}</b></span>`).join("")}</span>` : ""}
+        ${talents.length ? `<span class="talents">${spec && spec.p ? `<span class="spec">${esc(spec.n)} ${esc(cname)}</span>` : ""}${talents.map(t => `<span class="talent">${esc(t.n)} <b>${num(t.p)}</b></span>`).join("")}</span>`
+          : ch.spec ? `<span class="talents"><span class="spec">${esc(ch.spec)} ${esc(cname)}</span></span>` : ""}
       </div>`;
     if (!Object.keys(gear).length) {
       return head + `<div class="mid solo" style="--c:${color}">${portraitHTML(ch)}</div><p class="empty">${ch.self ? tr("Gear appears after this character logs in with the latest FunStats.") : tr("Gear appears once this character has the Ledger app, or after the next armory update.")}</p>`;

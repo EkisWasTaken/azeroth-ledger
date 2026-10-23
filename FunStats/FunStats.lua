@@ -91,9 +91,13 @@ local function MapPosition(unit)
   return mapID, math.floor(x * 1000) / 10, math.floor(y * 1000) / 10
 end
 
--- Continent maps the website draws: Kalimdor, Eastern Kingdoms, Outland.
+-- Continent maps the website draws: Kalimdor, Eastern Kingdoms, Outland. Clients with the newer map ids
+-- (Mists of Pandaria Classic) don't have these; there the website draws Azeroth with its continents on it.
 local CONTINENTS = { 1414, 1415, 1945 }
+local AZEROTH = 947
 local CONTINENT_TYPE = Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2
+-- Mists of Pandaria Classic (5.x) and later: specializations and the newer profession list.
+local MODERN = (select(4, GetBuildInfo()) or 0) >= 50000
 
 -- The continent a map (zone, subzone, city) belongs to.
 local function ContinentOf(mapID)
@@ -123,14 +127,16 @@ local function Spot(unit)
   return { zone = GetRealZoneText(), map = mapID, x = x, y = y, cont = cont, cx = cx, cy = cy }
 end
 
--- Every zone's rectangle on each continent, so the website can draw the continents.
+-- Every zone's rectangle on each continent (or each continent's on Azeroth), so the website can draw them.
 local function BuildAtlas()
   if not (C_Map.GetMapChildrenInfo and C_Map.GetMapRectOnMap) then return nil end
   local zoneType = Enum and Enum.UIMapType and Enum.UIMapType.Zone or 3
   local atlas = { v = select(4, GetBuildInfo()) }
-  for _, cont in ipairs(CONTINENTS) do
+  local maps, kidType = CONTINENTS, zoneType
+  if not C_Map.GetMapInfo(CONTINENTS[1]) then maps, kidType = { AZEROTH }, CONTINENT_TYPE end
+  for _, cont in ipairs(maps) do
     local info = C_Map.GetMapInfo(cont)
-    local kids = info and C_Map.GetMapChildrenInfo(cont, zoneType)
+    local kids = info and C_Map.GetMapChildrenInfo(cont, kidType)
     if kids and #kids > 0 then
       local zones = {}
       for _, z in ipairs(kids) do
@@ -188,7 +194,10 @@ local function UpdateProfile()
   local _, raceToken = UnitRace("player")
   C.race = raceToken
   C.faction = UnitFactionGroup("player")
-  C.level = UnitLevel("player")
+  -- Characters never lose levels, but the game can report an old level while logging out (seen on Mists of
+  -- Pandaria Classic), so the level only goes up.
+  local level = UnitLevel("player")
+  if level and level > (C.level or 0) then C.level = level end
   UpdateGuild()
   C.lastSeen = time()
   C.owner = FunStatsDB.id
@@ -240,7 +249,10 @@ local function InitCharacter()
   for _, d in ipairs(C.deaths) do
     if type(d) == "table" and d.map and d.x and not d.cx then d.cont, d.cx, d.cy = OnContinent(d.map, d.x, d.y) end
   end
-  if not C.atlas or C.atlas.v ~= select(4, GetBuildInfo()) then C.atlas = BuildAtlas() end
+  -- Rebuilt for a new client, or when an older FunStats saved one without any maps (Mists of Pandaria Classic).
+  local hasMaps = false
+  for k in pairs(C.atlas or {}) do if k ~= "v" then hasMaps = true end end
+  if not hasMaps or C.atlas.v ~= select(4, GetBuildInfo()) then C.atlas = BuildAtlas() end
   UpdateProfile()
 
   lastMoney = GetMoney()
@@ -597,7 +609,7 @@ local function OnLevelUp(level)
   local spot = Spot()
   C.dingAt[tostring(level)] = { zone = spot.zone, cont = spot.cont, cx = spot.cx, cy = spot.cy }
   Add("levels")
-  C.level = level
+  if level > (C.level or 0) then C.level = level end
 end
 
 local function OnLoot(msg)
@@ -714,7 +726,16 @@ local function SnapshotGear(retries)
 end
 
 local function SnapshotTalents()
-  if not C or not GetNumTalentTabs then return end
+  if not C then return end
+  -- Mists of Pandaria and later: a specialization instead of talent trees.
+  if MODERN and GetSpecialization and GetSpecializationInfo then
+    local index = GetSpecialization()
+    local _, name = GetSpecializationInfo(index or 0)
+    C.spec = index and name or nil
+    C.talents = nil
+    return
+  end
+  if not GetNumTalentTabs then return end
   local tabs = {}
   for tab = 1, GetNumTalentTabs() do
     -- Classic Era returns name, icon, pointsSpent; later clients return id, name, description, icon, pointsSpent.
@@ -732,7 +753,18 @@ local PROFESSION_HEADERS = {
 }
 
 local function SnapshotProfessions()
-  if not C or not GetNumSkillLines then return end
+  if not C then return end
+  -- Cataclysm and later list professions with GetProfessions instead of the skill lines.
+  if MODERN and GetProfessions and GetProfessionInfo then
+    local out = {}
+    for _, index in pairs({ GetProfessions() }) do
+      local name, _, rank, maxRank = GetProfessionInfo(index)
+      if name then out[#out + 1] = { n = name, r = rank, m = maxRank } end
+    end
+    if #out > 0 then C.professions = out end
+    return
+  end
+  if not GetNumSkillLines then return end
   local out, section = {}, nil
   for i = 1, GetNumSkillLines() do
     local name, isHeader, _, rank, _, _, maxRank = GetSkillLineInfo(i)
@@ -902,6 +934,7 @@ end
 handlers.PLAYER_EQUIPMENT_CHANGED = SheetSoon
 handlers.CHARACTER_POINTS_CHANGED = SheetSoon
 handlers.SKILL_LINES_CHANGED = SheetSoon
+handlers.PLAYER_SPECIALIZATION_CHANGED = SheetSoon
 
 function handlers.QUEST_TURNED_IN()
   Add("quests")
@@ -922,7 +955,8 @@ frame:SetScript("OnEvent", function(_, event, ...)
   if event ~= "PLAYER_LOGIN" and not C then return end
   handlers[event](...)
 end)
-for event in pairs(handlers) do frame:RegisterEvent(event) end
+-- pcall: not every event exists in every client (specializations arrived with Mists of Pandaria).
+for event in pairs(handlers) do pcall(frame.RegisterEvent, frame, event) end
 
 ---------------------------------------------------------------------------
 -- Slash command
