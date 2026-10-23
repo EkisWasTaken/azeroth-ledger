@@ -1257,7 +1257,7 @@
     if (state.view === "all") people.forEach(p => Object.entries(p.kills).forEach(([m, c]) => kills[m] = (kills[m] || 0) + c));
     const topKill = Object.entries(kills).sort((a, b) => b[1] - a[1])[0];
     const tiles = [
-      ["skull", tr("Deaths"), num(Math.max(deathsN, t.deaths || 0)), t.ghost ? tr("{0} as ghosts", dur(t.ghost)) : "", true],
+      ["skull", tr("Deaths"), num(Math.max(deathsN, t.deaths || 0)), t.ghost ? tr("{0} as ghosts", dur(t.ghost)) : ""],
       ["sword", tr("Damage dealt"), compact(t.dmg), t.hits ? tr("{0} hits, {1} crits", num(t.hits), pct((t.crits || 0) / t.hits)) : ""],
       ["heart", tr("Healing done"), compact(t.heal), t.overheal ? tr("{0} overhealed", compact(t.overheal)) : ""],
       ["axe", tr("Killing blows"), num(t.kb), topKill ? `${num(topKill[1])}× ${esc(topKill[0])}` : ""],
@@ -1270,7 +1270,7 @@
     ];
     // Stats nobody has touched yet are left out; deaths always show (zero deaths is worth bragging about).
     const raw = [1, t.dmg, t.heal, t.kb, t.quests, t.goldIn, t.played, t.dist, t.jumps, t.dungeons];
-    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([icon, l, v, f, red]) => `<div class="frame tile"><span class="lbl" title="${esc(l)}">${sprite(icon, 1)}<span>${l}</span></span><span class="val${red ? " red" : ""}">${v}</span><span class="foot">${f || ""}</span></div>`).join("");
+    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([icon, l, v, f]) => `<div class="frame tile"><span class="lbl">${sprite(icon, 1)}<span>${l}</span></span><span class="val">${v}</span><span class="foot">${f || ""}</span></div>`).join("");
   }
 
   const ACH = [
@@ -1310,7 +1310,8 @@
     if (!ch || (!ch.avatar && !CLASS[ch.class])) return achIcon(a);
     const icon = CLASS[ch.class] ? classIcon(ch, 2) : sprite(a.i, 2);
     const face = ch.avatar ? `<canvas class="face" width="32" height="32" data-src="${esc(ch.avatar)}" role="img" aria-label="${esc(ch.name)}"></canvas><span class="alt" hidden>${icon}</span>` : icon;
-    return `<div class="achic ${a.shame ? "shame" : TIER[a.pts]}">${face}</div>`;
+    const tier = a.shame ? "shame" : TIER[a.pts];
+    return `<div class="achwrap"><div class="achic ${tier}">${face}</div><span class="achbadge ${tier}">${sprite(a.i, 1)}</span></div>`;
   }
 
   function renderAchievements(rows) {
@@ -1703,7 +1704,7 @@
   }
   // A short "when" (a date) sits after the name; a long one (a spell and its target) gets its own line.
   const longWhen = r => String(r.when || "").replace(/<[^>]+>/g, "").length > 14;
-  const recordsHTML = recs => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 2)}</span><span class="t">${r.t}</span>`
+  const recordsHTML = recs => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 1)}</span><span class="t">${r.t}</span>`
     + `<span class="v">${r.v}${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}</span>`
     + `<span class="w">${nameHTML(r.p)}${r.when && !longWhen(r) ? `<span class="muted">· ${r.when}</span>` : ""}</span>`
     + (r.when && longWhen(r) ? `<span class="when">${r.when}</span>` : "")
@@ -2133,7 +2134,7 @@
 
   // One-line card texts that are a little too long shrink to fit (down to 10.5px) instead of being cut off;
   // whatever still doesn't fit keeps its ellipsis and shows the full text on hover.
-  const FIT = ".tile .foot, .tile .lbl > span, .ach .t, .ach .d, .rec .t, .rec .w .muted, .rec .when, .rec .beat, .glead .lbl, .sigc .cmp, .sec-head p";
+  const FIT = ".tile .foot, .ach .t, .ach .d, .rec .t, .rec .w .muted, .rec .when, .rec .beat, .glead .lbl, .sigc .cmp, .sec-head p";
   function fitText() {
     document.querySelectorAll(FIT).forEach(el => {
       if (!el.offsetWidth) return;
