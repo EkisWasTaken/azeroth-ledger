@@ -188,6 +188,8 @@ body[data-route="main"] .profile-only { display: none !important; }
 /* ---------- Add stats ---------- */
 .getapp { box-shadow: inset 0 0 0 1px var(--line), inset 0 3px 0 var(--accent), var(--shadow); }
 .getapp .steps { margin: 0; }
+.dlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.dlrow .muted { font-size: 13px; }
 .btn.dl { justify-self: start; display: inline-block; text-decoration: none; padding: 12px 20px; font: 600 15px var(--pf); background: var(--accent); color: var(--on-accent); }
 
 /* ---------- Page tabs ---------- */

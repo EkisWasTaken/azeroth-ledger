@@ -205,7 +205,10 @@
     "Others ({0})": "Övriga ({0})", "View": "Vy", "Pages": "Sidor", "World": "Världen", "Records": "Rekord", "Gear": "Utrustning",
     "History": "Historik", "Activity": "Aktivitet", "Meters & Combat": "Mätare & strid", "Loot & World": "Loot & världen", "Lately": "På sistone", "This week": "Denna vecka", "Last week": "Förra veckan", "updated {0}": "uppdaterad {0}",
     "Windows: get the Ledger app": "Windows: hämta Ledger-appen", "recommended": "rekommenderas", "One download, then just play.": "En nedladdning, sedan är det bara att spela.",
-    "It installs the FunStats addon for you, and keeps it up to date.": "Den installerar FunStats-tillägget åt dig och håller det uppdaterat.",
+    "Download the app and run it once. It installs itself and the FunStats addon in every WoW folder it finds.": "Ladda ner appen och kör den en gång. Den installerar sig själv och FunStats-tillägget i varje WoW-mapp den hittar.",
+    "It updates itself: new versions of the app and the addon arrive on their own. Restart WoW to load a new addon.": "Den uppdaterar sig själv: nya versioner av appen och tillägget kommer av sig själva. Starta om WoW för att ladda ett nytt tillägg.",
+    "Already have it? Nothing to do, it keeps itself up to date. Only apps from before version 1.1 need one more download.": "Har du den redan? Då behöver du inte göra något, den håller sig uppdaterad. Bara appar från före version 1.1 behöver laddas ner en gång till.",
+    "Without the app, the addon doesn't update itself: download FunStats.zip again now and then, and upload your file after you play.": "Utan appen uppdateras inte tillägget av sig självt: ladda ner FunStats.zip igen då och då, och ladda upp din fil efter att du har spelat.",
     "It starts with Windows and waits quietly in the tray.": "Den startar med Windows och väntar tyst i aktivitetsfältet.",
     "Every time you log out of WoW, your stats appear here.": "Varje gång du loggar ut ur WoW dyker din statistik upp här.",
     "Download for Windows": "Ladda ner för Windows",
@@ -2920,6 +2923,11 @@
     staticAria.forEach(([el, en]) => el.setAttribute("aria-label", tr(en)));
   }
   translateStatic();
+  // The Add stats page shows the app's current version, from app-version.txt ("1.2.0.0 <sha256>", written by app\build.cmd).
+  fetch("app-version.txt", { cache: "no-cache" }).then(r => (r.ok ? r.text() : "")).then(t => {
+    const v = t.split(" ")[0].replace(/(\.0)+$/, "");
+    if (/^\d+(\.\d+)*$/.test(v)) document.getElementById("appVer").textContent = "v" + v;
+  }).catch(() => {});
   document.querySelectorAll(".lang-btn").forEach(b => b.addEventListener("click", () => {
     LANG = b.dataset.lang;
     try { localStorage.setItem("ledger-lang", LANG); } catch (err) { /* remembering is optional */ }

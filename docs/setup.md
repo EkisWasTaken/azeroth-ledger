@@ -79,7 +79,7 @@ To test one character without saving anything, open `https://nznnybzrqplsqyhotln
 
 ## For players
 
-**Windows:** download the app from the site's **Add stats** page and run it. Then just play.
+**Windows:** download the app from the site's **Add stats** page and run it. Then just play. It updates itself and the addon (see [Updates](#the-ledger-app-windows)); restart WoW to load a new addon.
 
 **Mac or without the app:**
 1. Unzip `FunStats.zip` into the game's AddOns folder, for example `World of Warcraft\_anniversary_\Interface\AddOns`.

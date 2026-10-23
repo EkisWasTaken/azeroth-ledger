@@ -439,13 +439,15 @@
       <div class="frame getapp">
         <div class="frame-title"><span>Windows: get the Ledger app</span><small>recommended</small></div>
         <p>One download, then just play.</p>
-        <ul class="steps">
-          <li>It installs the FunStats addon for you, and keeps it up to date.</li>
+        <ol class="steps">
+          <li>Download the app and run it once. It installs itself and the FunStats addon in every WoW folder it finds.</li>
           <li>It starts with Windows and waits quietly in the tray.</li>
           <li>Every time you log out of WoW, your stats appear here.</li>
-        </ul>
-        <a class="btn dl" href="AzerothLedger.exe" download>Download for Windows</a>
+          <li>It updates itself: new versions of the app and the addon arrive on their own. Restart WoW to load a new addon.</li>
+        </ol>
+        <div class="dlrow"><a class="btn dl" href="AzerothLedger.exe" download>Download for Windows</a><span class="muted" id="appVer"></span></div>
         <p class="muted" style="font-size:13px">If Windows says it protected your PC, click <b>More info</b>, then <b>Run anyway</b>. The app is small and only uploads your FunStats file.</p>
+        <p class="muted" style="font-size:13px">Already have it? Nothing to do, it keeps itself up to date. Only apps from before version 1.1 need one more download.</p>
         <p class="muted" style="font-size:13px">To stop it: right-click the shield icon in the tray and untick <b>Start with Windows</b>, or choose <b>Quit</b>.</p>
       </div>
       <div class="frame">
@@ -461,6 +463,7 @@
           <span class="muted">or click to choose the file</span>
         </label>
         <div class="log" id="upLog" aria-live="polite"></div>
+        <p class="muted" style="font-size:13px">Without the app, the addon doesn't update itself: download FunStats.zip again now and then, and upload your file after you play.</p>
         <p class="muted" style="font-size:13px">Guild mates without the addon still show up: with their level and class from the guild roster, and their gear from the Blizzard armory.</p>
       </div>
     </div>
