@@ -18,7 +18,6 @@ local playerGUID, playerName
 local lastHit      -- most recent damage taken, used to explain deaths
 local lastMoney, lastXP, lastXPMax
 local lastX, lastY, lastInst
-local lastInstanceName
 
 ---------------------------------------------------------------------------
 -- Helpers
@@ -245,6 +244,9 @@ local function InitCharacter()
   C.healers = C.healers or {}       -- who healed me, total effective healing
   C.playedTotal = C.playedTotal or 0
   C.dingAt = C.dingAt or {}         -- where each level was reached: zone and map positions
+  C.bosses = C.bosses or {}         -- "encounterID:difficultyID" -> kills, wipes, fastest kill, best DPS
+  C.fights = C.fights or {}         -- recent boss fights, with the group's damage and healing
+  C.runs = C.runs or {}             -- finished dungeon and raid runs; C.run is the one in progress
   -- Deaths saved before continent positions existed get them now.
   for _, d in ipairs(C.deaths) do
     if type(d) == "table" and d.map and d.x and not d.cx then d.cont, d.cx, d.cy = OnContinent(d.map, d.x, d.y) end
@@ -427,6 +429,198 @@ local function GroupTick()
 end
 
 ---------------------------------------------------------------------------
+-- Boss fights and dungeon runs. The game marks each boss fight with
+-- ENCOUNTER_START and ENCOUNTER_END; the group's damage and healing in between
+-- is that fight's meter. A run lasts from entering a dungeon or raid until
+-- being outside it for a while, so running back as a ghost is the same run.
+---------------------------------------------------------------------------
+
+local MAX_FIGHTS = 150
+local MAX_RUNS = 150
+local RUN_GRACE = 600            -- seconds outside the instance before the run is over
+local GROUP = 0x00000007         -- combat log affiliation: mine, party or raid
+local fight                      -- the boss fight in progress
+local petOwner = {}              -- pet guid -> owner guid, so pets count for their owner
+
+local function MapPets()
+  wipe(petOwner)
+  local mine = UnitGUID("pet")
+  if mine then petOwner[mine] = playerGUID end
+  local raid = IsInRaid()
+  for i = 1, raid and GetNumGroupMembers() or GetNumSubgroupMembers() do
+    local pet = UnitGUID((raid and "raidpet" or "partypet") .. i)
+    if pet then petOwner[pet] = UnitGUID((raid and "raid" or "party") .. i) end
+  end
+end
+
+-- The group member a combat log source belongs to (pets and my guardians count for their owner), or nil.
+local function FightActor(guid, flags)
+  if not guid or not flags or band(flags, GROUP) == 0 then return nil end
+  if guid:find("^Player%-") then return guid end
+  if band(flags, MINE) ~= 0 then return playerGUID end
+  return petOwner[guid]
+end
+
+local function FightTally(sub, srcGUID, srcFlags, dstGUID, dstName, dstFlags, a12, a15, a16)
+  local f = fight
+  if sub == "UNIT_DIED" then
+    if dstGUID and dstGUID:find("^Player%-") and dstFlags and band(dstFlags, GROUP) ~= 0 then
+      -- Hunters' Feign Death also fires UNIT_DIED; check a moment later.
+      C_Timer.After(0.3, function()
+        if f ~= fight or (UnitIsFeignDeath and UnitIsFeignDeath(dstName)) then return end
+        f.deaths = f.deaths + 1
+      end)
+    end
+    return
+  end
+  local who = FightActor(srcGUID, srcFlags)
+  if not who then return end
+  if sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL" then
+    local effective = (a15 or 0) - (a16 or 0)
+    if effective > 0 then f.heal[who] = (f.heal[who] or 0) + effective end
+    return
+  end
+  local amount
+  if sub == "SWING_DAMAGE" then
+    amount = a12
+  elseif sub == "SPELL_DAMAGE" or sub == "SPELL_PERIODIC_DAMAGE" or sub == "RANGE_DAMAGE" or sub == "DAMAGE_SHIELD" then
+    amount = a15
+  end
+  if amount and amount > 0 and not (dstFlags and band(dstFlags, GROUP) ~= 0) then
+    f.dmg[who] = (f.dmg[who] or 0) + amount
+  end
+end
+
+-- The fight's top ten damage dealers and top five healers, so a raid fight still fits in a sync message.
+local function FightMeter(f)
+  local rows, seen = {}, {}
+  local function top(map, n)
+    local list = {}
+    for guid in pairs(map) do list[#list + 1] = guid end
+    table.sort(list, function(a, b) return map[a] > map[b] end)
+    for i = 1, math.min(n, #list) do
+      local guid = list[i]
+      if not seen[guid] then
+        seen[guid] = true
+        local _, classToken, _, _, _, name = GetPlayerInfoByGUID(guid)
+        rows[#rows + 1] = { n = name or "?", c = classToken, d = math.floor(f.dmg[guid] or 0), h = math.floor(f.heal[guid] or 0) }
+      end
+    end
+  end
+  top(f.dmg, 10)
+  top(f.heal, 5)
+  table.sort(rows, function(a, b) return a.d > b.d end)
+  return rows
+end
+
+-- Everyone else in a party, added to the run as they show up. Raids are too many to list.
+local function AddMates(r)
+  if IsInRaid() or not IsInGroup() then return end
+  r.with = r.with or {}
+  for i = 1, GetNumSubgroupMembers() do
+    local name = UnitName("party" .. i)
+    if name and name ~= UNKNOWNOBJECT and #r.with < 8 and not tContains(r.with, name) then r.with[#r.with + 1] = name end
+  end
+end
+
+local function EndRun()
+  local r = C.run
+  if not r then return end
+  C.run = nil
+  r.dur = math.max(0, (r.left or r.last or r.t) - r.t)
+  r.left, r.last = nil, nil
+  -- A quick look inside without a single boss pull isn't a run worth listing.
+  if r.bosses == 0 and r.wipes == 0 and r.dur < 300 then return end
+  PushCapped(C.runs, r, MAX_RUNS)
+end
+
+local function OnZone()
+  local inInstance, kind = IsInInstance()
+  local r = C.run
+  if inInstance and (kind == "party" or kind == "raid") then
+    local name, _, diffID, diffName = GetInstanceInfo()
+    if not name then return end
+    if r and r.inst == name and r.d == diffID then
+      r.left = nil -- back inside: a ghost run back, or a reload
+      return
+    end
+    EndRun()
+    r = {
+      t = time(), last = time(), inst = name, kind = kind, d = diffID, dn = diffName ~= "" and diffName or nil,
+      lvl = UnitLevel("player"), bosses = 0, wipes = 0, deaths = 0,
+    }
+    AddMates(r)
+    C.run = r
+    Add("dungeons")
+    C.instances[name] = (C.instances[name] or 0) + 1
+  elseif r and not r.left then
+    -- After logging out inside, the run ended when we were last seen there.
+    r.left = math.min(time(), r.last or time())
+  end
+end
+
+local function RunTick()
+  local r = C.run
+  if not r then return end
+  if not r.left then r.last = time() elseif time() - r.left > RUN_GRACE then EndRun() end
+end
+
+local function OnEncounterStart(id, name, diffID, size)
+  MapPets()
+  fight = { id = id, start = GetTime(), t = time(), dmg = {}, heal = {}, deaths = 0 }
+end
+
+local function OnEncounterEnd(id, name, diffID, size, success)
+  local f = fight
+  fight = nil
+  if f and f.id ~= id then f = nil end
+  local secs = f and math.floor(GetTime() - f.start + 0.5)
+  local won = success == 1 or success == true
+  -- A pull that resets at once (the boss ran home) isn't a wipe.
+  if not won and secs and secs < 8 then return end
+  local mine = f and math.floor(f.dmg[playerGUID] or 0) or 0
+  local myHeal = f and math.floor(f.heal[playerGUID] or 0) or 0
+  local inst, _, _, diffName = GetInstanceInfo()
+  diffName = diffName ~= "" and diffName or nil
+
+  local key = tostring(id) .. ":" .. tostring(diffID or 0)
+  local b = C.bosses[key]
+  if not b then
+    b = { n = name, inst = inst, d = diffID, dn = diffName, kills = 0, wipes = 0 }
+    C.bosses[key] = b
+  end
+  b.dmg = (b.dmg or 0) + mine
+  b.heal = (b.heal or 0) + myHeal
+  if won then
+    b.kills = b.kills + 1
+    b.first = b.first or time()
+    b.lvl = b.lvl or UnitLevel("player") -- level at the first kill
+    b.last = time()
+    if secs and secs > 0 then
+      if not b.fast or secs < b.fast then b.fast = secs end
+      b.dps = math.max(b.dps or 0, math.floor(mine / secs))
+      b.hps = math.max(b.hps or 0, math.floor(myHeal / secs))
+    end
+    Add("bossKills")
+  else
+    b.wipes = b.wipes + 1
+    Add("wipes")
+  end
+
+  local r = C.run
+  if r and r.inst == inst then
+    if won then r.bosses = r.bosses + 1; r.lastBoss = name else r.wipes = r.wipes + 1 end
+    AddMates(r)
+  end
+  if f then
+    PushCapped(C.fights, {
+      t = f.t, boss = name, inst = inst, d = diffID, dn = diffName, size = size, ok = won or nil, dur = secs,
+      dmg = mine, heal = myHeal, deaths = f.deaths > 0 and f.deaths or nil, lvl = UnitLevel("player"), who = FightMeter(f),
+    }, MAX_FIGHTS)
+  end
+end
+
+---------------------------------------------------------------------------
 -- Combat log
 ---------------------------------------------------------------------------
 
@@ -534,6 +728,10 @@ local function OnCombatLog()
     end
   end
 
+  if fight then
+    FightTally(sub, srcGUID, srcFlags, dstGUID, dstName, dstFlags, a12, a15, a16)
+  end
+
   if next(FunStatsDB.friends) then
     OnFriendCombat(sub, srcGUID, srcName, srcFlags, dstGUID, dstName, a12, a13, a15, a16)
   end
@@ -573,6 +771,7 @@ local function OnDeath()
     grouped = IsInGroup() or nil,
   }, MAX_DEATHS)
   lastHit = nil
+  if C.run and not C.run.left then C.run.deaths = C.run.deaths + 1 end
 
   if C.settings.announce and IsInGroup() then
     local total = #C.deaths
@@ -663,8 +862,13 @@ local function OnDuel(msg)
   end
 end
 
+local RESET_PATTERN = FormatToPattern(INSTANCE_RESET_SUCCESS)
+
 local function OnSystem(msg)
   if OnDuel(msg) then return end
+  -- The group leader reset the dungeon we just left: going back in is a new run.
+  local reset = RESET_PATTERN and msg:match(RESET_PATTERN)
+  if reset and C.run and C.run.left and C.run.inst == reset then EndRun() return end
   if not ROLL_PATTERN then return end
   local who, roll, lo, hi = msg:match(ROLL_PATTERN)
   if who ~= playerName then return end
@@ -783,20 +987,6 @@ local function SnapshotSheet()
   SnapshotProfessions()
 end
 
-local function OnZone()
-  local inInstance, kind = IsInInstance()
-  if inInstance and (kind == "party" or kind == "raid") then
-    local name = GetInstanceInfo()
-    if name and name ~= lastInstanceName then
-      Add("dungeons")
-      C.instances[name] = (C.instances[name] or 0) + 1
-    end
-    lastInstanceName = name
-  else
-    lastInstanceName = nil
-  end
-end
-
 ---------------------------------------------------------------------------
 -- Once-per-second sampling: time, distance, states
 ---------------------------------------------------------------------------
@@ -814,6 +1004,7 @@ local function Tick()
   if UnitAffectingCombat("player") then Add("combat") end
   if IsSwimming() then Add("swim") end
   GroupTick()
+  RunTick()
 
   if UnitOnTaxi("player") then
     Add("taxi")
@@ -877,6 +1068,8 @@ handlers.CHAT_MSG_LOOT = OnLoot
 handlers.CHAT_MSG_SYSTEM = OnSystem
 handlers.ZONE_CHANGED_NEW_AREA = OnZone
 handlers.PLAYER_ENTERING_WORLD = OnZone
+handlers.ENCOUNTER_START = OnEncounterStart
+handlers.ENCOUNTER_END = OnEncounterEnd
 
 local sheetPending = false
 local function SheetSoon()
@@ -1031,6 +1224,20 @@ SlashCmdList.FUNSTATS = function(input)
     Print(ns.SyncStatus and ns.SyncStatus() or "sync isn't running.")
     return
   end
+  if cmd == "bosses" then
+    local list = {}
+    for _, b in pairs(C.bosses) do list[#list + 1] = b end
+    table.sort(list, function(a, b) return (a.last or a.first or 0) > (b.last or b.first or 0) end)
+    if #list == 0 then Print("no boss fights recorded yet.") end
+    for i = 1, math.min(8, #list) do
+      local b = list[i]
+      Print(("%s (%s): %d kills, %d wipes%s"):format(b.n or "?", b.inst or "?", b.kills, b.wipes,
+        b.fast and (", fastest " .. b.fast .. "s, best " .. (b.dps or 0) .. " DPS") or ""))
+    end
+    local r = C.run
+    if r then Print(("this run: %s, %d bosses, %d wipes, %d deaths"):format(r.inst, r.bosses, r.wipes, r.deaths)) end
+    return
+  end
   local arg = cmd
   if arg == "announce" then
     C.settings.announce = not C.settings.announce
@@ -1046,6 +1253,7 @@ SlashCmdList.FUNSTATS = function(input)
     C.best.hit and (C.best.hit.amt .. " (" .. (C.best.hit.spell or "?") .. ")") or "none yet"))
   Print("Type /reload or log out to save, then upload FunStats.lua on the website.")
   Print("/funstats sync shows whose stats you've received from your group and guild.")
+  Print("/funstats bosses shows your latest boss kills and the dungeon run you're in.")
   Print("/funstats add Name (or 'add group') tracks a friend, /funstats friends lists them.")
   Print("/funstats announce toggles death announcements in group chat.")
 end

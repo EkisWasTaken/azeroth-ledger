@@ -38,6 +38,17 @@ Do a bit of everything, so every stat gets something:
 
 Type `/funstats`. The numbers should be going up.
 
+### Dungeon bosses
+
+Boss fights are recorded from the game's own encounter events. These always fire in raids. For the old leveling dungeons this needs checking, so run one if you can (Ragefire Chasm or the Deadmines are quick):
+
+- [ ] Kill a boss, then type `/funstats bosses`. It should list the boss with 1 kill and the fight's length, and "this run" should count it.
+- [ ] If a boss is missing, note which dungeon and boss. Type `/console scriptErrors 1` first, in case it's an error rather than a missing event.
+- [ ] Die and run back in as a ghost: `/funstats bosses` still shows the same run.
+- [ ] Leave, and after 10 minutes outside the run is finished.
+
+**Check on the site:** **Dungeons & Raids** lists the fight under **The Boss Log** (open it for the damage meter) and the run under **Dungeon Runs**. Your character's **Records** page lists the boss under **Bosses defeated**.
+
 ## 4. Log out, and check the upload
 
 Log out (or `/reload`). Within about 20 seconds the tray status (right-click the shield) should change to "Uploaded …", and **Show log** lists your character.

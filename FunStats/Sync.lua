@@ -6,7 +6,7 @@
 --   h  hello     broadcast: for each of my characters, my newest day and its played seconds
 --   r  request   whisper:   "send me character X from day S onwards"
 --   m  meta      whisper:   character profile, records and all-time tables
---   d  day       whisper:   one day's numbers plus that day's deaths and notable loot
+--   d  day       whisper:   one day's numbers plus that day's deaths, notable loot, boss fights and runs
 -- Messages are encoded as JSON and split into chunks of "id:index:total:body".
 
 local ADDON_NAME, ns = ...
@@ -213,6 +213,19 @@ local function Top(map, n)
   return out
 end
 
+-- The n bosses fought most recently, so the profile message stays small.
+local function RecentBosses(map, n)
+  local keys = {}
+  for k, b in pairs(map or {}) do
+    if type(b) == "table" then keys[#keys + 1] = k end
+  end
+  local function seen(k) return map[k].last or map[k].first or 0 end
+  table.sort(keys, function(a, b) return seen(a) > seen(b) end)
+  local out = {}
+  for i = 1, math.min(n, #keys) do out[keys[i]] = map[keys[i]] end
+  return out
+end
+
 local PROFILE = {
   "name", "realm", "class", "race", "faction", "level", "guild", "lastSeen", "firstSeen",
   "peakGold", "gold", "playedTotal",
@@ -231,6 +244,7 @@ local function Meta(ch)
   m.casts = Top(ch.casts, 30)
   m.zones = Top(ch.zones, 30)
   m.healers = Top(ch.healers, 20)
+  m.bosses = RecentBosses(ch.bosses, 120)
   return m
 end
 
@@ -249,24 +263,33 @@ end
 local function Replica(key)
   local rep = FunStatsDB.synced[key]
   if not rep then
-    rep = { days = {}, deaths = {}, notable = {} }
+    rep = { days = {}, deaths = {}, notable = {}, fights = {}, runs = {} }
     FunStatsDB.synced[key] = rep
   end
   rep.days = rep.days or {}
   rep.deaths = rep.deaths or {}
   rep.notable = rep.notable or {}
+  rep.fights = rep.fights or {}
+  rep.runs = rep.runs or {}
   return rep
+end
+
+-- Lists that arrive with each day, kept apart from the profile.
+local DAY_LISTS = { days = true, deaths = true, notable = true, fights = true, runs = true }
+
+local function EventId(e)
+  return tostring(e.t) .. tostring(e.by or e.item or e.cause or e.boss or e.inst or "")
 end
 
 -- Add entries we don't have yet (matched by timestamp + text), keeping the list sorted and capped.
 local function MergeEvents(list, incoming, cap)
   local seen = {}
   for _, e in ipairs(list) do
-    if type(e) == "table" then seen[tostring(e.t) .. (e.by or e.item or e.cause or "")] = true end
+    if type(e) == "table" then seen[EventId(e)] = true end
   end
   for _, e in ipairs(incoming) do
     if type(e) == "table" and tonumber(e.t) then
-      local id = tostring(e.t) .. (e.by or e.item or e.cause or "")
+      local id = EventId(e)
       if not seen[id] then
         seen[id] = true
         list[#list + 1] = e
@@ -322,10 +345,22 @@ local function OnRequest(msg, sender)
   end
   table.sort(days)
   for _, day in ipairs(days) do
-    local ok = Send({
+    local msg = {
       k = "d", c = key, d = day, v = ch.days[day],
       x = OnDay(ch.deaths, day), n = OnDay(ch.notable, day),
-    }, "WHISPER", sender)
+      b = OnDay(ch.fights, day), u = OnDay(ch.runs, day),
+    }
+    -- A long raid night can be too big for one message: then the fights go without their meters, or without fights.
+    if #Encode(msg) > 400 * CHUNK then
+      local bare = {}
+      for i, f in ipairs(msg.b) do
+        bare[i] = {}
+        for k, v in pairs(f) do if k ~= "who" then bare[i][k] = v end end
+      end
+      msg.b = bare
+      if #Encode(msg) > 400 * CHUNK then msg.b = nil end
+    end
+    local ok = Send(msg, "WHISPER", sender)
     if not ok then break end -- queue full; the rest follows on the next hello
   end
 end
@@ -334,7 +369,7 @@ local function OnMeta(msg)
   if not ValidKey(msg.c) or type(msg.v) ~= "table" then return end
   local rep = Replica(msg.c)
   for k, v in pairs(msg.v) do
-    if k ~= "days" and k ~= "deaths" and k ~= "notable" then rep[k] = v end
+    if not DAY_LISTS[k] then rep[k] = v end
   end
   rep.syncedAt = time()
 end
@@ -350,6 +385,8 @@ local function OnDayMessage(msg)
   rep.days[msg.d] = clean
   if type(msg.x) == "table" then MergeEvents(rep.deaths, msg.x, 300) end
   if type(msg.n) == "table" then MergeEvents(rep.notable, msg.n, 200) end
+  if type(msg.b) == "table" then MergeEvents(rep.fights, msg.b, 150) end
+  if type(msg.u) == "table" then MergeEvents(rep.runs, msg.u, 150) end
   rep.syncedAt = time()
 end
 

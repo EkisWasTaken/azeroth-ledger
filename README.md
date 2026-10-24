@@ -25,9 +25,10 @@ The **FunStats** addon quietly records everything worth laughing about, per char
 | | |
 |---|---|
 | ⚔️ **Combat** | damage, healing, crits, overkill, killing blows, biggest hits, damage by ability |
+| 🐉 **Dungeons & raids** | boss kills and wipes, fastest kills, a damage and healing meter for every boss fight, dungeon run times and who you ran with |
 | 💀 **Deaths** | who or what killed you, where, at what level, falling and drowning included, plus your nemeses |
 | 💰 **Loot & gold** | rare drops, gold looted and spent, repairs, your richest moment |
-| 🗺️ **The world** | zones, distance run, jumps (yes, every one), time played, hearthstones, dungeon runs |
+| 🗺️ **The world** | zones, distance run, jumps (yes, every one), time played, hearthstones |
 | 🛡️ **Your character** | gear with Wowhead icons and tooltips, talents, professions, level-ups |
 | 🏆 **Glory** | achievements like *Can't stop jumping* and *Spends ages dead*, personal bests, a Hall of Fame |
 

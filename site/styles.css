@@ -576,7 +576,7 @@ a.mrow:hover .nm { color: var(--accent); }
 .clog .sp { color: var(--accent); }
 .clog .dmg { color: var(--bad); }
 .clog .where { color: var(--good); }
-.clog .lvl { color: var(--muted); font-size: 12px; }
+.clog .lvl { display: inline; position: static; min-height: 0; padding: 0; color: var(--muted); font-size: 12px; } /* not the sidebar's .lvl rows */
 .clog .alt { color: var(--muted); }
 
 .wanted { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -648,6 +648,27 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .hbar span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hbar .num { font-weight: 700; }
 .zonebars { display: grid; gap: 8px; }
+
+/* ---------- Boss fights and dungeon runs ---------- */
+.fights { display: grid; gap: 6px; max-height: min(62vh, 560px); overflow-y: auto; padding-right: 6px; }
+.fight { border-radius: 9px; background: var(--panel2); box-shadow: inset 0 0 0 1px var(--line); }
+.fight > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; padding: 8px 12px; cursor: pointer; list-style: none; font-size: 14px; }
+.fight > summary::-webkit-details-marker { display: none; }
+.fight .res { font: 800 11px var(--pf); letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; color: var(--on-accent); background: var(--good); }
+.fight .res.wipe { background: var(--bad); }
+.fight .boss { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fight .sub { grid-column: 2 / 4; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fight .when { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.fight .meter { display: grid; gap: 6px; padding: 4px 12px 12px; }
+.fight .meter .hbar { grid-template-columns: minmax(80px, 130px) minmax(0, 1fr) auto; }
+.fight .meter .hbar .fill { background: var(--c, var(--accent)) !important; }
+.fight .meter .lh { margin-top: 4px; }
+.fight .meter .lh, .runcard .lh { font: 700 11px var(--pf); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.runcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.runcard { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--panel2); box-shadow: inset 0 0 0 1px var(--line); }
+.runcard h3 { font: 600 16px var(--lf); overflow-wrap: anywhere; }
+.runcard .big { font: 400 26px/1.1 var(--sf); color: var(--good); }
+.runcard .kv { font-size: 13px; }
 
 /* ---------- Roster ---------- */
 .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }

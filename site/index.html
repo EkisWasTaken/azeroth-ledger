@@ -117,6 +117,11 @@
       <div class="fame" id="pBests"></div>
     </div>
 
+    <div class="frame" id="p-bosses" data-pg="p-records">
+      <div class="frame-title"><span>Bosses defeated</span><small>all time</small></div>
+      <div class="table-wrap tall"><table id="pBosses"><thead></thead><tbody></tbody></table></div>
+    </div>
+
     <div class="frame" id="p-ach" data-pg="p-records">
       <div class="frame-title"><span>Achievements Held</span><small>all time</small></div>
       <div class="achievements" id="pAch"></div>
@@ -336,6 +341,32 @@
     <p class="muted mapnote" id="mapNote"></p>
     <p class="muted mapnote">Click a zone to open its map. Right-click to zoom back out.</p>
     <p class="muted mapnote">Map art © Blizzard Entertainment.</p>
+  </section>
+
+  <section id="s-bosses" data-pg="dungeons" aria-labelledby="h-bosses">
+    <div class="sec-head"><h2 id="h-bosses">The Boss Log</h2></div>
+    <div class="duo">
+      <div class="frame">
+        <div class="frame-title"><span>Recent boss fights</span><small>open one for its damage meter</small></div>
+        <div class="fights" id="fightLog"></div>
+      </div>
+      <div class="frame">
+        <div class="frame-title"><span>Boss tally</span><small id="bossTallyNote"></small></div>
+        <div class="table-wrap tall"><table id="tBosses"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-runs" data-pg="dungeons" aria-labelledby="h-runs">
+    <div class="sec-head"><h2 id="h-runs">Dungeon Runs</h2></div>
+    <div class="frame">
+      <div class="frame-title"><span>Dungeon records</span><small>fastest clear: quickest run that killed the most bosses</small></div>
+      <div class="runcards" id="runCards"></div>
+    </div>
+    <div class="frame">
+      <div class="frame-title"><span>Recent runs</span><small>most recent first</small></div>
+      <div class="clog" id="runLog"></div>
+    </div>
   </section>
 
   <section id="s-combat" data-pg="meters" aria-labelledby="h-combat">

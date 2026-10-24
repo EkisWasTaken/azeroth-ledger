@@ -239,6 +239,19 @@
     "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Trollboken", "Bonds": "Band", "Full Ledger": "Hela liggaren",
     "Roster": "Rullan", "Join": "Gå med", "Signature": "Signatur", "Character": "Karaktär", "Charts": "Diagram", "Bests": "Rekord",
     "‹ Ledger": "‹ Liggaren", "Previous friend": "Föregående vän", "Next friend": "Nästa vän", "Sections": "Sektioner", "Site": "Webbplats",
+    // dungeons & raids
+    "Dungeons & Raids": "Instanser & raider", "The Boss Log": "Bossloggen", "Recent boss fights": "Senaste bossfighterna",
+    "open one for its damage meter": "öppna en för dess skademätare", "Boss tally": "Bossräkning", "Dungeon Runs": "Instansrundor",
+    "Dungeon records": "Instansrekord", "fastest clear: quickest run that killed the most bosses": "snabbast rensning: snabbaste rundan som dödade flest bossar",
+    "Recent runs": "Senaste rundorna", "Bosses defeated": "Besegrade bossar", "Kill": "Kill","Wipe": "Wipe", "({0}/s)": "({0}/s)",
+    "top damage: {0}": "mest skada: {0}", "No meter for this fight.": "Ingen mätare för den här fighten.",
+    "No boss fights yet. They're recorded from FunStats 1.3 on.": "Inga bossfighter än. De sparas från FunStats 1.3 och framåt.",
+    "Boss": "Boss", "Kills": "Dödade", "Wipes": "Wipes", "Fastest": "Snabbast", "Best DPS": "Bästa DPS", "Best HPS": "Bästa HPS",
+    "Last kill": "Senast dödad", "First kill": "Först dödad", "No bosses fought in this range.": "Inga bossar under den här perioden.",
+    "Fastest clear": "Snabbast rensning", "Runs": "Rundor", "Average time": "Snitt-tid", "Bosses": "Bossar", "up to {0}": "upp till {0}",
+    "Most runs": "Flest rundor", "No dungeon runs yet. They're recorded from FunStats 1.3 on.": "Inga instansrundor än. De sparas från FunStats 1.3 och framåt.",
+    "{0} boss": "{0} boss", "{0} bosses": "{0} bossar", "{0} wipe": "{0} wipe", "{0} wipes": "{0} wipes", "No runs in this range.": "Inga rundor under den här perioden.",
+    "No bosses defeated yet. They're recorded from FunStats 1.3 on.": "Inga besegrade bossar än. De sparas från FunStats 1.3 och framåt.",
   };
   let LANG = (() => {
     try { const s = new URLSearchParams(location.search).get("lang") || localStorage.getItem("ledger-lang"); if (s === "en" || s === "sv") return s; } catch (e) { /* remembering is optional */ }
@@ -462,6 +475,8 @@
     }
     return days;
   }
+  // Lua lists can arrive as objects ({"1": …}) after a round trip through the save file.
+  const asArr = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
   const mergeMaps = (chars, field) => {
     const out = {};
     for (const ch of chars) for (const [k, v] of Object.entries(ch[field] || {})) if (typeof v === "number") out[k] = (out[k] || 0) + v;
@@ -497,6 +512,9 @@
         spellDmg: mergeMaps(owned, "spellDmg"), casts: mergeMaps(owned, "casts"), heat: mergeMaps(owned, "heat"),
         zones: mergeMaps(owned, "zones"), healers: mergeMaps(owned, "healers"), kills: mergeMaps(owned, "kills"), duels,
         notable: owned.flatMap(ch => (ch.notable || []).filter(Boolean).map(n => ({ ...n, _char: ch.name }))),
+        fights: owned.flatMap(ch => asArr(ch.fights).filter(f => f && f.t && f.boss)),
+        runs: owned.flatMap(ch => asArr(ch.runs).filter(r => r && r.t && r.inst)),
+        bosses: owned.flatMap(ch => Object.values(ch.bosses && typeof ch.bosses === "object" ? ch.bosses : {}).filter(b => b && b.n)),
         peakGold: Math.max(0, ...owned.map(ch => ch.peakGold || 0)),
         bestHit: owned.map(ch => ch.best && ch.best.hit).filter(Boolean).sort((a, b) => b.amt - a.amt)[0],
       };
@@ -664,6 +682,50 @@
       };
       days[id + "_x"] = { char: id, days: dmap };
     });
+    // Dungeon runs done together, so each run and boss fight is in several characters' saves, like the real thing.
+    const DEMO_BOSSES = {
+      "Ragefire Chasm": ["Oggleflint", "Taragaman the Hungerer", "Jergosh the Invoker", "Bazzalan"],
+      "The Deadmines": ["Rhahk'Zor", "Sneed", "Gilnid", "Mr. Smite", "Captain Greenskin", "Edwin VanCleef"],
+      "Wailing Caverns": ["Lady Anacondra", "Lord Cobrahn", "Kresh", "Lord Pythas", "Skum", "Lord Serpentis", "Verdan the Everliving", "Mutanus the Devourer"],
+      "Shadowfang Keep": ["Rethilgore", "Razorclaw the Butcher", "Baron Silverlaine", "Commander Springvale", "Odo the Blindwatcher", "Fenrus the Devourer", "Wolf Master Nandos", "Archmage Arugal"],
+    };
+    const DPS = { WARRIOR: 34, PRIEST: 14, MAGE: 42, SHAMAN: 26, WARLOCK: 38, DRUID: 24 };
+    const ids = Object.keys(chars);
+    ids.forEach(id => Object.assign(chars[id], { fights: [], runs: [], bosses: {} }));
+    for (let i = 0; i < 16; i++) {
+      const inst = pickOne(dungeons), list = DEMO_BOSSES[inst];
+      const group = ids.filter(() => rnd() < 0.65).slice(0, 5);
+      if (group.length < 2) continue;
+      const t0 = Math.floor(Date.now() / 1000) - 86400 * ri(0, SPAN - 1) - ri(0, 30000);
+      const killed = rnd() < 0.75 ? list.length : ri(1, list.length - 1);
+      const fights = [];
+      let t = t0 + ri(180, 500), wipes = 0;
+      for (let b = 0; b < killed; b++) {
+        const tries = rnd() < 0.12 ? 2 : 1;
+        for (let k = 1; k <= tries; k++) {
+          const ok = k === tries, secs = ok ? ri(30, 150) : ri(20, 90);
+          if (!ok) wipes++;
+          const who = group.map(gid => {
+            const c = chars[gid], healer = c.class === "PRIEST" || (c.class === "DRUID" && rnd() < 0.5);
+            return { n: c.name, c: c.class, d: Math.round(DPS[c.class] * secs * (0.7 + rnd() * 0.6) * (healer ? 0.3 : 1)), h: healer ? Math.round(secs * ri(25, 45)) : Math.round(secs * ri(0, 3)) };
+          });
+          fights.push({ t, boss: list[b], inst, ok: ok || undefined, dur: secs, size: 5, deaths: ok ? (rnd() < 0.2 ? 1 : undefined) : ri(3, 5), who });
+          t += secs + ri(90, 420);
+        }
+      }
+      group.forEach(gid => {
+        const c = chars[gid];
+        c.runs.push({ t: t0, inst, kind: "party", dur: t - t0 + ri(30, 240), bosses: killed, wipes, deaths: ri(0, 2), lvl: c.level, lastBoss: list[killed - 1], with: group.filter(x => x !== gid).map(x => chars[x].name) });
+        fights.forEach(f => {
+          const me = f.who.find(w => w.n === c.name);
+          c.fights.push({ ...f, dmg: me.d, heal: me.h, lvl: c.level });
+          const key = `${f.boss}:${inst}`, b = c.bosses[key] ||= { n: f.boss, inst, kills: 0, wipes: 0 };
+          if (!f.ok) { b.wipes++; return; }
+          b.kills++; b.first = Math.min(b.first || Infinity, f.t); b.last = Math.max(b.last || 0, f.t); b.lvl ||= c.level;
+          b.fast = Math.min(b.fast || Infinity, f.dur); b.dps = Math.max(b.dps || 0, Math.round(me.d / f.dur)); b.hps = Math.max(b.hps || 0, Math.round(me.h / f.dur));
+        });
+      });
+    }
     const players = {
       ex1: { name: "Alex", chars: ["Grimtusk-Example"] },
       ex2: { name: "Sam", chars: ["Mirelle-Example"] },
@@ -1631,6 +1693,146 @@
       || `<p class="empty">${tr("No deaths, no dangerous places.")}</p>`;
   }
 
+  // ---------- dungeons & raids ----------
+  const bossKey = x => `${x.boss || x.n}|${x.inst || ""}|${x.d || 0}`;
+  // Fight and run lengths: 2:05 under an hour, otherwise hours and minutes.
+  const clock = s => {
+    if (s == null || !(s >= 0)) return "–";
+    s = Math.round(s);
+    return s >= 3600 ? dur(s) : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  };
+  const dayText = t => new Date(t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" });
+  // A name from a fight's meter: a link when that character is on the site, otherwise just the class colour.
+  const whoHTML = (w, people) => {
+    const p = people.find(x => x.name === w.n);
+    return p ? nameHTML(p) : `<span class="dot" style="background:${(CLASS[w.c] || classOf({}))[1]}"></span><span class="cname">${esc(w.n)}</span>`;
+  };
+  // The difficulty only shows for instances that were run on more than one.
+  function instLabeler(records) {
+    const diffs = {};
+    records.forEach(r => (diffs[r.inst] ||= new Set()).add(r.d || 0));
+    return r => esc(r.inst || "?") + (r.dn && diffs[r.inst] && diffs[r.inst].size > 1 ? ` <span class="muted">(${esc(r.dn)})</span>` : "");
+  }
+
+  // A fight seen by several characters in the group is one fight: the same boss within half a minute.
+  // Their meters are combined with max, so nobody's damage counts twice.
+  function groupFights(people) {
+    const all = [];
+    people.forEach(p => p.fights.forEach(f => { if (inRange(localKey(f.t))) all.push({ p, f }); }));
+    all.sort((a, b) => a.f.t - b.f.t);
+    const byBoss = {}, out = [];
+    for (const { p, f } of all) {
+      const key = bossKey(f), list = byBoss[key] ||= [];
+      let g = list.find(x => Math.abs(x.t - f.t) < 30);
+      if (!g) { g = { key, boss: f.boss, inst: f.inst, d: f.d, dn: f.dn, t: f.t, dur: f.dur, ok: false, deaths: 0, who: {}, seen: [] }; list.push(g); out.push(g); }
+      g.ok = g.ok || !!f.ok;
+      if (f.dur > (g.dur || 0)) g.dur = f.dur;
+      g.deaths = Math.max(g.deaths, +f.deaths || 0);
+      g.seen.push(p);
+      const add = r => {
+        if (!r || !r.n) return;
+        const w = g.who[r.n] ||= { n: String(r.n), c: r.c, d: 0, h: 0 };
+        w.d = Math.max(w.d, +r.d || 0); w.h = Math.max(w.h, +r.h || 0); w.c ||= r.c;
+      };
+      asArr(f.who).forEach(add);
+      add({ n: p.name, c: p.class, d: f.dmg, h: f.heal }); // in case their own meter left them out
+    }
+    return out.sort((a, b) => b.t - a.t);
+  }
+
+  // Runs work the same way: one group run per dungeon within 15 minutes of entering.
+  function groupRuns(people) {
+    const all = [];
+    people.forEach(p => p.runs.forEach(r => { if (inRange(localKey(r.t))) all.push({ p, r }); }));
+    all.sort((a, b) => a.r.t - b.r.t);
+    const byInst = {}, out = [];
+    for (const { p, r } of all) {
+      const list = byInst[`${r.inst}|${r.d || 0}`] ||= [];
+      let g = list.find(x => Math.abs(x.t - r.t) < 900);
+      if (!g) { g = { inst: r.inst, d: r.d, dn: r.dn, kind: r.kind, t: r.t, lvl: r.lvl, dur: 0, bosses: 0, wipes: 0, deaths: 0, people: [], names: new Set() }; list.push(g); out.push(g); }
+      g.dur = Math.max(g.dur, +r.dur || 0); g.bosses = Math.max(g.bosses, +r.bosses || 0); g.wipes = Math.max(g.wipes, +r.wipes || 0);
+      g.deaths += +r.deaths || 0;
+      g.lastBoss ||= r.lastBoss;
+      g.people.push(p); g.names.add(p.name);
+      asArr(r.with).forEach(n => g.names.add(String(n)));
+    }
+    return { runs: out.sort((a, b) => b.t - a.t), all };
+  }
+
+  function renderDungeons(people) {
+    const fights = groupFights(people);
+    const label = instLabeler(fights.concat(people.flatMap(p => p.bosses.map(b => ({ ...b, boss: b.n })))));
+
+    $("fightLog").innerHTML = fights.slice(0, 60).map(g => {
+      const who = Object.values(g.who);
+      const dmg = who.filter(w => w.d > 0).sort((a, b) => b.d - a.d);
+      const heal = who.filter(w => w.h > 0).sort((a, b) => b.h - a.h).slice(0, 5);
+      const bars = (list, f) => {
+        const max = Math.max(1, ...list.map(f));
+        return list.map(w => `<div class="hbar" style="--c:${(CLASS[w.c] || classOf({}))[1]}"><span>${whoHTML(w, people)}</span><span class="track"><span class="fill" style="display:block;width:${(f(w) / max) * 100}%"></span></span><span class="num">${compact(f(w))}${g.dur ? ` <span class="muted">${tr("({0}/s)", compact(f(w) / g.dur))}</span>` : ""}</span></div>`).join("");
+      };
+      const sub = [label(g), clock(g.dur), g.deaths ? tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths) : "", dmg[0] ? tr("top damage: {0}", esc(dmg[0].n)) : ""].filter(Boolean).join(" · ");
+      return `<details class="fight"><summary><span class="res${g.ok ? "" : " wipe"}">${tr(g.ok ? "Kill" : "Wipe")}</span><span class="boss">${esc(g.boss)}</span><span class="when">${dayText(g.t)}</span><span class="sub">${sub}</span></summary>
+        <div class="meter">${dmg.length ? `<span class="lh">${tr("Damage")}</span>${bars(dmg, w => w.d)}` : ""}${heal.length ? `<span class="lh">${tr("Healing")}</span>${bars(heal, w => w.h)}` : ""}${!dmg.length && !heal.length ? `<p class="empty">${tr("No meter for this fight.")}</p>` : ""}</div></details>`;
+    }).join("") || `<p class="empty">${tr("No boss fights yet. They're recorded from FunStats 1.3 on.")}</p>`;
+
+    // The tally: this range's fights, plus (all time) each character's own totals, which go back further than the fight list.
+    const tally = {};
+    const row = x => tally[bossKey(x)] ||= { boss: x.boss || x.n, inst: x.inst, d: x.d, dn: x.dn, kills: 0, wipes: 0, fast: null, dps: null, last: 0 };
+    for (const g of fights) {
+      const r = row(g);
+      if (!g.ok) { r.wipes++; continue; }
+      r.kills++;
+      r.last = Math.max(r.last, g.t);
+      if (g.dur && (r.fast == null || g.dur < r.fast)) r.fast = g.dur;
+      if (g.dur) for (const w of Object.values(g.who)) if (!r.dps || w.d / g.dur > r.dps.v) r.dps = { v: w.d / g.dur, w };
+    }
+    if (state.view === "all") for (const p of people) for (const b of p.bosses) {
+      const r = row(b);
+      r.kills = Math.max(r.kills, +b.kills || 0);
+      r.wipes = Math.max(r.wipes, +b.wipes || 0);
+      if (b.fast && (r.fast == null || b.fast < r.fast)) r.fast = b.fast;
+      if (b.dps && (!r.dps || b.dps > r.dps.v)) r.dps = { v: b.dps, w: { n: p.name, c: p.class } };
+      r.last = Math.max(r.last, +b.last || 0);
+    }
+    const trows = Object.values(tally).sort((a, b) => b.last - a.last || b.wipes - a.wipes);
+    $("bossTallyNote").textContent = rangeLabel();
+    $("tBosses").tHead.innerHTML = `<tr><th>${tr("Boss")}</th><th>${tr("Kills")}</th><th>${tr("Wipes")}</th><th>${tr("Fastest")}</th><th>${tr("Best DPS")}</th><th>${tr("Last kill")}</th></tr>`;
+    $("tBosses").tBodies[0].innerHTML = trows.map(r => `<tr><td><b>${esc(r.boss)}</b><br><span class="muted" style="font-size:12px">${label(r)}</span></td><td>${num(r.kills)}</td><td>${num(r.wipes)}</td><td>${clock(r.fast)}</td>
+        <td>${r.dps ? `<span class="nm">${whoHTML(r.dps.w, people)} ${num(r.dps.v)}</span>` : "–"}</td><td>${r.last ? dayText(r.last) : "–"}</td></tr>`).join("")
+      || `<tr><td colspan="6" class="empty">${tr("No bosses fought in this range.")}</td></tr>`;
+
+    // Dungeon records and the latest runs.
+    const { runs, all } = groupRuns(people);
+    const runLabel = instLabeler(runs);
+    const byInst = {};
+    runs.forEach(g => (byInst[`${g.inst}|${g.d || 0}`] ||= []).push(g));
+    $("runCards").innerHTML = Object.values(byInst).sort((a, b) => b.length - a.length).map(list => {
+      const most = Math.max(...list.map(g => g.bosses));
+      const clears = list.filter(g => g.bosses === most && most > 0 && g.dur > 0).sort((a, b) => a.dur - b.dur);
+      const best = clears[0];
+      const runners = {};
+      all.forEach(({ p, r }) => { if (r.inst === list[0].inst && (r.d || 0) === (list[0].d || 0)) runners[p.name] = (runners[p.name] || 0) + 1; });
+      const top = Object.entries(runners).sort((a, b) => b[1] - a[1])[0];
+      const topP = top && people.find(p => p.name === top[0]);
+      return `<div class="runcard"><h3>${runLabel(list[0])}</h3>
+        <span class="lh">${tr("Fastest clear")}</span><span class="big">${best ? clock(best.dur) : "–"}</span>
+        ${best ? `<span class="muted" style="font-size:13px">${esc([...best.names].slice(0, 5).join(", "))} · ${dayText(best.t)}</span>` : ""}
+        <dl class="kv"><dt>${tr("Runs")}</dt><dd>${num(list.length)}</dd>
+          <dt>${tr("Average time")}</dt><dd>${clock(list.reduce((a, g) => a + g.dur, 0) / list.length)}</dd>
+          <dt>${tr("Bosses")}</dt><dd>${tr("up to {0}", most)}</dd>
+          <dt>${tr("Deaths")}</dt><dd>${num(list.reduce((a, g) => a + g.deaths, 0))}</dd>
+          ${top ? `<dt>${tr("Most runs")}</dt><dd>${topP ? nameHTML(topP) : esc(top[0])} ×${top[1]}</dd>` : ""}</dl></div>`;
+    }).join("") || `<p class="empty">${tr("No dungeon runs yet. They're recorded from FunStats 1.3 on.")}</p>`;
+    $("runLog").innerHTML = runs.slice(0, 60).map(g => {
+      const bits = [clock(g.dur), tr(g.bosses === 1 ? "{0} boss" : "{0} bosses", g.bosses)];
+      if (g.wipes) bits.push(tr(g.wipes === 1 ? "{0} wipe" : "{0} wipes", g.wipes));
+      if (g.deaths) bits.push(tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths));
+      return `<div class="ln"><span class="ts">${dayText(g.t)}</span><b class="where">${runLabel(g)}</b> · ${bits.join(" · ")}
+        <span class="alt">· ${esc([...g.names].join(", "))}</span>${g.lvl ? ` <span class="lvl">${tr("Lvl {0}", esc(g.lvl))}</span>` : ""}</div>`;
+    }).join("") || `<p class="empty">${tr("No runs in this range.")}</p>`;
+  }
+
   function renderCombat(rows) {
     const R = [
       [tr("Damage"), s => s.dmg || 0], [tr("Healing"), s => s.heal || 0], [tr("Killing blows"), s => s.kb || 0],
@@ -2072,6 +2274,7 @@
       $("p-compare").classList.add("is-empty");
       ["pSig", "pAch", "pSheet", "pBests", "pDeaths", "pHeat", "pZones", "pLoot", "pNemesis", "pCharPick", "pLately"].forEach(id => $(id).innerHTML = "");
       ["cPDaily", "cPRace", "cPSpells", "cPCause"].forEach(id => drawChart(id, null));
+      $("pBosses").tHead.innerHTML = $("pBosses").tBodies[0].innerHTML = "";
       return;
     }
     document.title = `${p.name} · Azeroth Ledger`;
@@ -2148,7 +2351,15 @@
     $("pNemesis").innerHTML = kTop.map(([n, c]) => `<div class="hbar bad"><span>${esc(n)}</span><span class="track"><span class="fill" style="display:block;width:${(c / kMax) * 100}%"></span></span><span class="num">${c}</span></div>`).join("")
       || `<p class="empty">${tr("No creature has killed {0} yet.", esc(p.name))}</p>`;
 
-    $("pBests").innerHTML = recordsHTML(fameRecords([p])) || `<p class="empty">${tr("Personal bests appear after the first synced session.")}</p>`;
+    // Bosses in the order they first fell, so a leveling character's list reads like their journey.
+    const pLabel = instLabeler(p.bosses);
+    const bosses = p.bosses.slice().sort((a, b) => (a.first || Infinity) - (b.first || Infinity));
+    $("pBosses").tHead.innerHTML = `<tr><th>${tr("Boss")}</th><th>${tr("Kills")}</th><th>${tr("Wipes")}</th><th>${tr("Fastest")}</th><th>${tr("Best DPS")}</th><th>${tr("Best HPS")}</th><th>${tr("First kill")}</th></tr>`;
+    $("pBosses").tBodies[0].innerHTML = bosses.map(b => `<tr><td><b>${esc(b.n)}</b><br><span class="muted" style="font-size:12px">${pLabel(b)}</span></td><td>${num(b.kills)}</td><td>${num(b.wipes)}</td>
+        <td>${clock(b.fast)}</td><td>${b.dps ? num(b.dps) : "–"}</td><td>${b.hps ? num(b.hps) : "–"}</td><td>${b.first ? dayText(b.first) + (b.lvl ? ` <span class="muted">${tr("Lvl {0}", esc(b.lvl))}</span>` : "") : "–"}</td></tr>`).join("")
+      || `<tr><td colspan="7" class="empty">${tr("No bosses defeated yet. They're recorded from FunStats 1.3 on.")}</td></tr>`;
+
+    $("pBests").innerHTML = recordsHTML(fameRecords([p])) ||`<p class="empty">${tr("Personal bests appear after the first synced session.")}</p>`;
     $("pDeaths").innerHTML = p.deaths.slice().sort((a, b) => b.t - a.t).slice(0, 30).map(d => deathLine(p, d, true)).join("") || `<p class="empty">${tr("{0} hasn't died yet. Impressive.", esc(p.name))}</p>`;
     $("pHeat").innerHTML = heatHTML(p.heat);
     const zs = Object.entries(p.zones).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -2352,6 +2563,7 @@
     renderMeter(active.length ? active : rows);
     renderDaily(people);
     renderDeaths(people);
+    renderDungeons(people);
     renderMap(people);
     renderCombat(active);
     renderLoot(active, people);
@@ -2569,7 +2781,7 @@
   // ---------- navigation ----------
   // Pages: [id, label, icon]. Each page shows only the sections tagged with its data-pg.
   const MAIN_PAGES = [
-    ["overview", "Overview", "scroll"], ["meters", "Meters & Combat", "sword"], ["deaths", "Deaths", "skull"],
+    ["overview", "Overview", "scroll"], ["meters", "Meters & Combat", "sword"], ["dungeons", "Dungeons & Raids", "gate"], ["deaths", "Deaths", "skull"],
     ["atlas", "Atlas", "map"], ["loot", "Loot & Gold", "loot"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
   ];
   const PROFILE_PAGES = [
