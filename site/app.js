@@ -1467,15 +1467,18 @@
     // Biggest achievements first (the sort keeps the list order among equals).
     const pts = c => +c.match(/data-pts="(\d+)"/)[1];
     cards.sort((a, b) => pts(b) - pts(a));
-    $("achievements").innerHTML = cards.join("") || `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
+    const none = `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
+    $("achievements").innerHTML = cards.slice(0, OVERVIEW_CARDS).join("") || none;
+    $("achAll").innerHTML = cards.join("") || none;
     drawFaces($("achievements"));
+    drawFaces($("achAll"));
     carUpdateAll();
   }
   document.addEventListener("click", e => {
     const j = e.target.closest("[data-jump]");
     if (!j) return;
     $("recNews").open = false;
-    if (j.dataset.jump === "s-fame" && state.page !== "overview") setPage("overview");
+    if (j.dataset.jump === "s-glory-fame") { state.sub.glory = "s-glory-fame"; setPage("glory"); }
     $(j.dataset.jump).scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
   });
 
@@ -2014,6 +2017,7 @@
     }).join("") || `<p class="empty">${tr("Nobody has been healed by a friend yet.")}</p>`;
   }
 
+  const OVERVIEW_CARDS = 6; // Hall of Fame and achievement cards on the overview
   function renderFame(people) {
     const recs = fameRecords(people).sort((a, b) => !!b.fresh - !!a.fresh); // new records first
     const fresh = recs.filter(r => r.fresh);
@@ -2021,17 +2025,22 @@
     $("recNews").hidden = !fresh.length;
     if (!fresh.length) $("recNews").open = false;
     $("recNews").innerHTML = fresh.length ? `<summary>${sprite("sulfuras", 1)}${tr(fresh.length === 1 ? "A record fell!" : "{0} records fell!", fresh.length)}</summary><div class="menu"><small>${state.view === "all" ? tr("last 7 days") : rangeLabel()}</small>` +
-      fresh.map(r => `<button type="button" class="recchip" data-jump="s-fame">${esc(r.p.name)} · ${r.t} · <b>${r.v}</b></button>`).join("") + `</div>` : "";
-    $("fame").innerHTML = recordsHTML(recs) || `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
+      fresh.map(r => `<button type="button" class="recchip" data-jump="s-glory-fame">${esc(r.p.name)} · ${r.t} · <b>${r.v}</b></button>`).join("") + `</div>` : "";
+    const none = `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
+    // The overview shows a handful; the Hall of Fame page has them all, each with the runners-up.
+    $("fame").innerHTML = recordsHTML(recs.slice(0, OVERVIEW_CARDS)) || none;
+    $("fameAll").innerHTML = recordsHTML(recs, true) || none;
     carUpdateAll();
   }
   // A short "when" (a date) sits after the name; a long one (a spell and its target) gets its own line.
   const longWhen = r => String(r.when || "").replace(/<[^>]+>/g, "").length > 14;
-  const recordsHTML = recs => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 1)}</span><span class="t">${r.t}</span>`
+  const recordsHTML = (recs, podium) => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 1)}</span><span class="t">${r.t}</span>`
     + `<span class="v">${r.v}${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}</span>`
     + `<span class="w">${nameHTML(r.p)}${r.when && !longWhen(r) ? `<span class="muted">· ${r.when}</span>` : ""}</span>`
     + (r.when && longWhen(r) ? `<span class="when">${r.when}</span>` : "")
-    + (r.fresh ? `<span class="beat">${beatText(r)}</span>` : "") + `</div>`).join("");
+    + (r.fresh ? `<span class="beat">${beatText(r)}</span>` : "")
+    + (podium && r.top && r.top.length > 1 ? `<ol class="podium">${r.top.map((x, i) => `<li><span class="rk">${i + 1}</span><span class="nm">${nameHTML(x.p)}</span><span class="pv">${x.v}</span></li>`).join("")}</ol>` : "")
+    + `</div>`).join("");
   const beatText = r => r.beat.p === r.p
     ? tr("Topped their own {0} from {1}", r.beat.v, shortDate(r.beat.k))
     : tr("Beat {0}'s {1} from {2}", esc(r.beat.p.name), r.beat.v, shortDate(r.beat.k));
@@ -2051,6 +2060,11 @@
   const freshDay = k => state.view === "all" ? k >= addDays(todayKey(), -6) : inRange(k);
   const newRecord = (k, prev) => (k && prev && freshDay(k) ? { fresh: true, beat: prev } : {});
 
+  // The best three characters for a record: each character's own best, highest first.
+  const podiumOf = (people, best, fmt) => people.map(p => ({ p, n: best(p) })).filter(x => x.n > 0)
+    .sort((a, b) => b.n - a.n).slice(0, 3).map(x => ({ p: x.p, v: fmt(x.n) }));
+  const bestDay = (p, f) => Math.max(0, ...Object.values(p.days).map(d => d[f] || 0));
+
   function fameRecords(people) {
     const DAY = [
       ["dmg", "Most damage in one day", num], ["heal", "Most healing in one day", num], ["deaths", "Most deaths in one day", num],
@@ -2061,22 +2075,30 @@
     const recs = [];
     DAY.forEach(([f, t, fmt]) => {
       const hist = recordHistory(people, f), best = hist[hist.length - 1];
-      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
+      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), top: podiumOf(people, p => bestDay(p, f), fmt), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
     });
     // Only each character's best hit is kept, so the hit it beat is the biggest one landed before it.
     const hits = people.map(p => ({ p, h: p.bestHit })).filter(x => x.h).sort((a, b) => b.h.amt - a.h.amt), hit = hits[0];
     if (hit) {
       const before = hit.h.t && hits.find(x => x.h.t && x.h.t < hit.h.t);
-      recs.unshift({ t: tr("Hardest hit ever"), v: num(hit.h.amt), p: hit.p, when: esc(hit.h.spell || "") + (hit.h.target ? tr(" on {0}", esc(hit.h.target)) : ""),
+      recs.unshift({ t: tr("Hardest hit ever"), v: num(hit.h.amt), p: hit.p, top: hits.slice(0, 3).map(x => ({ p: x.p, v: num(x.h.amt) })), when: esc(hit.h.spell || "") + (hit.h.target ? tr(" on {0}", esc(hit.h.target)) : ""),
         ...newRecord(hit.h.t && localKey(hit.h.t), before && { p: before.p, v: num(before.h.amt), k: localKey(before.h.t) }) });
     }
     const rich = people.filter(p => p.peakGold).sort((a, b) => b.peakGold - a.peakGold)[0];
-    if (rich) recs.push({ t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, when: tr("most gold held at once") });
+    if (rich) recs.push({ t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, top: podiumOf(people, p => p.peakGold, goldHTML), when: tr("most gold held at once") });
     let mob = null;
     people.forEach(p => Object.entries(p.kills).forEach(([m, c]) => { if (!mob || c > mob.c) mob = { p, m, c }; }));
-    if (mob) recs.push({ t: tr("Most hunted creature"), v: `${num(mob.c)}× ${esc(mob.m)}`, p: mob.p, when: tr("by one friend") });
-    const lvl = people.map(p => ({ p, ch: p.chars.slice().sort((a, b) => (b.level || 0) - (a.level || 0))[0] })).filter(x => x.ch).sort((a, b) => (b.ch.level || 0) - (a.ch.level || 0))[0];
-    if (lvl) recs.push({ t: tr("Highest level"), v: tr("Level {0}", lvl.ch.level || "?"), p: lvl.p, when: esc(lvl.ch.name) });
+    if (mob) {
+      // each character's most hunted creature
+      const fav = p => Object.entries(p.kills).sort((a, b) => b[1] - a[1])[0] || ["", 0];
+      const top = people.map(p => ({ p, f: fav(p) })).filter(x => x.f[1] > 0).sort((a, b) => b.f[1] - a.f[1]).slice(0, 3)
+        .map(x => ({ p: x.p, v: `${num(x.f[1])}× ${esc(x.f[0])}` }));
+      recs.push({ t: tr("Most hunted creature"), v: `${num(mob.c)}× ${esc(mob.m)}`, p: mob.p, when: tr("by one friend"), top });
+    }
+    const lvls = people.map(p => ({ p, ch: p.chars.slice().sort((a, b) => (b.level || 0) - (a.level || 0))[0] })).filter(x => x.ch).sort((a, b) => (b.ch.level || 0) - (a.ch.level || 0));
+    const lvl = lvls[0];
+    if (lvl) recs.push({ t: tr("Highest level"), v: tr("Level {0}", lvl.ch.level || "?"), p: lvl.p, when: esc(lvl.ch.name),
+      top: lvls.slice(0, 3).map(x => ({ p: x.p, v: tr("Level {0}", x.ch.level || "?") })) });
     return recs;
   }
 
@@ -2782,7 +2804,7 @@
   // Pages: [id, label, icon]. Each page shows only the sections tagged with its data-pg.
   const MAIN_PAGES = [
     ["overview", "Overview", "scroll"], ["meters", "Meters & Combat", "sword"], ["dungeons", "Dungeons & Raids", "gate"], ["deaths", "Deaths", "skull"],
-    ["atlas", "Atlas", "map"], ["loot", "Loot & Gold", "loot"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
+    ["atlas", "Atlas", "map"], ["loot", "Loot & Gold", "loot"], ["glory", "Hall of Fame", "sulfuras"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
   ];
   const PROFILE_PAGES = [
     ["p-overview", "Character", "ashbringer"], ["p-activity", "Activity", "clock"], ["p-records", "Records", "shield"], ["p-compare", "Compare", "sword"],
@@ -2881,7 +2903,12 @@
   });
   $("pageTabs").addEventListener("click", e => { const b = e.target.closest(".pagetab"); if (b) { setMenu(false); setPage(b.dataset.pg); } });
   // "Details" and "View all" on the overview's cards open their page.
-  document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if (g) setPage(g.dataset.goto); });
+  document.addEventListener("click", e => {
+    const g = e.target.closest("[data-goto]");
+    if (!g) return;
+    if (g.dataset.sub) state.sub[g.dataset.goto] = g.dataset.sub; // open the page on the matching section
+    setPage(g.dataset.goto);
+  });
 
   // Phones: the sidebar slides in from the menu button and closes on a page, the dimmed backdrop or Escape.
   function setMenu(open) {
