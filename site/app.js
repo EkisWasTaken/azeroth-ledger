@@ -11,7 +11,7 @@
     "Stat shown in the meter": "Statistik i mätaren", "per hour": "per timme",
     "{0} friend, {1}.": "{0} vän, {1}.", "{0} friends, {1}.": "{0} vänner, {1}.", "{0} character": "{0} karaktär", "{0} characters": "{0} karaktärer",
     " Updated {0}.": " Uppdaterad {0}.",
-    "<strong>Opening the ledger…</strong> Showing example data until it loads.": "<strong>Öppnar liggaren…</strong> Visar exempeldata tills den har laddats.",
+    "Opening the ledger…": "Öppnar liggaren…",
     "<strong>Example data.</strong> This site isn't connected to Supabase yet. Add your project URL and publishable key in <code>config.js</code>.": "<strong>Exempeldata.</strong> Sidan är inte kopplad till Supabase än. Lägg in projektets URL och publishable key i <code>config.js</code>.",
     "<strong>Couldn't reach the ledger.</strong> Showing example data instead. Try reloading in a minute.": "<strong>Kunde inte nå liggaren.</strong> Visar exempeldata i stället. Försök ladda om om en minut.",
     "<strong>The ledger is connected but still empty.</strong> Stats appear after the first sync. Until then, this is example data.": "<strong>Liggaren är kopplad men fortfarande tom.</strong> Statistiken dyker upp efter första synken. Tills dess är det här exempeldata.",
@@ -2509,6 +2509,9 @@
   window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitText, 150); });
 
   function render() {
+    // No example data while the ledger loads: show the loader until there's something real to draw.
+    document.body.classList.toggle("loading", state.status === "loading");
+    if (state.status === "loading") { $("loaderText").textContent = tr("Opening the ledger…"); return; }
     requestAnimationFrame(fitText); // after this render has laid the page out
     const d = state.data;
     const real = characters(d);
@@ -2550,7 +2553,6 @@
     renderNav(people, route);
 
     const banner = {
-      loading: tr("<strong>Opening the ledger…</strong> Showing example data until it loads."),
       unconfigured: tr("<strong>Example data.</strong> This site isn't connected to Supabase yet. Add your project URL and publishable key in <code>config.js</code>."),
       error: tr("<strong>Couldn't reach the ledger.</strong> Showing example data instead. Try reloading in a minute."),
     }[state.status] || (state.demo
