@@ -2061,6 +2061,7 @@
   const newRecord = (k, prev) => (k && prev && freshDay(k) ? { fresh: true, beat: prev } : {});
 
   // The best three characters for a record: each character's own best, highest first.
+  // Daily records then move their holder (the first to reach it) to the front, so a tie can't show someone else at #1.
   const podiumOf = (people, best, fmt) => people.map(p => ({ p, n: best(p) })).filter(x => x.n > 0)
     .sort((a, b) => b.n - a.n).slice(0, 3).map(x => ({ p: x.p, v: fmt(x.n) }));
   const bestDay = (p, f) => Math.max(0, ...Object.values(p.days).map(d => d[f] || 0));
@@ -2075,7 +2076,7 @@
     const recs = [];
     DAY.forEach(([f, t, fmt]) => {
       const hist = recordHistory(people, f), best = hist[hist.length - 1];
-      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), top: podiumOf(people, p => bestDay(p, f), fmt), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
+      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), top: podiumOf(people, p => bestDay(p, f), fmt).sort((a, b) => (b.p === best.p) - (a.p === best.p)), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
     });
     // Only each character's best hit is kept, so the hit it beat is the biggest one landed before it.
     const hits = people.map(p => ({ p, h: p.bestHit })).filter(x => x.h).sort((a, b) => b.h.amt - a.h.amt), hit = hits[0];
