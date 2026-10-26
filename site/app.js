@@ -175,7 +175,8 @@
     "{0} deaths happened before positions were saved (FunStats 1.1), so they're only counted, not placed.": "{0} dödsfall skedde innan positioner sparades (FunStats 1.1), så de räknas men placeras inte ut.", "Animations": "Animationer", "On": "På", "Off": "Av", "New record": "Nytt rekord", "A record fell!": "Ett rekord föll!", "{0} records fell!": "{0} rekord föll!", "last 7 days": "senaste 7 dagarna",
     "Beat {0}'s {1} from {2}": "Slog {0}s {1} från {2}", "Topped their own {0} from {1}": "Slog sitt eget {0} från {1}",
     "Characters": "Karaktärer", "Guild Roster": "Guildens roster", "Everyone on this realm with FunStats": "Alla på den här realmen med FunStats",
-    "Every member with FunStats": "Alla medlemmar med FunStats", "Add stats": "Lägg till", "Add Your Stats": "Lägg till din statistik",
+    "Every member with FunStats": "Alla medlemmar med FunStats", "Get the addon": "Hämta addonen",
+    "On your phone? Open this page on the PC where you play WoW to download.": "På mobilen? Öppna den här sidan på datorn där du spelar WoW för att ladda ner.",
     "Anyone with the addon can join": "Alla med addonen kan vara med",
     "Play. Your stats are recorded per character, and shared with your group and guild members who also have FunStats.": "Spela. Din statistik sparas per karaktär och delas med gruppen och guildmedlemmar som också har FunStats.",
     "Type <code>/reload</code> or log out so WoW saves the file.": "Skriv <code>/reload</code> eller logga ut så sparar WoW filen.",
@@ -215,8 +216,8 @@
     "Guild mates without the addon still show up: with their level and class from the guild roster, and their gear from the Blizzard armory.": "Guildmedlemmar utan addonen syns ändå: med level och class från guildens roster och gear från Blizzards armory.",
     "Gear appears once this character has the Ledger app, or after the next armory update.": "Gear syns när karaktären har Ledger-appen, eller efter nästa armory-uppdatering.",
     "Gear from the Blizzard armory. Fun stats need the FunStats addon.": "Gear från Blizzards armory. Den roliga statistiken kräver FunStats-addonen.", "The Race to {0}": "Racet till {0}", "No deaths yet.": "Inga dödsfall än.", "Leaders": "Ledare", "newest first": "nyast först", "Example data": "Exempeldata",
-    "<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or upload your FunStats.lua under Add stats.": "<strong>Exempeldata.</strong> Karaktärerna är påhittade så att du kan se hur sidan fungerar. Välj din realm i Realm-menyn eller ladda upp din FunStats.lua under Lägg till.",
-    "<strong>No stats on {0} yet.</strong> Be the first: upload your FunStats.lua under Add stats.": "<strong>Ingen statistik på {0} än.</strong> Bli först: ladda upp din FunStats.lua under Lägg till.",
+    "<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or get the addon to add your own.": "<strong>Exempeldata.</strong> Karaktärerna är påhittade så att du kan se hur sidan fungerar. Välj din realm i Realm-menyn, eller hämta addonen och lägg till din egen.",
+    "<strong>No stats on {0} yet.</strong> Be the first: get the addon and play.": "<strong>Ingen statistik på {0} än.</strong> Bli först: hämta addonen och spela.",
     // navigation
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
@@ -2610,8 +2611,8 @@
       unconfigured: tr("<strong>Example data.</strong> This site isn't connected to Supabase yet. Add your project URL and publishable key in <code>config.js</code>."),
       error: tr("<strong>Couldn't reach the ledger.</strong> Showing example data instead. Try reloading in a minute."),
     }[state.status] || (state.demo
-      ? tr("<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or upload your FunStats.lua under Add stats.")
-      : !realmChars.length ? tr("<strong>No stats on {0} yet.</strong> Be the first: upload your FunStats.lua under Add stats.", esc(realmLabel())) : "");
+      ? tr("<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or get the addon to add your own.")
+      : !realmChars.length ? tr("<strong>No stats on {0} yet.</strong> Be the first: get the addon and play.", esc(realmLabel())) : "");
     $("demoBanner").hidden = !banner;
     $("bannerText").innerHTML = banner;
 
@@ -2688,6 +2689,12 @@
       </div>`;
   }
 
+  // A member's icon on the guild card: hover or focus shows who it is, like an in-game tooltip.
+  const faceLink = c => {
+    const [cls, color] = classOf(c), meta = [tr("Lvl {0}", esc(c.level || "?")), cls].join(" ");
+    const pic = CLASS[c.class] ? zam("classicon_" + String(c.class).toLowerCase(), 32) : `<span class="dot" style="background:${color}"></span>`;
+    return `<a class="face" href="${charHref(c.key)}" aria-label="${esc(c.name)}, ${meta}">${pic}<span class="tip" aria-hidden="true"><b style="color:${color}">${esc(c.name)}</b><small>${meta}</small></span></a>`;
+  };
   const FAC_ORDER = { alliance: 0, horde: 1, "": 2 };
   document.addEventListener("click", e => {
     const b = e.target.closest(".facbtn");
@@ -2721,7 +2728,7 @@
         <div class="gstats">${stat(compact(tot.dmg), "Damage", tot.dmg)}${stat(compact(tot.heal), "Healing", tot.heal)}${stat(num(tot.deaths), "Deaths", 1)}
           ${stat(num(tot.quests), "Quests", tot.quests)}${stat(goldHTML(tot.goldIn), "Gold", tot.goldIn)}${stat(dur(tot.played), "Played", tot.played)}</div>
         ${top && top.v ? `<div class="gmvp">${tr("Top damage")}: <a class="plink" href="${charHref(top.c.key)}">${classIcon(top.c)}<span class="cname" style="--cc:${classOf(top.c)[1]}">${esc(top.c.name)}</span></a></div>` : ""}
-        <div class="gfaces">${list.slice(0, 24).map(c => `<a href="${charHref(c.key)}" title="${esc(c.name)}">${classIcon(c, 2)}</a>`).join("")}${list.length > 24 ? `<span class="muted" style="align-self:center">+${list.length - 24}</span>` : ""}</div>
+        <div class="gfaces">${list.slice(0, 24).map(c => faceLink(c)).join("")}${list.length > 24 ? `<span class="muted" style="align-self:center">+${list.length - 24}</span>` : ""}</div>
         ${g ? `<a class="btn" href="${guildHref(state.realm, g)}">${tr("Open guild page")}</a>` : ""}
       </div>`;
     }).join("") || `<p class="empty">${tr("No guilds yet.")}</p>`;
@@ -2880,7 +2887,7 @@
   // Pages: [id, label, icon]. Each page shows only the sections tagged with its data-pg.
   const MAIN_PAGES = [
     ["overview", "Overview", "scroll"], ["meters", "Meters & Combat", "sword"], ["dungeons", "Dungeons & Raids", "gate"], ["deaths", "Deaths", "skull"],
-    ["atlas", "Atlas", "map"], ["loot", "Loot & Gold", "loot"], ["glory", "Hall of Fame", "sulfuras"], ["characters", "Characters", "ashbringer"], ["join", "Add stats", "spring"],
+    ["atlas", "Atlas", "map"], ["loot", "Loot & Gold", "loot"], ["glory", "Hall of Fame", "sulfuras"], ["characters", "Characters", "ashbringer"], ["join", "Get the addon", "spring"],
   ];
   const PROFILE_PAGES = [
     ["p-overview", "Character", "ashbringer"], ["p-activity", "Activity", "clock"], ["p-records", "Records", "shield"], ["p-compare", "Compare", "sword"],
@@ -2890,6 +2897,7 @@
   state.ppage = "p-overview";
   function applyPages(kind) {
     const pg = kind === "profile" ? state.ppage : state.page;
+    document.body.dataset.page = pg;
     document.querySelectorAll("#app [data-pg]").forEach(el => { el.hidden = !el.dataset.pg.split(" ").includes(pg); });
     applySubs(kind === "profile" ? null : pg);
   }
@@ -2976,7 +2984,11 @@
   // Pages switch from the tab bar or (on narrow screens) the View menu.
   document.addEventListener("click", e => {
     const a = e.target.closest('a[href="#join"]');
-    if (a) { e.preventDefault(); setPage("join"); }
+    if (!a) return;
+    e.preventDefault();
+    setMenu(false);
+    state.page = "join";
+    if (parseRoute().kind === "char") location.hash = ""; else setPage("join");
   });
   $("pageTabs").addEventListener("click", e => { const b = e.target.closest(".pagetab"); if (b) { setMenu(false); setPage(b.dataset.pg); } });
   // "Details" and "View all" on the overview's cards open their page.
@@ -3239,7 +3251,9 @@
     staticAria.forEach(([el, en]) => el.setAttribute("aria-label", tr(en)));
   }
   translateStatic();
-  // The Add stats page shows the app's current version, from app-version.txt ("1.2.0.0 <sha256>", written by app\build.cmd).
+  // Mac players see the manual install first; the Windows app is no use to them.
+  if (/Mac/i.test(navigator.platform || "")) document.body.classList.add("is-mac");
+  // The Get the addon page shows the app's current version, from app-version.txt ("1.2.0.0 <sha256>", written by app\build.cmd).
   fetch("app-version.txt", { cache: "no-cache" }).then(r => (r.ok ? r.text() : "")).then(t => {
     const v = t.split(" ")[0].replace(/(\.0)+$/, "");
     if (/^\d+(\.\d+)*$/.test(v)) document.getElementById("appVer").textContent = "v" + v;

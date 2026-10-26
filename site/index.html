@@ -61,6 +61,7 @@
   <label class="realm-pick" for="realmSel" title="Change realm"><span class="realm-emblem" id="realmIcon"></span><span class="realm-txt"><span class="nav-lbl">Realm</span><select id="realmSel" class="sel"></select></span></label>
   <button type="button" class="btn profile-only" id="prevFriend" aria-label="Previous friend">&lt;</button>
   <button type="button" class="btn profile-only" id="nextFriend" aria-label="Next friend">&gt;</button>
+  <a class="btn cta" href="#join" id="joinBtn">Get the addon</a>
   <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
   <span class="nav-spacer"></span>
   <div class="search" id="searchWrap" role="search">
@@ -478,18 +479,18 @@
   </section>
 
   <section id="join" data-pg="join" aria-labelledby="joinH">
-    <div class="sec-head"><h2 id="joinH">Add Your Stats</h2></div>
+    <p class="phone-note">On your phone? Open this page on the PC where you play WoW to download.</p>
     <div class="duo even">
       <div class="frame getapp">
-        <div class="frame-title"><span>Windows: get the Ledger app</span><small>recommended</small></div>
+        <div class="frame-title"><span id="joinH">Windows: get the Ledger app</span><small>recommended</small></div>
         <p>One download, then just play.</p>
+        <div class="dlrow"><a class="btn dl" href="AzerothLedger.exe" download>Download for Windows</a><span class="muted" id="appVer"></span></div>
         <ol class="steps">
           <li>Download the app and run it once. It installs itself and the FunStats addon in every WoW folder it finds.</li>
           <li>It starts with Windows and waits quietly in the tray.</li>
           <li>Every time you log out of WoW, your stats appear here.</li>
           <li>It updates itself: new versions of the app and the addon arrive on their own. Restart WoW to load a new addon.</li>
         </ol>
-        <div class="dlrow"><a class="btn dl" href="AzerothLedger.exe" download>Download for Windows</a><span class="muted" id="appVer"></span></div>
         <p class="muted" style="font-size:13px">If Windows says it protected your PC, click <b>More info</b>, then <b>Run anyway</b>. The app is small and only uploads your FunStats file.</p>
         <p class="muted" style="font-size:13px">Already have it? Nothing to do, it keeps itself up to date. Only apps from before version 1.1 need one more download.</p>
         <p class="muted" style="font-size:13px">To stop it: right-click the shield icon in the tray and untick <b>Start with Windows</b>, or choose <b>Quit</b>.</p>
