@@ -4,8 +4,8 @@
   // {0}, {1} are placeholders. Game names (mobs, spells, zones, items) stay English, like the game itself.
   const SV = {
     // header, tabs, banners
-    "Every death, every crit, every greedy roll. A chronicle of our deeds in WoW Forever.": "Varje död, varje crit, varje girigt tärningsslag. En krönika över våra dåd i WoW Forever.",
-    "Every death, every crit, every greedy roll.": "Varje död, varje crit, varje girigt tärningsslag.",
+    "Every death, every crit, every greedy roll. A chronicle of our deeds in WoW Forever.": "Varje död, varje crit, varje girig roll. En krönika över våra dåd i WoW Forever.",
+    "Every death, every crit, every greedy roll.": "Varje död, varje crit, varje girig roll.",
     "This Week": "Denna vecka", "All Time": "Totalt", "Join the Ledger": "Gå med i liggaren", "Game &amp; realm": "Spel &amp; realm", "Realm": "Realm",
     "Time range": "Tidsperiod", "Previous week": "Föregående vecka", "Week": "Vecka", "Next week": "Nästa vecka", "Colour theme": "Färgtema", "Language": "Språk",
     "Stat shown in the meter": "Statistik i mätaren", "per hour": "per timme",
@@ -20,86 +20,86 @@
     // section headings (static page)
     "‹ Back to the Ledger": "‹ Tillbaka till liggaren", "Back to the Ledger": "Tillbaka till liggaren",
     "Signature Stats": "Signaturstatistik", "Where they stand out from the group": "Där de sticker ut från gruppen",
-    "Character Sheet": "Karaktärsblad", "Achievements Held": "Innehavda bedrifter", "all time": "totalt",
-    "Damage and healing per day": "Skada och helning per dag", "last 30 days played": "senaste 30 speldagarna",
-    "Level progress": "Nivåutveckling", "Damage by ability": "Skada per förmåga", "Causes of death": "Dödsorsaker", "Nemeses": "Ärkefiender",
+    "Character Sheet": "Karaktärsblad", "Achievements Held": "Achievements", "all time": "totalt",
+    "Damage and healing per day": "Damage och healing per dag", "last 30 days played": "senaste 30 speldagarna",
+    "Level progress": "Levelprogress", "Damage by ability": "Damage per spell", "Causes of death": "Dödsorsaker", "Nemeses": "Ärkefiender",
     "Personal Bests": "Personliga rekord", "Recent deaths": "Senaste dödsfall", "When they play": "När de spelar",
-    "Favorite zones": "Favoritzoner", "hours": "timmar", "Best loot": "Bästa bytet", "rare and better": "rare och bättre",
-    "Ledger of Deeds": "Dådens liggare", "Achievements Earned": "Uppnådda bedrifter", "Glory for some, shame for others": "Ära för vissa, skam för andra",
-    "The Meters": "Mätarna", "Who's pumping, who's padding": "Vem pumpar, vem fuskar", "Damage Done": "Utdelad skada", "Damage per day": "Skada per dag",
+    "Favorite zones": "Favoritzoner", "hours": "timmar", "Best loot": "Bästa lootet", "rare and better": "rare och bättre",
+    "Ledger of Deeds": "Dådens liggare", "Achievements Earned": "Achievements", "Glory for some, shame for others": "Ära för vissa, skam för andra",
+    "The Meters": "Mätarna", "Who's pumping, who's padding": "Vem pumpar, vem paddar", "Damage Done": "Damage", "Damage per day": "Damage per dag",
     "The Race to 60": "Racet till 60", "Every ding, plotted": "Varje ding, inritat", "By date": "Per datum", "By /played": "Per /played",
-    "The Spirit Healer's Log": "Andehelarens logg", "Combat log": "Stridslogg", "most recent first": "senaste först",
-    "Deaths by level": "Dödsfall per nivå", "Most Wanted": "Mest efterlysta", "The creatures that killed us most": "Varelserna som dödat oss mest",
+    "The Spirit Healer's Log": "Spirit Healerns logg", "Combat log": "Combat log", "most recent first": "senaste först",
+    "Deaths by level": "Dödsfall per level", "Most Wanted": "Mest efterlysta", "The creatures that killed us most": "Mobsen som dödat oss mest",
     "Deadliest places": "Dödligaste platserna", "Combat Analysis": "Stridsanalys", "Crits, whiffs and the art of not getting hit": "Crits, bom och konsten att inte bli träffad",
     "Playstyle": "Spelstil", "each stat scaled to the group's best": "varje värde jämfört med gruppens bästa",
-    "Crit rate": "Crit-frekvens", "Damage taken vs healing received": "Tagen skada mot mottagen helning", "Combat sheet": "Stridsblad",
+    "Crit rate": "Crit rate", "Damage taken vs healing received": "Tagen damage mot mottagen healing", "Combat sheet": "Stridsblad",
     "Loot Council": "Lootrådet", "Mostly grey, occasionally purple": "Mest grått, ibland lila", "Loot by quality": "Loot per kvalitet",
     "green or better drops": "gröna eller bättre", "Gold earned and spent": "Guld intjänat och spenderat", "Notable drops": "Anmärkningsvärda drops",
     "The Treasury": "Skattkammaren", "Gold in the bags, day by day": "Guld i väskorna, dag för dag", "Gold held": "Guld i väskorna",
     "all characters combined": "alla karaktärer sammanlagt", "Atlas of Azeroth": "Azeroths atlas", "When we play and where we go": "När vi spelar och vart vi går",
     "When the group plays": "När gruppen spelar", "time played, by weekday and hour": "speltid per veckodag och timme", "less": "mindre", "more": "mer",
-    "hours spent": "timmar", "The Spellbook": "Trollboken", "Where everyone's damage comes from": "Var allas skada kommer ifrån",
-    "Bonds of the Guild": "Gillets band", "Rivalries and guardian angels": "Rivaliteter och skyddsänglar", "Duel rivalries": "Duellrivaliteter",
-    "row's wins – losses against column": "radens vinster – förluster mot kolumnen", "Guardian angels": "Skyddsänglar", "who healed whom the most": "vem som helade vem mest",
+    "hours spent": "timmar", "The Spellbook": "Spellbook", "Where everyone's damage comes from": "Var allas damage kommer ifrån",
+    "Bonds of the Guild": "Guildens band", "Rivalries and guardian angels": "Rivaliteter och skyddsänglar", "Duel rivalries": "Duellrivaliteter",
+    "row's wins – losses against column": "radens vinster – förluster mot kolumnen", "Guardian angels": "Skyddsänglar", "who healed whom the most": "vem som healade vem mest",
     "Hall of Fame": "Hederssalen", "All-time records. Some to be proud of.": "Rekord genom tiderna. Vissa att vara stolt över.",
-    "The Full Ledger": "Hela liggaren", "The Guild Roster": "Gillesrullan", "Every friend, their main and their alts": "Alla vänner, deras main och deras alts",
+    "The Full Ledger": "Hela liggaren", "The Guild Roster": "Guildens roster", "Every friend, their main and their alts": "Alla vänner, deras main och deras alts",
     "All you need is the addon": "Allt du behöver är addonen",
     "Install the <b>FunStats</b> addon: put the <code>FunStats</code> folder in your game's AddOns folder, for example <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.": "Installera addonen <b>FunStats</b>: lägg mappen <code>FunStats</code> i spelets AddOns-mapp, till exempel <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.",
     "In game, type <code>/funstats name YourName</code> so all your characters appear under one name here.": "Skriv <code>/funstats name DittNamn</code> i spelet så hamnar alla dina karaktärer under ett namn här.",
     "Play together. While you're in a party or raid, the addons quietly share everyone's stats. <code>/funstats sync</code> shows what you've received.": "Spela tillsammans. När ni är i samma party eller raid delar addonerna allas statistik i bakgrunden. <code>/funstats sync</code> visar vad du har tagit emot.",
     "The ledger updates after the ledger keeper logs out or types <code>/reload</code>.": "Liggaren uppdateras när den som sköter synken loggar ut eller skriver <code>/reload</code>.",
-    "Friends without the addon still appear with damage, healing, killing blows and deaths if someone in the group types <code>/funstats add group</code>.": "Vänner utan addonen syns ändå med skada, helning, dödande slag och dödsfall om någon i gruppen skriver <code>/funstats add group</code>.",
+    "Friends without the addon still appear with damage, healing, killing blows and deaths if someone in the group types <code>/funstats add group</code>.": "Vänner utan addonen syns ändå med damage, healing, killing blows och dödsfall om någon i gruppen skriver <code>/funstats add group</code>.",
     "Weeks start on Tuesday, matching the US weekly reset. Dates use each player's own computer clock.": "Veckor börjar på tisdag, som den amerikanska veckoåterställningen. Datum följer varje spelares egen datorklocka.",
 
     // metric and column names
-    "Healing Done": "Helning", "Killing Blows": "Dödande slag", "Deaths": "Dödsfall", "Damage Taken": "Tagen skada", "Healing Received": "Mottagen helning",
-    "Experience": "Erfarenhet", "Quests Completed": "Avklarade quests", "Gold Looted": "Plundrat guld", "Repair Bills": "Reparationer",
+    "Healing Done": "Healing", "Killing Blows": "Killing blows", "Deaths": "Dödsfall", "Damage Taken": "Tagen damage", "Healing Received": "Mottagen healing",
+    "Experience": "XP", "Quests Completed": "Avklarade quests", "Gold Looted": "Lootat guld", "Repair Bills": "Reparationer",
     "Distance Traveled": "Tillryggalagd sträcka", "Jumps": "Hopp", "Time Played": "Speltid", "Time as a Ghost": "Tid som spöke",
     "Time on Flight Paths": "Tid på flygrutter", "Time Swimming": "Tid i vattnet", "Time AFK": "Tid AFK", "Time Grouped": "Tid i grupp",
-    "Dungeon Runs": "Dungeonrundor", "Spells Cast": "Kastade besvärjelser", "Overkill": "Overkill", "Missed Attacks": "Missade attacker",
+    "Dungeon Runs": "Dungeon runs", "Spells Cast": "Castade spells", "Overkill": "Overkill", "Missed Attacks": "Missade attacker",
     "Chat Messages": "Chattmeddelanden", "Apologies": "Ursäkter", "lols": "lols", "Emotes": "Emotes", "Hearthstones": "Hearthstones",
-    "Damage": "Skada", "Healing": "Helning", "KBs": "KB", "XP": "XP", "Quests": "Quests", "Gold +": "Guld +", "Gold −": "Guld −", "Repairs": "Reparationer",
+    "Damage": "Damage", "Healing": "Healing", "KBs": "KB", "XP": "XP", "Quests": "Quests", "Gold +": "Guld +", "Gold −": "Guld −", "Repairs": "Reparationer",
     "Distance": "Distans", "Played": "Spelat", "Grouped": "I grupp", "Ghost": "Spöke", "Flying": "Flygtid", "Dungeons": "Dungeons", "Rares": "Rares",
-    "Epics": "Epics", "Rolls": "Tärningsslag", "Duels won": "Vunna dueller", "Messages": "Meddelanden", "Sorrys": "Förlåt", "Hearths": "Hearths", "Friend": "Vän",
+    "Epics": "Epics", "Rolls": "Rolls", "Duels won": "Vunna dueller", "Messages": "Meddelanden", "Sorrys": "Förlåt", "Hearths": "Hearths", "Friend": "Vän",
     "{0} / hour": "{0} / timme", "{0} per week": "{0} per vecka", "{0} per day": "{0} per dag",
 
     // causes, loot quality
-    "Slain by creatures": "Dödad av varelser", "Fell to their death": "Föll till döds", "Drowned": "Drunknade", "Burned": "Brann upp", "Lava": "Lava",
-    "Slime": "Slem", "Fatigue": "Utmattning", "Killed by a player": "Dödad av en spelare", "Environment": "Miljön", "Mystery": "Mysterium",
+    "Slain by creatures": "Dödad av mobs", "Fell to their death": "Föll till döds", "Drowned": "Drunknade", "Burned": "Brann upp", "Lava": "Lava",
+    "Slime": "Slem", "Fatigue": "Fatigue", "Killed by a player": "Dödad av en spelare", "Environment": "Miljön", "Mystery": "Mysterium",
     "Poor": "Poor", "Common": "Common", "Uncommon": "Uncommon", "Rare": "Rare", "Epic": "Epic", "Legendary": "Legendary",
 
     // stat tiles
-    "Damage dealt": "Utdelad skada", "{0} as ghosts": "{0} som spöke", "{0} hits, {1} crits": "{0} träffar, {1} crits", "Healing done": "Helning",
-    "{0} overhealed": "{0} överhelat", "Killing blows": "Dödande slag", "Quests completed": "Avklarade quests", "{0} XP earned": "{0} XP intjänat",
-    "Gold looted": "Plundrat guld", "spent {0}": "spenderat {0}", "Time played": "Speltid", "{0} grouped up": "{0} i grupp",
-    "about {0} miles": "ungefär {0} km", "{0} per hour": "{0} per timme", "Dungeon runs": "Dungeonrundor", "{0} hearthstones": "{0} hearthstones",
+    "Damage dealt": "Damage", "{0} as ghosts": "{0} som spöke", "{0} hits, {1} crits": "{0} träffar, {1} crits", "Healing done": "Healing",
+    "{0} overhealed": "{0} overheal", "Killing blows": "Killing blows", "Quests completed": "Avklarade quests", "{0} XP earned": "{0} XP intjänat",
+    "Gold looted": "Lootat guld", "spent {0}": "spenderat {0}", "Time played": "Speltid", "{0} grouped up": "{0} i grupp",
+    "about {0} miles": "ungefär {0} km", "{0} per hour": "{0} per timme", "Dungeon runs": "Dungeon runs", "{0} hearthstones": "{0} hearthstones",
 
     // achievements
-    "Spirit Healer's Regular": "Andehelarens stamkund", "Died {0} times": "Dog {0} gånger", "Big Pumper": "Storpumparen", "Dealt {0} damage": "Delade ut {0} skada",
-    "Lifebinder": "Livsbindaren", "Healed {0}": "Helade {0}", "Executioner": "Bödeln", "{0} killing blows": "{0} dödande slag",
+    "Spirit Healer's Regular": "Spirit Healerns stamkund", "Died {0} times": "Dog {0} gånger", "Big Pumper": "Storpumparen", "Dealt {0} damage": "Gjorde {0} damage",
+    "Lifebinder": "Livsbindaren", "Healed {0}": "Healade {0}", "Executioner": "Bödeln", "{0} killing blows": "{0} killing blows",
     "One-Hit Wonder": "Engångsundret", "Hit for {0} with {1}": "Träffade för {0} med {1}", " on {0}": " på {0}", "something": "något",
-    "Critical Mass": "Kritisk massa", "{0} of hits were crits": "{0} av träffarna var crits", "{0} damage past dead": "{0} skada efter döden",
-    "Gravity's Favorite": "Gravitationens favorit", "{0} deaths from falling": "{0} dödsfall från fall", "Took {0} fall damage": "Tog {0} fallskada",
-    "Professional Ghost": "Professionellt spöke", "Spent {0} dead": "Låg död i {0}", "Meat Shield": "Köttsköld", "Took {0} damage": "Tog {0} skada",
-    "Untouchable": "Oberörbar", "Dodged, parried or blocked {0} attacks": "Undvek, parerade eller blockerade {0} attacker",
-    "Life Support": "Livsuppehållande", "Needed {0} healing from friends": "Behövde {0} helning från vänner", "Loremaster": "Loremaster",
+    "Critical Mass": "Kritisk massa", "{0} of hits were crits": "{0} av träffarna var crits", "{0} damage past dead": "{0} damage efter döden",
+    "Gravity's Favorite": "Gravitationens favorit", "{0} deaths from falling": "{0} dödsfall från fall", "Took {0} fall damage": "Tog {0} fall damage",
+    "Professional Ghost": "Professionellt spöke", "Spent {0} dead": "Låg död i {0}", "Meat Shield": "Köttsköld", "Took {0} damage": "Tog {0} damage",
+    "Untouchable": "Oberörbar", "Dodged, parried or blocked {0} attacks": "Dodgade, parryade eller blockade {0} attacker",
+    "Life Support": "Livsuppehållande", "Needed {0} healing from friends": "Behövde {0} healing från vänner", "Loremaster": "Loremaster",
     "{0} quests turned in": "{0} quests inlämnade", "Bunny Hopper": "Kaninhopparen", "{0} jumps": "{0} hopp", "Explorer": "Utforskaren",
-    "{0} yards on foot": "{0} yards till fots", "Goblin Tycoon": "Goblinmagnaten", "Looted {0}": "Plundrade {0}", "Repair Bill": "Reparationsnotan",
+    "{0} yards on foot": "{0} yards till fots", "Goblin Tycoon": "Goblinmagnaten", "Looted {0}": "Lootade {0}", "Repair Bill": "Reparationsnotan",
     "Paid {0} in repairs": "Betalade {0} i reparationer", "Apology Tour": "Ursäktsturnén", "Said sorry {0} times": "Sa förlåt {0} gånger",
     "Chatterbox": "Pratkvarnen", "{0} chat messages": "{0} chattmeddelanden", "Loot Goblin": "Lootgoblinen", "{0} rare or better drops": "{0} rare eller bättre drops",
-    "Vendor Trash Collector": "Skräpsamlaren", "{0} grey items looted": "{0} gråa föremål plundrade", "Lucky Roller": "Tärningslyckan",
-    "Averaged {0} over {1} rolls": "Snitt {0} på {1} slag", "Duelist": "Duellanten", "Won {0} duels": "Vann {0} dueller",
-    "Dungeon Crawler": "Dungeonkrälaren", "{0} dungeon runs": "{0} dungeonrundor", "Frequent Flyer": "Flitig flygare", "{0} on flight paths": "{0} på flygrutter",
+    "Vendor Trash Collector": "Skräpsamlaren", "{0} grey items looted": "{0} grå items lootade", "Lucky Roller": "Tärningslyckan",
+    "Averaged {0} over {1} rolls": "Snitt {0} på {1} rolls", "Duelist": "Duellanten", "Won {0} duels": "Vann {0} dueller",
+    "Dungeon Crawler": "Dungeonkrälaren", "{0} dungeon runs": "{0} dungeon runs", "Frequent Flyer": "Flitig flygare", "{0} on flight paths": "{0} på flygrutter",
     "Professional AFK": "Professionell AFK", "{0} away from keyboard": "{0} borta från tangentbordet",
     "+{0} tied": "+{0} delad", "Unkillable": "Odödlig", "Only {0} deaths": "Bara {0} dödsfall", "Didn't die once": "Dog inte en enda gång", "{0} in {1}": "{0} på {1}",
-    "No achievements yet. They appear as soon as someone uploads.": "Inga bedrifter än. De dyker upp så fort någon har synkat.",
+    "No achievements yet. They appear as soon as someone uploads.": "Inga achievements än. De dyker upp så fort någon har laddat upp.",
     "Nobody on the meter yet.": "Ingen på mätaren än.",
 
     // charts
-    "hours played": "speltimmar", "level": "nivå", "Level {0}": "Nivå {0}", "{0} played": "{0} spelat", "{0}% of the best": "{0} % av bästa",
-    "{0}% crits ({1} of {2} hits)": "{0} % crits ({1} av {2} träffar)", "Damage taken": "Tagen skada", "Healing received": "Mottagen helning",
-    "Also {0} grey and {1} white items": "Plus {0} gråa och {1} vita föremål", "Looted & earned": "Plundrat & intjänat", "Spent": "Spenderat",
-    "{0} damage ({1}%)": "{0} skada ({1} %)", "{0} casts": "{0} kast",
+    "hours played": "speltimmar", "level": "level", "Level {0}": "Level {0}", "{0} played": "{0} spelat", "{0}% of the best": "{0} % av bästa",
+    "{0}% crits ({1} of {2} hits)": "{0} % crits ({1} av {2} träffar)", "Damage taken": "Tagen damage", "Healing received": "Mottagen healing",
+    "Also {0} grey and {1} white items": "Plus {0} grå och {1} vita items", "Looted & earned": "Lootat & intjänat", "Spent": "Spenderat",
+    "{0} damage ({1}%)": "{0} damage ({1} %)", "{0} casts": "{0} casts",
     "Survival": "Överlevnad", "Exploration": "Utforskande", "Wealth": "Rikedom", "Questing": "Questande", "Chatter": "Prat",
     "Charts couldn't load. Check your connection and reload.": "Diagrammen kunde inte laddas. Kontrollera anslutningen och ladda om.",
     "Nothing recorded yet.": "Inget registrerat än.",
@@ -112,81 +112,81 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst", "for the murder of {0} hero": "för mordet på {0} hjälte", "for the murder of {0} heroes": "för mordet på {0} hjältar",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}", "Reward: {0} gold": "Belöning: {0} guld",
-    "No creature has claimed a victim yet.": "Ingen varelse har krävt ett offer än.", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "No creature has claimed a victim yet.": "Ingen mob har krävt ett offer än.", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
-    "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Motstått", "Dodges": "Undvikanden",
-    "Parries": "Pareringar", "Blocks": "Blockeringar", "Taken": "Tagen", "Healed by others": "Helad av andra", "Overheal": "Överhelning",
-    "Casts": "Kast", "Fall damage": "Fallskada", "Nobody on the roster yet.": "Ingen på listan än.",
+    "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
+    "Parries": "Parries", "Blocks": "Blocks", "Taken": "Tagen", "Healed by others": "Healad av andra", "Overheal": "Overheal",
+    "Casts": "Casts", "Fall damage": "Fall damage", "Nobody on the roster yet.": "Ingen på listan än.",
 
     // loot, bonds, fame
     "receives loot:": "får loot:", "No rare drops yet. Keep rolling Need.": "Inga rare drops än. Fortsätt rolla Need.",
     "No duels between friends yet. Someone challenge someone.": "Inga dueller mellan vänner än. Någon får utmana någon.",
-    "was kept alive by": "hölls vid liv av", "Nobody has been healed by a friend yet.": "Ingen har blivit helad av en vän än.",
+    "was kept alive by": "hölls vid liv av", "Nobody has been healed by a friend yet.": "Ingen har blivit healad av en vän än.",
     "Records appear after the first upload.": "Rekorden dyker upp efter första synken.",
-    "Most damage in one day": "Mest skada på en dag", "Most healing in one day": "Mest helning på en dag", "Most deaths in one day": "Flest dödsfall på en dag",
-    "Most killing blows in one day": "Flest dödande slag på en dag", "Most quests in one day": "Flest quests på en dag", "Most XP in one day": "Mest XP på en dag",
+    "Most damage in one day": "Mest damage på en dag", "Most healing in one day": "Mest healing på en dag", "Most deaths in one day": "Flest dödsfall på en dag",
+    "Most killing blows in one day": "Flest killing blows på en dag", "Most quests in one day": "Flest quests på en dag", "Most XP in one day": "Mest XP på en dag",
     "Longest day of play": "Längsta speldagen", "Most jumps in one day": "Flest hopp på en dag", "Longest journey in one day": "Längsta resan på en dag",
-    "Biggest haul in one day": "Största bytet på en dag", "Most levels in one day": "Flest nivåer på en dag", "Hardest hit ever": "Hårdaste träffen någonsin",
-    "Deepest pockets": "Djupaste fickorna", "most gold held at once": "mest guld på en gång", "Most hunted creature": "Mest jagade varelse",
-    "by one friend": "av en vän", "Highest level": "Högsta nivå",
+    "Biggest haul in one day": "Största bytet på en dag", "Most levels in one day": "Flest levels på en dag", "Hardest hit ever": "Hårdaste träffen någonsin",
+    "Deepest pockets": "Djupaste fickorna", "most gold held at once": "mest guld på en gång", "Most hunted creature": "Mest farmade mob",
+    "by one friend": "av en vän", "Highest level": "Högsta level",
 
     // roster and profiles
-    "Lvl {0}": "Nivå {0}", "Main": "Main", "seen by friends": "sedd av vänner", "Biggest hit": "Största träff",
+    "Lvl {0}": "Lvl {0}", "Main": "Main", "seen by friends": "sedd av vänner", "Biggest hit": "Största träff",
     "Most gold held": "Mest guld", "Most killed": "Mest dödade",
     "Recorded by friends' addons. Installing FunStats adds jumps, gold, loot and more.": "Registrerad av vänners addons. Med FunStats installerad kommer hopp, guld, loot och mer.",
     "Nobody here yet. Friends appear once their stats have been synced.": "Ingen här än. Vänner dyker upp när deras statistik har synkats.",
     "Not found": "Hittades inte", "There's nobody with that link on this realm.": "Det finns ingen med den länken på den här realmen.",
-    "Adventurer": "Äventyrare", "Known for: {0}": "Känd för: {0}", "highest level": "högsta nivå", "played": "spelat", "damage": "skada", "deaths": "dödsfall",
+    "Adventurer": "Äventyrare", "Known for: {0}": "Känd för: {0}", "highest level": "högsta level", "played": "spelat", "damage": "damage", "deaths": "dödsfall",
     "character": "karaktär", "characters": "karaktärer", "Where {0} stands out from the group, all time": "Där {0} sticker ut från gruppen, totalt",
     "{0}'s biggest numbers so far": "{0}s största siffror hittills", "#{0} of {1}": "#{0} av {1}", " · {0}× the others' average": " · {0}× de andras snitt",
     "Only friend with this stat so far": "Enda vännen med det här hittills", "No stats yet. They appear after {0}'s first synced session.": "Ingen statistik än. Den dyker upp efter {0}s första synkade session.",
-    "No characters yet.": "Inga karaktärer än.", "(tied)": "(delad)", "No achievements held yet. Someone else is ahead on everything, for now.": "Inga bedrifter än. Någon annan leder allt, för tillfället.",
-    "No creature has killed {0} yet.": "Ingen varelse har dödat {0} än.", "Personal bests appear after the first synced session.": "Personliga rekord dyker upp efter första synkade sessionen.",
+    "No characters yet.": "Inga karaktärer än.", "(tied)": "(delad)", "No achievements held yet. Someone else is ahead on everything, for now.": "Inga achievements än. Någon annan leder allt, för tillfället.",
+    "No creature has killed {0} yet.": "Ingen mob har dödat {0} än.", "Personal bests appear after the first synced session.": "Personliga rekord dyker upp efter första synkade sessionen.",
     "{0} hasn't died yet. Impressive.": "{0} har inte dött än. Imponerande.", "Zones appear once {0} has played with the addon.": "Zoner dyker upp när {0} har spelat med addonen.",
     "on {0}": "på {0}", "No rare drops yet.": "Inga rare drops än.",
-    "Level {0} {1} {2}": "Nivå {0} {1} {2}", "avg item level": "snitt föremålsnivå", "item level {0}": "föremålsnivå {0}",
-    "Gear appears after this character logs in with the latest FunStats.": "Utrustningen visas när karaktären loggar in med senaste FunStats.",
-    "Gear is only recorded for friends who have the addon.": "Utrustning registreras bara för vänner som har addonen.",
+    "Level {0} {1} {2}": "Level {0} {1} {2}", "avg item level": "snitt-ilvl", "item level {0}": "ilvl {0}",
+    "Gear appears after this character logs in with the latest FunStats.": "Gear syns när karaktären loggar in med senaste FunStats.",
+    "Gear is only recorded for friends who have the addon.": "Gear sparas bara för vänner som har addonen.",
     "Head": "Huvud", "Neck": "Hals", "Shoulder": "Axlar", "Shirt": "Skjorta", "Chest": "Bröst", "Waist": "Midja", "Legs": "Ben", "Feet": "Fötter",
-    "Wrist": "Handleder", "Hands": "Händer", "Finger": "Finger", "Trinket": "Trinket", "Back": "Rygg", "Main Hand": "Huvudhand", "Off Hand": "Andra hand",
-    "Ranged": "Avstånd", "Tabard": "Tabard",
+    "Wrist": "Handleder", "Hands": "Händer", "Finger": "Finger", "Trinket": "Trinket", "Back": "Rygg", "Main Hand": "Main hand", "Off Hand": "Off hand",
+    "Ranged": "Ranged", "Tabard": "Tabard",
 
     // signature stats
     "Hits the hardest": "Slår hårdast", "Keeps everyone alive": "Håller alla vid liv", "Steals the kills": "Snor alla kills", "Dies the most": "Dör mest",
-    "Actually reads the quests": "Läser faktiskt questtexterna", "Experience earned": "Intjänad erfarenhet", "Levels like mad": "Levlar som en galning",
+    "Actually reads the quests": "Läser faktiskt questtexterna", "Experience earned": "XP", "Levels like mad": "Levlar som en galning",
     "Richest of the bunch": "Rikast i gänget", "Distance traveled": "Tillryggalagd sträcka", "Always running somewhere": "Springer alltid någonstans",
     "Can't stop jumping": "Kan inte sluta hoppa", "Basically lives in Azeroth": "Bor i princip i Azeroth", "Time as a ghost": "Tid som spöke",
     "Spends ages dead": "Ligger död en evighet", "Time on flight paths": "Tid på flygrutter", "Loves a flight path": "Älskar flygrutter",
-    "Always AFK": "Alltid AFK", "Dungeon regular": "Stamgäst i dungeons", "Damage sponge": "Skadesvamp", "Needs the most healing": "Behöver mest helning",
+    "Always AFK": "Alltid AFK", "Dungeon regular": "Stamgäst i dungeons", "Damage sponge": "Damagesvamp", "Needs the most healing": "Behöver mest healing",
     "Keeps hitting dead things": "Fortsätter slå på döda saker", "Swings at air": "Slår i luften", "Slippery": "Hal som en ål",
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
-    "Epic drops": "Epic drops", "Purple luck": "Lila tur", "Grey items looted": "Gråa föremål plundrade", "Hoards vendor trash": "Samlar på skräp",
-    "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Kastade besvärjelser",
+    "Epic drops": "Epic drops", "Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
+    "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
     "Missed attacks": "Missade attacker",
     // characters, guilds, search, upload
-    "Search characters or guilds": "Sök karaktärer eller gillen", "Guild": "Gille", "Guilds": "Gillen",
-    "Every guild on this realm with FunStats players": "Alla gillen på den här realmen med FunStats-spelare",
-    "No guild": "Inget gille", "{0} member": "{0} medlem", "{0} members": "{0} medlemmar", "{0} guild": "{0} gille", "{0} guilds": "{0} gillen",
-    "Top damage": "Mest skada", "Open guild page": "Öppna gillessidan", "No guilds yet.": "Inga gillen än.",
-    "Top level {0}": "Högsta nivå {0}", "No stats yet.": "Ingen statistik än.",
+    "Search characters or guilds": "Sök karaktärer eller guilds", "Guild": "Guild", "Guilds": "Guilds",
+    "Every guild on this realm with FunStats players": "Alla guilds på den här realmen med FunStats-spelare",
+    "No guild": "Ingen guild", "{0} member": "{0} medlem", "{0} members": "{0} medlemmar", "{0} guild": "{0} guild", "{0} guilds": "{0} guilds",
+    "Top damage": "Mest damage", "Open guild page": "Öppna guildsidan", "No guilds yet.": "Inga guilds än.",
+    "Top level {0}": "Högsta level {0}", "No stats yet.": "Ingen statistik än.",
     "Previous page": "Föregående sida", "Next page": "Nästa sida",
     "Gold": "Guld", "Ctrl + scroll to zoom · drag to move": "Ctrl + scrolla för att zooma · dra för att flytta", "Zoom in": "Zooma in", "Zoom out": "Zooma ut",
     "Show the whole continent": "Visa hela kontinenten", "Map of the Fallen": "De fallnas karta", "Every death, ding and drop, where it happened": "Varje död, ding och drop, där det hände",
-    "Level-ups": "Nya nivåer", "Rare loot": "Sällsynt loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
-    "Top killer: {0}": "Värsta mördaren: {0}", "No deaths in this range. Impressive.": "Inga dödsfall här. Imponerande.", "reached level {0}": "nådde nivå {0}",
+    "Level-ups": "Dings", "Rare loot": "Rare loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
+    "Top killer: {0}": "Värsta mördaren: {0}", "No deaths in this range. Impressive.": "Inga dödsfall här. Imponerande.", "reached level {0}": "dingade {0}",
     "killed by {0}": "dödad av {0}", "fell to their death": "föll till sin död", "looted": "lootade", "Unknown": "Okänt",
     "{0} deaths happened before positions were saved (FunStats 1.1), so they're only counted, not placed.": "{0} dödsfall skedde innan positioner sparades (FunStats 1.1), så de räknas men placeras inte ut.", "Animations": "Animationer", "On": "På", "Off": "Av", "New record": "Nytt rekord", "A record fell!": "Ett rekord föll!", "{0} records fell!": "{0} rekord föll!", "last 7 days": "senaste 7 dagarna",
     "Beat {0}'s {1} from {2}": "Slog {0}s {1} från {2}", "Topped their own {0} from {1}": "Slog sitt eget {0} från {1}",
-    "Characters": "Karaktärer", "Guild Roster": "Gillesrullan", "Everyone on this realm with FunStats": "Alla på den här realmen med FunStats",
+    "Characters": "Karaktärer", "Guild Roster": "Guildens roster", "Everyone on this realm with FunStats": "Alla på den här realmen med FunStats",
     "Every member with FunStats": "Alla medlemmar med FunStats", "Add stats": "Lägg till", "Add Your Stats": "Lägg till din statistik",
     "Anyone with the addon can join": "Alla med addonen kan vara med",
-    "Play. Your stats are recorded per character, and shared with your group and guild members who also have FunStats.": "Spela. Din statistik sparas per karaktär och delas med gruppen och gillesmedlemmar som också har FunStats.",
+    "Play. Your stats are recorded per character, and shared with your group and guild members who also have FunStats.": "Spela. Din statistik sparas per karaktär och delas med gruppen och guildmedlemmar som också har FunStats.",
     "Type <code>/reload</code> or log out so WoW saves the file.": "Skriv <code>/reload</code> eller logga ut så sparar WoW filen.",
     "Drop this file here: <code>World of Warcraft\\_anniversary_\\WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\FunStats.lua</code>": "Släpp den här filen här: <code>World of Warcraft\\_anniversary_\\WTF\\Account\\DITT_KONTO\\SavedVariables\\FunStats.lua</code>",
-    "Your file contains a private upload code, so only you can update your characters. Stats it received from guild mates fill in their pages too, until they upload their own.": "Filen innehåller en privat uppladdningskod, så bara du kan uppdatera dina karaktärer. Statistik den fått från gillesmedlemmar fyller också i deras sidor, tills de laddar upp sin egen.",
+    "Your file contains a private upload code, so only you can update your characters. Stats it received from guild mates fill in their pages too, until they upload their own.": "Filen innehåller en privat uppladdningskod, så bara du kan uppdatera dina karaktärer. Statistik den fått från guildmedlemmar fyller också i deras sidor, tills de laddar upp sin egen.",
     "Drop FunStats.lua here": "Släpp FunStats.lua här", "or click to choose the file": "eller klicka för att välja filen",
     "{0}: couldn't read this file.": "{0}: kunde inte läsa filen.",
     "{0} has no FunStats data. Pick FunStats.lua from WTF\\Account\\YOUR_ACCOUNT\\SavedVariables after logging out once.": "{0} innehåller ingen FunStats-data. Välj FunStats.lua i WTF\\Account\\DITT_KONTO\\SavedVariables efter att du loggat ut en gång.",
@@ -196,19 +196,19 @@
     "Other characters by this player": "Andra karaktärer av samma spelare",
     "How {0} compares with the rest of <{1}>, all time": "Hur {0} står sig mot resten av <{1}>, totalt",
     "How {0} compares with everyone on this realm, all time": "Hur {0} står sig mot alla på den här realmen, totalt",
-    "Only one with this stat so far": "Enda med det här hittills", "Compare": "Jämför", "Compare with": "Jämför med", "Level": "Nivå",
-    "No characters or guilds match.": "Inga karaktärer eller gillen matchar.", "‹ Guild": "‹ Gillet",
+    "Only one with this stat so far": "Enda med det här hittills", "Compare": "Jämför", "Compare with": "Jämför med", "Level": "Level",
+    "No characters or guilds match.": "Inga karaktärer eller guilds matchar.", "‹ Guild": "‹ Guilden",
     "Nobody here yet. Characters appear once their stats have been uploaded.": "Ingen här än. Karaktärer dyker upp när deras statistik har laddats upp.",
-    "This guild has no characters on this realm yet.": "Det här gillet har inga karaktärer på den här realmen än.",
+    "This guild has no characters on this realm yet.": "Den här guilden har inga karaktärer på den här realmen än.",
     "There's no character with that link.": "Det finns ingen karaktär med den länken.",
     "<strong>The ledger is connected but still empty.</strong> Stats appear after the first upload. Until then, this is example data.": "<strong>Liggaren är kopplad men fortfarande tom.</strong> Statistiken dyker upp efter första uppladdningen. Tills dess är det här exempeldata.",
-    "Others ({0})": "Övriga ({0})", "View": "Vy", "Pages": "Sidor", "World": "Världen", "Records": "Rekord", "Gear": "Utrustning",
+    "Others ({0})": "Övriga ({0})", "View": "Vy", "Pages": "Sidor", "World": "Världen", "Records": "Rekord", "Gear": "Gear",
     "History": "Historik", "Activity": "Aktivitet", "Meters & Combat": "Mätare & strid", "Loot & World": "Loot & världen", "Lately": "På sistone", "This week": "Denna vecka", "Last week": "Förra veckan", "updated {0}": "uppdaterad {0}",
     "Windows: get the Ledger app": "Windows: hämta Ledger-appen", "recommended": "rekommenderas", "One download, then just play.": "En nedladdning, sedan är det bara att spela.",
-    "Download the app and run it once. It installs itself and the FunStats addon in every WoW folder it finds.": "Ladda ner appen och kör den en gång. Den installerar sig själv och FunStats-tillägget i varje WoW-mapp den hittar.",
-    "It updates itself: new versions of the app and the addon arrive on their own. Restart WoW to load a new addon.": "Den uppdaterar sig själv: nya versioner av appen och tillägget kommer av sig själva. Starta om WoW för att ladda ett nytt tillägg.",
+    "Download the app and run it once. It installs itself and the FunStats addon in every WoW folder it finds.": "Ladda ner appen och kör den en gång. Den installerar sig själv och FunStats-addonen i varje WoW-mapp den hittar.",
+    "It updates itself: new versions of the app and the addon arrive on their own. Restart WoW to load a new addon.": "Den uppdaterar sig själv: nya versioner av appen och addonen kommer av sig själva. Starta om WoW för att ladda en ny addon.",
     "Already have it? Nothing to do, it keeps itself up to date. Only apps from before version 1.1 need one more download.": "Har du den redan? Då behöver du inte göra något, den håller sig uppdaterad. Bara appar från före version 1.1 behöver laddas ner en gång till.",
-    "Without the app, the addon doesn't update itself: download FunStats.zip again now and then, and upload your file after you play.": "Utan appen uppdateras inte tillägget av sig självt: ladda ner FunStats.zip igen då och då, och ladda upp din fil efter att du har spelat.",
+    "Without the app, the addon doesn't update itself: download FunStats.zip again now and then, and upload your file after you play.": "Utan appen uppdateras inte addonen av sig själv: ladda ner FunStats.zip igen då och då, och ladda upp din fil efter att du har spelat.",
     "It starts with Windows and waits quietly in the tray.": "Den startar med Windows och väntar tyst i aktivitetsfältet.",
     "Every time you log out of WoW, your stats appear here.": "Varje gång du loggar ut ur WoW dyker din statistik upp här.",
     "Download for Windows": "Ladda ner för Windows",
@@ -218,39 +218,40 @@
     "Download <a href=\"FunStats.zip\">FunStats.zip</a> and put the <code>FunStats</code> folder in <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.": "Ladda ner <a href=\"FunStats.zip\">FunStats.zip</a> och lägg mappen <code>FunStats</code> i <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.",
     "Play, then log out so WoW saves your stats.": "Spela och logga sedan ut så att WoW sparar din statistik.",
     "Drop <code>WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\FunStats.lua</code> here:": "Släpp <code>WTF\\Account\\DITT_KONTO\\SavedVariables\\FunStats.lua</code> här:",
-    "Guild mates without the addon still show up: with their level and class from the guild roster, and their gear from the Blizzard armory.": "Gillesmedlemmar utan tillägget syns ändå: med nivå och klass från gillets medlemslista och utrustning från Blizzards armory.",
-    "Gear appears once this character has the Ledger app, or after the next armory update.": "Utrustningen syns när karaktären har Ledger-appen, eller efter nästa armory-uppdatering.",
-    "Gear from the Blizzard armory. Fun stats need the FunStats addon.": "Utrustning från Blizzards armory. Den roliga statistiken kräver FunStats-tillägget.", "The Race to {0}": "Racet till {0}", "No deaths yet.": "Inga dödsfall än.", "Leaders": "Ledare", "newest first": "nyast först", "Example data": "Exempeldata",
+    "Guild mates without the addon still show up: with their level and class from the guild roster, and their gear from the Blizzard armory.": "Guildmedlemmar utan addonen syns ändå: med level och class från guildens roster och gear från Blizzards armory.",
+    "Gear appears once this character has the Ledger app, or after the next armory update.": "Gear syns när karaktären har Ledger-appen, eller efter nästa armory-uppdatering.",
+    "Gear from the Blizzard armory. Fun stats need the FunStats addon.": "Gear från Blizzards armory. Den roliga statistiken kräver FunStats-addonen.", "The Race to {0}": "Racet till {0}", "No deaths yet.": "Inga dödsfall än.", "Leaders": "Ledare", "newest first": "nyast först", "Example data": "Exempeldata",
     "<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or upload your FunStats.lua under Add stats.": "<strong>Exempeldata.</strong> Karaktärerna är påhittade så att du kan se hur sidan fungerar. Välj din realm i Realm-menyn eller ladda upp din FunStats.lua under Lägg till.",
     "<strong>No stats on {0} yet.</strong> Be the first: upload your FunStats.lua under Add stats.": "<strong>Ingen statistik på {0} än.</strong> Bli först: ladda upp din FunStats.lua under Lägg till.",
     // navigation
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
-    "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Byte",
-    "Loot quality": "Bytets kvalitet", "Most wanted": "Mest efterlyst", "Responsible for {0} death": "Ansvarig för {0} dödsfall", "Responsible for {0} deaths": "Ansvarig för {0} dödsfall",
-    "Hero": "Hjälte", "{0} drop": "{0} fynd", "{0} drops": "{0} fynd", "Best drop": "Bästa fyndet", "death": "dödsfall", "deaths": "dödsfall",
-    "You are here": "Du är här", "Realm ledger": "Realmens liggare", "Go back": "Tillbaka", "Realm pages": "Realmens sidor", "Guild pages": "Gillets sidor",
+    "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
+    "Loot quality": "Lootkvalitet", "Most wanted": "Mest efterlyst", "Responsible for {0} death": "Ansvarig för {0} dödsfall", "Responsible for {0} deaths": "Ansvarig för {0} dödsfall",
+    "Hero": "Hjälte", "{0} drop": "{0} drop", "{0} drops": "{0} drops", "Best drop": "Bästa dropen", "death": "dödsfall", "deaths": "dödsfall",
+    "You are here": "Du är här", "Realm ledger": "Realmens liggare", "Go back": "Tillbaka", "Realm pages": "Realmens sidor", "Guild pages": "Guildens sidor",
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
     "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
     "Atlas": "Atlas", "Loot & Gold": "Loot & guld", "Back to {0}": "Tillbaka till {0}",
     "Click a zone to open its map. Right-click to zoom back out.": "Klicka på en zon för att öppna dess karta. Högerklicka för att zooma ut igen.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
-    "Achievements": "Bedrifter", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
-    "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Trollboken", "Bonds": "Band", "Full Ledger": "Hela liggaren",
-    "Roster": "Rullan", "Join": "Gå med", "Signature": "Signatur", "Character": "Karaktär", "Charts": "Diagram", "Bests": "Rekord",
+    "Achievements": "Achievements", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
+    "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Spellbook", "Bonds": "Band", "Full Ledger": "Hela liggaren",
+    "Roster": "Roster", "Join": "Gå med", "Signature": "Signatur", "Character": "Karaktär", "Charts": "Diagram", "Bests": "Rekord",
     "‹ Ledger": "‹ Liggaren", "Previous friend": "Föregående vän", "Next friend": "Nästa vän", "Sections": "Sektioner", "Site": "Webbplats",
     // dungeons & raids
-    "Dungeons & Raids": "Instanser & raider", "The Boss Log": "Bossloggen", "Recent boss fights": "Senaste bossfighterna",
-    "open one for its damage meter": "öppna en för dess skademätare", "Boss tally": "Bossräkning", "Dungeon Runs": "Instansrundor",
-    "Dungeon records": "Instansrekord", "fastest clear: quickest run that killed the most bosses": "snabbast rensning: snabbaste rundan som dödade flest bossar",
-    "Recent runs": "Senaste rundorna", "Bosses defeated": "Besegrade bossar", "Kill": "Kill","Wipe": "Wipe", "({0}/s)": "({0}/s)",
-    "top damage: {0}": "mest skada: {0}", "No meter for this fight.": "Ingen mätare för den här fighten.",
+    "Dungeons & Raids": "Dungeons & raids", "The Boss Log": "Bossloggen", "Recent boss fights": "Senaste bossfighterna",
+    "open one for its damage meter": "öppna en för dess damage meter", "Boss tally": "Bossräkning", "Dungeon Runs": "Dungeon runs",
+    "Dungeon records": "Dungeonrekord", "fastest clear: quickest run that killed the most bosses": "snabbaste clear: snabbaste runnen som dödade flest bossar",
+    "Recent runs": "Senaste runs", "Bosses defeated": "Besegrade bossar", "Kill": "Kill","Wipe": "Wipe", "({0}/s)": "({0}/s)",
+    "top damage: {0}": "mest damage: {0}", "No meter for this fight.": "Ingen mätare för den här fighten.",
     "No boss fights yet. They're recorded from FunStats 1.3 on.": "Inga bossfighter än. De sparas från FunStats 1.3 och framåt.",
-    "Boss": "Boss", "Kills": "Dödade", "Wipes": "Wipes", "Fastest": "Snabbast", "Best DPS": "Bästa DPS", "Best HPS": "Bästa HPS",
-    "Last kill": "Senast dödad", "First kill": "Först dödad", "No bosses fought in this range.": "Inga bossar under den här perioden.",
-    "Fastest clear": "Snabbast rensning", "Runs": "Rundor", "Average time": "Snitt-tid", "Bosses": "Bossar", "up to {0}": "upp till {0}",
-    "Most runs": "Flest rundor", "No dungeon runs yet. They're recorded from FunStats 1.3 on.": "Inga instansrundor än. De sparas från FunStats 1.3 och framåt.",
-    "{0} boss": "{0} boss", "{0} bosses": "{0} bossar", "{0} wipe": "{0} wipe", "{0} wipes": "{0} wipes", "No runs in this range.": "Inga rundor under den här perioden.",
+    "Horde": "Horde", "Alliance": "Alliance", "All": "Alla",
+    "Boss": "Boss", "Kills": "Kills", "Wipes": "Wipes", "Fastest": "Snabbast", "Best DPS": "Bästa DPS", "Best HPS": "Bästa HPS",
+    "Last kill": "Senaste kill", "First kill": "Första kill", "No bosses fought in this range.": "Inga bossar under den här perioden.",
+    "Fastest clear": "Snabbaste clear", "Runs": "Runs", "Average time": "Snitt-tid", "Bosses": "Bossar", "up to {0}": "upp till {0}",
+    "Most runs": "Flest runs", "No dungeon runs yet. They're recorded from FunStats 1.3 on.": "Inga dungeon runs än. De sparas från FunStats 1.3 och framåt.",
+    "{0} boss": "{0} boss", "{0} bosses": "{0} bossar", "{0} wipe": "{0} wipe", "{0} wipes": "{0} wipes", "No runs in this range.": "Inga runs under den här perioden.",
     "No bosses defeated yet. They're recorded from FunStats 1.3 on.": "Inga besegrade bossar än. De sparas från FunStats 1.3 och framåt.",
   };
   let LANG = (() => {
@@ -322,7 +323,7 @@
   // The class icon for a character, or the plain colour dot when the class is unknown.
   const classIcon = (ch, px = 1) => {
     const k = String(ch && ch.class || "").toLowerCase();
-    return CLASS[ch && ch.class] && SPRITES[k] ? `<span class="cicon" title="${classOf(ch)[0]}">${sprite(k, px)}</span>` : `<span class="dot" style="background:${classOf(ch)[1]}"></span>`;
+    return CLASS[ch && ch.class] ? `<span class="cicon" title="${classOf(ch)[0]}">${zam("classicon_" + k, px * 16)}</span>` : `<span class="dot" style="background:${classOf(ch)[1]}"></span>`;
   };
 
   const METRICS = [
@@ -442,6 +443,7 @@
       const ch = out[cid];
       if (!ch) continue;
       if (a.avatar) ch.avatar = a.avatar; // Blizzard's face render, addon users included
+      if (a.render) ch.render = a.render; // and the full-body one
       if (ch.self || a.faceOnly) continue;
       if (a.gear && Object.keys(a.gear).length && !(ch.gear && Object.keys(ch.gear).length)) { ch.gear = a.gear; ch.armory = true; ch.ilvl = a.ilvl; }
       ch.class ||= a.class;
@@ -601,8 +603,8 @@
       ["Mirelle", "PRIEST", "Scourge", { "Smite": 4, "Shadow Word: Pain": 3, "Mind Blast": 3, "Melee": 1 }, 0.9],
       ["Bonksworth", "MAGE", "Troll", { "Fireball": 6, "Frostbolt": 4, "Arcane Missiles": 2, "Fire Blast": 2, "Melee": 0.3 }, 1.1],
       ["Tidepaw", "SHAMAN", "Tauren", { "Lightning Bolt": 4, "Earth Shock": 2, "Melee": 3, "Flame Shock": 2 }, 0.6],
-      ["Felbrew", "WARLOCK", "Scourge", { "Shadow Bolt": 5, "Corruption": 3, "Immolate": 2, "Melee": 0.3 }, 0.95],
-      ["Stonehoof", "DRUID", "Tauren", { "Wrath": 2, "Moonfire": 2, "Melee": 5, "Claw": 3 }, 0.85],
+      ["Felbrew", "WARLOCK", "Gnome", { "Shadow Bolt": 5, "Corruption": 3, "Immolate": 2, "Melee": 0.3 }, 0.95],
+      ["Stonehoof", "DRUID", "NightElf", { "Wrath": 2, "Moonfire": 2, "Melee": 5, "Claw": 3 }, 0.85],
     ];
     const mobs = ["Defias Pillager", "Murloc Tidehunter", "Kobold Geomancer", "Riverpaw Mystic", "Hogger", "Harvest Golem", "Razormane Hunter", "Venture Co. Enforcer"];
     const zones = ["Durotar", "The Barrens", "Westfall", "Redridge Mountains", "Stonetalon Mountains", "Ashenvale", "Hillsbrad Foothills", "Orgrimmar"];
@@ -1332,6 +1334,44 @@
     rows.forEach((r, y) => [...r].forEach((ch, x) => { if (pal[ch]) rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[ch]}"${glow.includes(ch) ? ' class="gl"' : ""}/>`; }));
     return `<svg class="sprite" width="${w * px}" height="${hgt * px}" viewBox="0 0 ${w} ${hgt}" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
   }
+  // Real game icons (Wowhead's icon server) for the content; the pixel sprites stay for navigation and as the fallback.
+  const WOWICON = {
+    skull: "inv_misc_bone_humanskull_01", sword: "inv_sword_04", heart: "spell_holy_flashheal", axe: "inv_axe_02",
+    scroll: "inv_misc_note_01", coin: "inv_misc_coin_01", clock: "inv_misc_pocketwatch_01", boot: "inv_boots_01",
+    spring: "spell_magic_featherfall", gate: "inv_misc_key_04", shield: "inv_shield_06", hearth: "inv_misc_rune_01",
+    loot: "inv_misc_bag_10", sulfuras: "inv_hammer_unique_sulfuras", atiesh: "inv_staff_medivh", ashbringer: "inv_sword_2h_artifactashbringer_d_01",
+    onyxia: "inv_misc_head_dragon_01", lotus: "inv_misc_herb_blacklotus", crit: "ability_criticalstrike", tomb: "spell_shadow_raisedead",
+    ghost: "spell_holy_resurrection", feather: "spell_magic_featherfall", dice: "inv_misc_dice_01", wing: "ability_mount_wyvern_01",
+    speech: "inv_letter_15", flag: "inv_bannerpvp_02", bandage: "inv_misc_bandage_15", zzz: "spell_nature_sleep",
+    bunny: "spell_magic_polymorphrabbit", anvil: "trade_blacksmithing", map: "inv_misc_map_01", meat: "inv_misc_food_14",
+    horde: "inv_bannerpvp_01", alliance: "inv_bannerpvp_02",
+  };
+  const zam = (file, size) => `<img class="wicon" src="https://wow.zamimg.com/images/wow/icons/large/${file}.jpg" width="${size}" height="${size}" alt="" loading="lazy">`;
+  const icon = (name, px = 2) => WOWICON[name] ? zam(WOWICON[name], px * 16) : sprite(name, px);
+
+  // Horde or Alliance, from Blizzard's crest when there is one, else from the members' races (most of them wins).
+  const HORDE = new Set(["Orc", "Scourge", "Tauren", "Troll", "BloodElf", "Goblin"]);
+  const ALLIANCE = new Set(["Human", "Dwarf", "NightElf", "Gnome", "Draenei", "Worgen"]);
+  const crestOf = (realm, guild) => ((state.data && state.data.crests) || {})[`${String(realm).split("|").pop()}|${guild}`.toLowerCase()];
+  function factionOf(list, crest) {
+    const f = String(crest && crest.faction || "").toLowerCase();
+    if (f === "horde" || f === "alliance") return f;
+    const h = list.filter(c => HORDE.has(c.race)).length, a = list.filter(c => ALLIANCE.has(c.race)).length;
+    return h || a ? (h >= a ? "horde" : "alliance") : "";
+  }
+  // Only Blizzard's render server and plain rgba() colours make it into the page.
+  const blizzImg = u => typeof u === "string" && /^https:\/\/render\.worldofwarcraft\.com\/[\w\-./]+$/.test(u) ? u : "";
+  const rgbaOk = c => typeof c === "string" && /^rgba\(\d{1,3},\d{1,3},\d{1,3},[\d.]+\)$/.test(c) ? c : "";
+  // The guild's in-game tabard: Blizzard's emblem and border, tinted with the guild's colours. Without one, the faction banner.
+  function guildCrest(realm, guild, list, size) {
+    const c = crestOf(realm, guild);
+    const em = c && c.emblem && blizzImg(c.emblem.img), bo = c && c.border && blizzImg(c.border.img);
+    const fac = factionOf(list, c);
+    if (!em) return `<span class="tabard plain">${zam(WOWICON[fac] || WOWICON.shield, size)}</span>`;
+    return `<span class="tabard" style="--s:${size}px;--bg:${rgbaOk(c.bg) || "#2a2a2a"};--ec:${rgbaOk(c.emblem.color) || "#fff"};--bc:${rgbaOk(c.border && c.border.color) || "#c9a24a"}">`
+      + (bo ? `<i class="tb-b" style="--m:url('${bo}')"></i>` : "") + `<i class="tb-e" style="--m:url('${em}')"></i></span>`;
+  }
+
   // The crest picks up the current theme's colours.
   function crestHTML(px = 7) {
     SPRITES.crest[1] = { "#": "#000", g: css("--accent") || "#ffb02e", r: css("--accent2") || "#8c1c10", y: "#ffd27a", h: "#6b3e1d", s: "#b8c4cc", w: "#fff" };
@@ -1353,8 +1393,8 @@
   const guildHref = (realm, guild) => "#/g/" + encodeURIComponent(realm) + "/" + encodeURIComponent(guild);
   const guildLink = ch => ch.guild ? `<a class="glink" href="${guildHref(realmKey(ch), ch.guild)}">&lt;${esc(ch.guild)}&gt;</a>` : "";
   const nameHTML = p => p.id
-    ? `<a class="plink" href="${profileHref(p)}"><span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname">${esc(p.name)}</span></a>`
-    : `<span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname">${esc(p.name)}</span>`;
+    ? `<a class="plink" href="${profileHref(p)}"><span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span></a>`
+    : `<span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span>`;
   const rangeLabel = () => state.view === "all" ? tr("All time") : tr("Week of {0} – {1}", shortDate(state.week), shortDate(addDays(state.week, 6)));
 
   function renderWeekSelect(people) {
@@ -1400,7 +1440,7 @@
     ];
     // Stats nobody has touched yet are left out; deaths always show (zero deaths is worth bragging about).
     const raw = [1, t.dmg, t.heal, t.kb, t.quests, t.goldIn, t.played, t.dist, t.jumps, t.dungeons];
-    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([icon, l, v, f]) => `<div class="frame tile"><span class="ticon">${sprite(icon, 2)}</span><span class="tbody"><span class="lbl">${l}</span><span class="val">${v}</span><span class="foot">${f || ""}</span></span></div>`).join("");
+    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([ic, l, v, f]) => `<div class="frame tile"><span class="ticon">${icon(ic, 2)}</span><span class="tbody"><span class="lbl">${l}</span><span class="val">${v}</span><span class="foot">${f || ""}</span></span></div>`).join("");
   }
 
   const ACH = [
@@ -1433,15 +1473,15 @@
   ];
   // Each achievement shows its icon in a frame coloured by how big it is: gold, silver or copper (red for shame).
   const TIER = { 50: "gold", 25: "silver", 10: "copper" };
-  const achIcon = a => `<div class="achic ${a.shame ? "shame" : TIER[a.pts]}">${sprite(a.i, 2)}</div>`;
+  const achIcon = a => `<div class="achic ${a.shame ? "shame" : TIER[a.pts]}">${icon(a.i, 2)}</div>`;
   // On the overview the frame shows the winner's face instead (their class icon until it loads, or without one).
   function achFace(a, p) {
     const ch = (state.allChars || []).find(c => c.key === p.id);
     if (!ch || (!ch.avatar && !CLASS[ch.class])) return achIcon(a);
-    const icon = CLASS[ch.class] ? classIcon(ch, 2) : sprite(a.i, 2);
-    const face = ch.avatar ? `<canvas class="face" width="32" height="32" data-src="${esc(ch.avatar)}" role="img" aria-label="${esc(ch.name)}"></canvas><span class="alt" hidden>${icon}</span>` : icon;
+    const alt = CLASS[ch.class] ? classIcon(ch, 2) : icon(a.i, 2);
+    const face = ch.avatar ? `<canvas class="face" width="32" height="32" data-src="${esc(ch.avatar)}" role="img" aria-label="${esc(ch.name)}"></canvas><span class="alt" hidden>${alt}</span>` : alt;
     const tier = a.shame ? "shame" : TIER[a.pts];
-    return `<div class="achwrap"><div class="achic ${tier}">${face}</div><span class="achbadge ${tier}">${sprite(a.i, 1)}</span></div>`;
+    return `<div class="achwrap"><div class="achic ${tier}">${face}</div><span class="achbadge ${tier}">${icon(a.i, 1)}</span></div>`;
   }
 
   function renderAchievements(rows) {
@@ -1575,7 +1615,7 @@
       ? `<div class="qbar">${qs.map(x => `<i style="width:${(x.n / total) * 100}%;background:${QUAL[x.q][1]}"></i>`).join("")}</div>
         <div class="qlegend">${qs.map(x => `<div><i style="background:${QUAL[x.q][1]}"></i><span>${tr(QUAL[x.q][0])}</span><strong>${num(x.n)}</strong><small>${Math.round((x.n / total) * 100)}%</small></div>`).join("")}</div>`
       : `<p class="empty">${tr("No rare drops yet. Keep rolling Need.")}</p>`)
-      + (b ? `<div class="bestdrop"><span class="bd-icon">${sprite("loot", 2)}</span><div><span>${tr("Best drop")}</span><strong class="q${b.n.q}">${esc(b.n.item)}</strong><p>${esc(b.p.name)}${b.n.zone ? " · " + esc(b.n.zone) : ""}</p></div><b class="q${b.n.q}">${tr(QUAL[b.n.q][0])}</b></div>` : "");
+      + (b ? `<div class="bestdrop"><span class="bd-icon">${icon("loot", 2)}</span><div><span>${tr("Best drop")}</span><strong class="q${b.n.q}">${esc(b.n.item)}</strong><p>${esc(b.p.name)}${b.n.zone ? " · " + esc(b.n.zone) : ""}</p></div><b class="q${b.n.q}">${tr(QUAL[b.n.q][0])}</b></div>` : "");
   }
 
   function renderRace(people, canvasId = "cRace", mode = state.raceMode) {
@@ -1677,7 +1717,7 @@
     });
     const top = Object.entries(killers).sort((a, b) => b[1].n - a[1].n).slice(0, 8);
     const mw = top[0];
-    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${sprite("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${tr(mw[1].n === 1 ? "Responsible for {0} death" : "Responsible for {0} deaths", num(mw[1].n))}</span></div><b>×${num(mw[1].n)}</b></div>` : "";
+    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${icon("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${tr(mw[1].n === 1 ? "Responsible for {0} death" : "Responsible for {0} deaths", num(mw[1].n))}</span></div><b>×${num(mw[1].n)}</b></div>` : "";
     $("wanted").innerHTML = top.map(([name, k], i) => {
       const zone = Object.entries(k.zones).sort((a, b) => b[1] - a[1])[0];
       return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
@@ -1762,6 +1802,15 @@
     return { runs: out.sort((a, b) => b.t - a.t), all };
   }
 
+  // Journal names and the game's names differ in small ways ("The Deadmines" / "Deadmines"), so both are simplified.
+  const jkey = n => String(n || "").toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
+  const journalArt = (kind, name) => {
+    const j = state.data && state.data.journal && state.data.journal[kind];
+    if (!j) return "";
+    if (!j._k) Object.defineProperty(j, "_k", { value: Object.fromEntries(Object.entries(j).map(([n, u]) => [jkey(n), u])) });
+    return blizzImg(j._k[jkey(name)]);
+  };
+  const bossPic = name => { const u = journalArt("boss", name); return u ? `<img class="bosspic" src="${u}" alt="" loading="lazy">` : ""; };
   function renderDungeons(people) {
     const fights = groupFights(people);
     const label = instLabeler(fights.concat(people.flatMap(p => p.bosses.map(b => ({ ...b, boss: b.n })))));
@@ -1775,7 +1824,7 @@
         return list.map(w => `<div class="hbar" style="--c:${(CLASS[w.c] || classOf({}))[1]}"><span>${whoHTML(w, people)}</span><span class="track"><span class="fill" style="display:block;width:${(f(w) / max) * 100}%"></span></span><span class="num">${compact(f(w))}${g.dur ? ` <span class="muted">${tr("({0}/s)", compact(f(w) / g.dur))}</span>` : ""}</span></div>`).join("");
       };
       const sub = [label(g), clock(g.dur), g.deaths ? tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths) : "", dmg[0] ? tr("top damage: {0}", esc(dmg[0].n)) : ""].filter(Boolean).join(" · ");
-      return `<details class="fight"><summary><span class="res${g.ok ? "" : " wipe"}">${tr(g.ok ? "Kill" : "Wipe")}</span><span class="boss">${esc(g.boss)}</span><span class="when">${dayText(g.t)}</span><span class="sub">${sub}</span></summary>
+      return `<details class="fight"><summary><span class="res${g.ok ? "" : " wipe"}">${tr(g.ok ? "Kill" : "Wipe")}</span><span class="boss">${bossPic(g.boss)}${esc(g.boss)}</span><span class="when">${dayText(g.t)}</span><span class="sub">${sub}</span></summary>
         <div class="meter">${dmg.length ? `<span class="lh">${tr("Damage")}</span>${bars(dmg, w => w.d)}` : ""}${heal.length ? `<span class="lh">${tr("Healing")}</span>${bars(heal, w => w.h)}` : ""}${!dmg.length && !heal.length ? `<p class="empty">${tr("No meter for this fight.")}</p>` : ""}</div></details>`;
     }).join("") || `<p class="empty">${tr("No boss fights yet. They're recorded from FunStats 1.3 on.")}</p>`;
 
@@ -1801,7 +1850,7 @@
     const trows = Object.values(tally).sort((a, b) => b.last - a.last || b.wipes - a.wipes);
     $("bossTallyNote").textContent = rangeLabel();
     $("tBosses").tHead.innerHTML = `<tr><th>${tr("Boss")}</th><th>${tr("Kills")}</th><th>${tr("Wipes")}</th><th>${tr("Fastest")}</th><th>${tr("Best DPS")}</th><th>${tr("Last kill")}</th></tr>`;
-    $("tBosses").tBodies[0].innerHTML = trows.map(r => `<tr><td><b>${esc(r.boss)}</b><br><span class="muted" style="font-size:12px">${label(r)}</span></td><td>${num(r.kills)}</td><td>${num(r.wipes)}</td><td>${clock(r.fast)}</td>
+    $("tBosses").tBodies[0].innerHTML = trows.map(r => `<tr><td class="bosscell">${bossPic(r.boss)}<b>${esc(r.boss)}</b><br><span class="muted" style="font-size:12px">${label(r)}</span></td><td>${num(r.kills)}</td><td>${num(r.wipes)}</td><td>${clock(r.fast)}</td>
         <td>${r.dps ? `<span class="nm">${whoHTML(r.dps.w, people)} ${num(r.dps.v)}</span>` : "–"}</td><td>${r.last ? dayText(r.last) : "–"}</td></tr>`).join("")
       || `<tr><td colspan="6" class="empty">${tr("No bosses fought in this range.")}</td></tr>`;
 
@@ -1818,7 +1867,8 @@
       all.forEach(({ p, r }) => { if (r.inst === list[0].inst && (r.d || 0) === (list[0].d || 0)) runners[p.name] = (runners[p.name] || 0) + 1; });
       const top = Object.entries(runners).sort((a, b) => b[1] - a[1])[0];
       const topP = top && people.find(p => p.name === top[0]);
-      return `<div class="runcard"><h3>${runLabel(list[0])}</h3>
+      const art = journalArt("inst", list[0].inst);
+      return `<div class="runcard${art ? " has-art" : ""}"${art ? ` style="--art:url('${art}')"` : ""}><h3>${runLabel(list[0])}</h3>
         <span class="lh">${tr("Fastest clear")}</span><span class="big">${best ? clock(best.dur) : "–"}</span>
         ${best ? `<span class="muted" style="font-size:13px">${esc([...best.names].slice(0, 5).join(", "))} · ${dayText(best.t)}</span>` : ""}
         <dl class="kv"><dt>${tr("Runs")}</dt><dd>${num(list.length)}</dd>
@@ -2308,6 +2358,9 @@
     const main = p.chars[0];
 
     $("pHero").style.setProperty("--c", p.color);
+    const render = main && blizzImg(main.render);
+    $("pHero").classList.toggle("has-render", !!render);
+    $("pHero").style.setProperty("--render", render ? `url('${render}')` : "none");
     // "Same player" uses the addon's public account id; it never links accounts the addon didn't see.
     const otherChars = (state.allChars || []).filter(c => main && main.owner && !String(main.owner).startsWith("char:") && c.owner === main.owner && c.key !== main.key);
     $("pHero").innerHTML = `
@@ -2463,7 +2516,7 @@
   const leadsHTML = (rows, n = LEAD.length, guilds = true) => LEAD.slice(0, n).map(([icon, label, f, fmt]) => {
     const best = rows.slice().sort((a, b) => (b.s[f] || 0) - (a.s[f] || 0))[0];
     const g = guilds && best && best.p.chars[0] && best.p.chars[0].guild ? guildLink(best.p.chars[0]) : "";
-    return best && best.s[f] ? `<div class="glead${guilds ? " wg" : ""}">${sprite(icon, 1)}<span class="lbl">${tr(label)}</span>${guilds ? `<span class="gtag">${g}</span>` : ""}<a class="plink" href="${profileHref(best.p)}"><span class="cname">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
+    return best && best.s[f] ? `<div class="glead${guilds ? " wg" : ""}">${zam(WOWICON[icon], 18)}<span class="lbl">${tr(label)}</span>${guilds ? `<span class="gtag">${g}</span>` : ""}<a class="plink" href="${profileHref(best.p)}"><span class="cname" style="--cc:${classOf(best.p.chars[0])[1]}">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
   }).join("");
 
   function renderGuildSide(rows, people) {
@@ -2472,14 +2525,14 @@
       const ch = p.chars[0];
       const deaths = p.deaths.filter(d => d.t && inRange(localKey(d.t))).length || s.deaths || 0;
       return `<div class="grow">
-        <span class="who"><a class="plink" href="${profileHref(p)}">${classIcon(ch)}<span class="cname">${esc(p.name)}</span></a>
+        <span class="who"><a class="plink" href="${profileHref(p)}">${classIcon(ch)}<span class="cname" style="--cc:${classOf(ch)[1]}">${esc(p.name)}</span></a>
           <small>${[tr("Lvl {0}", esc(ch.level || "?")), esc(RACE[ch.race] || ch.race || ""), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
         <span class="n">${compact(s.dmg)}<small>${tr("damage")}</small></span>
         <span class="n${deaths ? " red" : ""}">${num(deaths)}<small>${tr("deaths")}</small></span>
       </div>`;
     }).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
-    const leads = leadsHTML(rows, LEAD.length, false);
-    if (leads && rows.length > 1) $("gRoster").innerHTML += `<div class="lh">${tr("Leaders")}</div><div class="gleads">${leads}</div>`;
+    $("gCount").textContent = tr(list.length === 1 ? "{0} member" : "{0} members", num(list.length));
+    $("oLeads").innerHTML = leadsHTML(rows, LEAD.length, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
     const deaths = people.flatMap(p => p.deaths.filter(d => d.t).map(d => ({ d, p }))).sort((a, b) => b.d.t - a.d.t).slice(0, 4);
@@ -2618,8 +2671,11 @@
     const t = {};
     people.forEach(p => { const s = sumFor(p, true); ["played", "dmg", "deaths", "quests"].forEach(f => t[f] = (t[f] || 0) + (s[f] || 0)); });
     const top = Math.max(0, ...people.map(p => p.chars[0].level || 0));
-    $("scopeHead").innerHTML = `<div class="frame ghero">
-        <span class="eyebrow">${tr("Guild")} · ${esc(realmLabel())}</span>
+    const chars = people.map(p => p.chars[0]);
+    const fac = factionOf(chars, crestOf(state.realm, route.guild));
+    $("scopeHead").innerHTML = `<div class="frame ghero ${fac}">
+        <span class="gcrest">${guildCrest(state.realm, route.guild, chars, 96)}</span>
+        <span class="eyebrow">${fac ? tr(fac === "horde" ? "Horde" : "Alliance") + " " : ""}${tr("Guild")} · ${esc(realmLabel())}</span>
         <h2>&lt;${esc(route.guild)}&gt;</h2>
         <div class="facts">
           <div><b>${num(people.length)}</b><span>${tr(people.length === 1 ? "{0} member" : "{0} members", "").trim()}</span></div>
@@ -2631,6 +2687,11 @@
       </div>`;
   }
 
+  const FAC_ORDER = { alliance: 0, horde: 1, "": 2 };
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".facbtn");
+    if (b) { state.gfac = b.dataset.fac; render(); }
+  });
   function renderGuilds(realmChars) {
     const groups = {};
     realmChars.forEach(c => (groups[c.guild || ""] ||= []).push(c));
@@ -2639,19 +2700,27 @@
       const dmgOf = c => Object.entries(c.days).reduce((a, [k, d]) => a + (inRange(k) ? d.dmg || 0 : 0), 0);
       list.forEach(c => { for (const [k, d] of Object.entries(c.days)) { if (!inRange(k)) continue; for (const f of ["dmg", "heal", "deaths", "quests", "goldIn", "played"]) tot[f] = (tot[f] || 0) + (d[f] || 0); } });
       const top = list.map(c => ({ c, v: dmgOf(c) })).sort((a, b) => b.v - a.v)[0];
-      return { g, list: list.slice().sort((a, b) => dmgOf(b) - dmgOf(a)), tot, top };
-    }).sort((a, b) => (a.g === "") - (b.g === "") || b.list.length - a.list.length || a.g.localeCompare(b.g));
-    $("guilds").innerHTML = cards.map(({ g, list, tot, top }) => {
+      return { g, list: list.slice().sort((a, b) => dmgOf(b) - dmgOf(a)), tot, top, fac: g ? factionOf(list, crestOf(state.realm, g)) : "" };
+    }).sort((a, b) => (a.g === "") - (b.g === "") || FAC_ORDER[a.fac] - FAC_ORDER[b.fac] || b.list.length - a.list.length || a.g.localeCompare(b.g));
+    // Alliance and Horde guilds get their own tab once a realm has both.
+    const counts = { alliance: cards.filter(c => c.fac === "alliance").length, horde: cards.filter(c => c.fac === "horde").length };
+    const split = counts.alliance && counts.horde;
+    if (!split || !counts[state.gfac]) state.gfac = "all";
+    $("facPick").hidden = !split;
+    $("facPick").innerHTML = split ? [["all", tr("All"), ""], ["alliance", tr("Alliance"), icon("alliance", 1)], ["horde", tr("Horde"), icon("horde", 1)]]
+      .map(([f, label, ic]) => `<button type="button" class="facbtn ${f}" data-fac="${f}" aria-pressed="${state.gfac === f}">${ic}${label}${f !== "all" ? ` <small>${counts[f]}</small>` : ""}</button>`).join("") : "";
+    $("guilds").innerHTML = cards.filter(c => state.gfac === "all" || c.fac === state.gfac).map(({ g, list, tot, top, fac }) => {
       const name = g ? `&lt;${esc(g)}&gt;` : esc(tr("No guild"));
       const lvl = Math.max(0, ...list.map(c => c.level || 0));
       const stat = (v, label, raw) => raw ? `<div><b>${v}</b><span>${tr(label)}</span></div>` : "";
-      return `<div class="frame gcard">
-        <div class="ghead">${g ? `<a class="gname" href="${guildHref(state.realm, g)}">${name}</a>` : `<span class="gname">${name}</span>`}
-          <span class="muted">${[tr(list.length === 1 ? "{0} member" : "{0} members", list.length), lvl ? tr("Top level {0}", lvl) : ""].filter(Boolean).join(" · ")}</span></div>
+      return `<div class="frame gcard ${fac}">
+        ${fac ? `<span class="facband">${tr(fac === "horde" ? "Horde" : "Alliance")}</span>` : ""}
+        <div class="ghead">${g ? guildCrest(state.realm, g, list, 44) : ""}<div>${g ? `<a class="gname" href="${guildHref(state.realm, g)}">${name}</a>` : `<span class="gname">${name}</span>`}
+          <span class="muted">${[tr(list.length === 1 ? "{0} member" : "{0} members", list.length), lvl ? tr("Top level {0}", lvl) : ""].filter(Boolean).join(" · ")}</span></div></div>
         <div class="gstats">${stat(compact(tot.dmg), "Damage", tot.dmg)}${stat(compact(tot.heal), "Healing", tot.heal)}${stat(num(tot.deaths), "Deaths", 1)}
           ${stat(num(tot.quests), "Quests", tot.quests)}${stat(goldHTML(tot.goldIn), "Gold", tot.goldIn)}${stat(dur(tot.played), "Played", tot.played)}</div>
-        ${top && top.v ? `<div class="gmvp">${tr("Top damage")}: <a class="plink" href="${charHref(top.c.key)}">${classIcon(top.c)}<span class="cname">${esc(top.c.name)}</span></a></div>` : ""}
-        <div class="gfaces">${list.slice(0, 6).map(c => `<a href="${charHref(c.key)}" title="${esc(c.name)}">${classIcon(c, 2)}</a>`).join("")}${list.length > 6 ? `<span class="muted" style="align-self:center">+${list.length - 6}</span>` : ""}</div>
+        ${top && top.v ? `<div class="gmvp">${tr("Top damage")}: <a class="plink" href="${charHref(top.c.key)}">${classIcon(top.c)}<span class="cname" style="--cc:${classOf(top.c)[1]}">${esc(top.c.name)}</span></a></div>` : ""}
+        <div class="gfaces">${list.slice(0, 24).map(c => `<a href="${charHref(c.key)}" title="${esc(c.name)}">${classIcon(c, 2)}</a>`).join("")}${list.length > 24 ? `<span class="muted" style="align-self:center">+${list.length - 24}</span>` : ""}</div>
         ${g ? `<a class="btn" href="${guildHref(state.realm, g)}">${tr("Open guild page")}</a>` : ""}
       </div>`;
     }).join("") || `<p class="empty">${tr("No guilds yet.")}</p>`;
@@ -2763,7 +2832,7 @@
       } catch (e) {
         rows = await readAll("entries");
       }
-      const src = { chars: {}, days: {}, obs: {}, players: {}, api: {} };
+      const src = { chars: {}, days: {}, obs: {}, players: {}, api: {}, crests: {}, journal: null };
       const relays = {};
       let updated = 0;
       for (const r of rows) {
@@ -2782,7 +2851,10 @@
         } else if (r.kind === "obs") {
           src.obs[r.id] = { ...data, char: id, key: r.char_key, deaths: Array.isArray(data.deaths) ? data.deaths : [] };
         } else if (r.kind === "api" && !data.missing) {
-          src.api[id] = data; // level, gear and guild from Blizzard's API
+          // level, gear and guild from Blizzard's API; plus guild crests and the dungeon journal (art and boss portraits)
+          if (String(r.id).startsWith("g:")) src.crests[`${data.realm}|${data.guild}`.toLowerCase()] = data;
+          else if (r.id === "j:journal") src.journal = data;
+          else src.api[id] = data;
         }
         updated = Math.max(updated, Date.parse(r.updated_at) || 0);
       }
@@ -2876,7 +2948,8 @@
     const focusChar = route.kind === "char" ? (state.allChars || []).find(c => c.key === route.key) : null;
     const guildName = route.kind === "guild" ? route.guild : focusChar && focusChar.guild;
     const levels = [{ label: tr("Realm ledger"), name: realmName, href: "#", icon: crestHTML(1) }];
-    if (guildName) levels.push({ label: tr("Guild"), name: `<${guildName}>`, href: guildHref(state.realm, guildName), icon: sprite("shield", 1) });
+    if (guildName) levels.push({ label: tr("Guild"), name: `<${guildName}>`, href: guildHref(state.realm, guildName),
+      icon: guildCrest(state.realm, guildName, (state.allChars || []).filter(c => c.guild === guildName && realmMatch(c)), 18) });
     if (focusChar) levels.push({ label: tr("Character"), name: focusChar.name, href: charHref(route.key), icon: classIcon(focusChar, 1) });
     const at = levels.length - 1;
     const lvlInner = l => `<span class="lvl-ic">${l.icon}</span><span class="lvl-t"><small>${esc(l.label)}</small><b>${esc(l.name)}</b></span>`;

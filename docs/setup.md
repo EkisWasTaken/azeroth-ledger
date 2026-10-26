@@ -73,6 +73,8 @@ Until real stats arrive, the site shows made-up example data on its own "Example
 
 To run it right away, open `https://nznnybzrqplsqyhotlnd.supabase.co/functions/v1/armory` in a browser. The answer says how many characters it looked up.
 
+Besides characters, the function looks up each guild's crest (the in-game tabard, shown on guild pages and guild cards) and full-body character renders. Once a week, one run fetches Blizzard's dungeon journal instead (instance art and boss portraits for Classic and Burning Crusade); its answer then says how many instances and bosses it found. After updating the function, open the link above twice, 20 minutes apart: the first run fetches the journal, the second starts on characters and crests.
+
 Which API it asks depends on the client version the addon recorded: 1.x uses Classic Era (`profile-classic1x`), 2.x uses TBC Anniversary (`profile-classicann`). Blizzard's realm lists confirm it: Thunderstrike, Spineshatter, Dreamscythe and Nightslayer are TBC Anniversary realms, while the hardcore realm Soulseeker is listed under Classic Era. Blizzard only has profiles for characters from about level 10.
 
 To test one character without saving anything, open `https://nznnybzrqplsqyhotlnd.supabase.co/functions/v1/armory?check=Name-Realm`. Blizzard hasn't published an API for WoW Forever yet. Once they do, set the secret `FOREVER_NAMESPACE` to its profile namespace. Known realms have their region set in the function; other realms are tried in EU, then US.

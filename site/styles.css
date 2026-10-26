@@ -17,7 +17,7 @@
 }
 :root {
   --logo: "Jacquard 12", "Instrument Serif", serif;
-  --hf: "Instrument Serif", Georgia, serif; /* headings and big numbers */
+  --hf: "Cinzel", "Instrument Serif", Georgia, serif; /* headings: carved capitals, like the game's titles */
   --sf: "Instrument Serif", Georgia, serif; /* the large numbers on stat cards and hero panels */
   --lf: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* stat labels: clear at small sizes */
   --pf: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* small headers, labels and navigation */
@@ -116,7 +116,7 @@ section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-w
 .realm-emblem { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .realm-txt { display: grid; gap: 0; min-width: 0; flex: 1; line-height: 1.1; }
 .realm-txt .nav-lbl { font-size: 10px; }
-.realm-txt .sel { width: 100%; padding: 1px 22px 1px 0; font: 400 18px var(--hf); background-color: transparent; box-shadow: none; background-position: right 2px center; }
+.realm-txt .sel { width: 100%; padding: 1px 22px 1px 0; font: 400 18px var(--sf); background-color: transparent; box-shadow: none; background-position: right 2px center; }
 /* "You are here": the realm's ledger, the guild and the character, top down; levels above the current one link back */
 .scope { display: grid; gap: 4px; }
 .scope .nav-label { margin: 2px 8px 4px; }
@@ -126,7 +126,7 @@ section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-w
 .lvl-ic { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .lvl-t { display: grid; min-width: 0; line-height: 1.2; }
 .lvl-t small { font: 700 10px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.lvl-t b { font: 400 18px var(--hf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lvl-t b { font: 400 18px var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lvl-back { font: 600 12px var(--body); color: var(--muted); white-space: nowrap; }
 a.lvl:hover { background: var(--soft); }
 a.lvl:hover .lvl-back { color: var(--accent); }
@@ -173,11 +173,12 @@ a.lvl:hover .lvl-back { color: var(--accent); }
 body[data-route="profile"] #weekNav { display: none !important; }
 body[data-route="main"] .profile-only { display: none !important; }
 @media (max-width: 720px) {
-  /* phones: menu, realm and week on the first row, search under them */
-  .topbar { flex-wrap: wrap; }
+  /* phones: menu and realm on the first row, the week and search side by side under them */
+  .topbar { flex-wrap: wrap; row-gap: 8px; }
   .crumbs, .topbar .nav-spacer { display: none; }
-  .realm-pick { flex: 1 1 150px; }
-  .topbar .search { order: 5; flex: 1 1 100%; }
+  .realm-pick { flex: 1 1 160px; min-width: 0; }
+  #weekNav { order: 4; flex: none; }
+  .topbar .search { order: 5; flex: 1 1 0; min-width: 120px; }
   /* on guild and character pages the breadcrumbs stay, as a last row: the way back up */
   body:not([data-route="main"]) .crumbs { display: flex; order: 6; flex: 1 1 100%; overflow-x: auto; padding-bottom: 2px; }
   body:not([data-route="main"]) .crumbs a { padding: 6px 0; }
@@ -295,8 +296,9 @@ header.hero { display: grid; gap: 16px; }
   #s-guilds .sec-head p:first-of-type { display: none; }
 }
 .gcard { gap: 10px; }
-.gname { font: 30px/1 var(--hf); color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
-.ghead { display: grid; gap: 2px; }
+.gname { font: 600 22px/1.1 var(--hf); color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+.ghead { display: flex; align-items: center; gap: 12px; }
+.ghead > div { display: grid; gap: 2px; min-width: 0; }
 .ghead .muted { font-size: 13px; }
 .gstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; }
 .gstats b { display: block; font: 400 24px/1.1 var(--sf); color: var(--ink); overflow-wrap: anywhere; }
@@ -309,8 +311,34 @@ a.gname:hover { text-decoration: underline; text-underline-offset: 4px; }
 .gcard .btn { justify-self: start; text-decoration: none; }
 a.glink { color: var(--good); text-decoration: none; font-weight: 700; }
 a.glink:hover { text-decoration: underline; }
+/* Guild page, the overview's guild cards and the character sheet: gold WoW-style frames with corner studs, drawn in SVG (no Blizzard art shipped). */
+#app[data-route="guild"] .frame, #app .gcard, #p-sheet {
+  border: 9px solid transparent; border-radius: 0; box-shadow: var(--shadow);
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dd8a'/%3E%3Cstop offset='.5' stop-color='%23b8862e'/%3E%3Cstop offset='1' stop-color='%236e4a14'/%3E%3C/linearGradient%3E%3Cpath id='d' d='M5 0 10 5 5 10 0 5Z' fill='url(%23g)' stroke='%23000'/%3E%3C/defs%3E%3Crect x='.5' y='.5' width='29' height='29' fill='none' stroke='%23000'/%3E%3Crect x='2.5' y='2.5' width='25' height='25' fill='none' stroke='%23d9b45a' stroke-width='2'/%3E%3Crect x='4.5' y='4.5' width='21' height='21' fill='none' stroke='%233a2a10'/%3E%3Cuse href='%23d'/%3E%3Cuse href='%23d' x='20'/%3E%3Cuse href='%23d' y='20'/%3E%3Cuse href='%23d' x='20' y='20'/%3E%3C/svg%3E") 10 stretch;
+  background-image: linear-gradient(color-mix(in srgb, #d9b45a 5%, transparent), transparent 120px);
+}
+#app[data-route="guild"] .frame-title, #p-sheet > .frame-title, .gcard .gname { color: #f2d57e; text-shadow: 1px 1px 0 #000; }
+.ghero { grid-template-columns: auto minmax(0, 1fr) !important; column-gap: 22px; }
+.ghero > :not(.gcrest) { grid-column: 2; }
+.gcrest { grid-row: 1 / span 3; align-self: center; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
+.ghero h2 { color: #f2d57e; text-shadow: 2px 2px 0 #000; }
+/* Phones: the crest sits small beside the name, and the hero numbers line up in columns instead of wrapping unevenly. */
+@media (max-width: 640px) {
+  #app .ghero { column-gap: 14px; padding: 16px; }
+  .gcrest { grid-row: 1 / span 2; align-self: end; }
+  .gcrest .tabard { --s: 52px !important; }
+  .gcrest .wicon { width: 52px; height: 52px; }
+  .ghero .facts { grid-column: 1 / -1 !important; }
+  #app .ghero h2 { font-size: clamp(26px, 8vw, 36px); }
+  #app .ghero .facts, #app .phero .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; }
+  #app .phero .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #app .ghero .facts b, #app .phero .facts b { font-size: 26px; }
+  #app .phero { padding: 16px; }
+  #app .phero h2 { font-size: clamp(34px, 10vw, 46px); }
+  #pName .cicon .wicon { width: 44px; height: 44px; }
+}
 .ghero { box-shadow: inset 0 0 0 1px var(--line), inset 0 3px 0 var(--accent), var(--shadow); padding: 22px 24px 20px; gap: 10px; }
-.ghero h2 { font: clamp(40px, 5vw, 60px)/0.95 var(--hf); color: var(--ink); overflow-wrap: anywhere; }
+.ghero h2 { font: clamp(40px, 5vw, 60px)/0.95 var(--hf); overflow-wrap: anywhere; }
 .ghero .facts, .phero .facts { display: flex; flex-wrap: wrap; gap: 10px 32px; }
 .ghero .facts div { display: grid; }
 .ghero .facts b { font: 400 30px/1.1 var(--sf); }
@@ -445,7 +473,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .map.can-open:not(.dragging) { cursor: pointer; }
 /* the hovered zone's name, at the top of the map like in the game */
 .maphover { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; padding: 4px 14px; pointer-events: none;
-  font: 400 22px/1.2 var(--hf); color: #ffd36b; text-shadow: 0 1px 0 #000, 0 0 6px #000, 0 0 12px #000; white-space: nowrap; }
+  font: 400 22px/1.2 var(--sf); color: #ffd36b; text-shadow: 0 1px 0 #000, 0 0 6px #000, 0 0 12px #000; white-space: nowrap; }
 .mapcrumbs { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 13px; color: var(--muted); }
 .mapcrumbs .linkbtn { padding: 6px 0; color: var(--accent); }
 .mapzoom { position: absolute; right: 8px; top: 8px; z-index: 4; display: grid; gap: 4px; }
@@ -509,7 +537,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .achbadge { position: absolute; right: -5px; bottom: -5px; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px;
   background: var(--panel); box-shadow: inset 0 0 0 1px var(--tc); line-height: 0; }
 .achbadge.gold { --tc: #e8b440; } .achbadge.silver { --tc: #c3c7d3; } .achbadge.copper { --tc: #c0763a; } .achbadge.shame { --tc: var(--bad); }
-.ach .t { font: 400 18px/1.2 var(--hf); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ach .t { font: 400 18px/1.2 var(--sf); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ach.shame .t { color: var(--bad); }
 .ach .who { font-weight: 700; display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 2px; }
 .ach .d { color: color-mix(in srgb, var(--muted) 85%, var(--ink)); font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -518,7 +546,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .dot { width: 10px; height: 10px; flex: none; display: inline-block; box-shadow: none; border-radius: 0; }
 .cicon { display: inline-flex; flex: none; vertical-align: middle; }
 #pName .cicon { margin: -8px 14px -8px 0; }
-.cname { font: 400 1.2em/1.1 var(--hf); letter-spacing: .01em; }
+.cname { font: 400 1.2em/1.1 var(--sf); color: var(--cc, inherit); letter-spacing: .01em; }
 a.plink { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 a.plink:hover .cname { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
@@ -587,7 +615,7 @@ a.mrow:hover .nm { color: var(--accent); }
   transform: rotate(var(--r, -1deg)); display: grid; gap: 4px;
 }
 .poster .w { font: 34px/1 var(--hf); color: #8a1c10; }
-.poster .m { font: 400 20px/1.15 var(--hf); overflow-wrap: anywhere; }
+.poster .m { font: 400 20px/1.15 var(--sf); overflow-wrap: anywhere; }
 .poster .f { font-size: 13px; }
 .poster .r { font: 800 14px var(--nf); border-top: 2px dashed rgba(59,36,18,.45); padding-top: 6px; margin-top: 4px; }
 
@@ -721,7 +749,10 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 #app:not([data-route="guild"]) .guild-only { display: none !important; }
 .deeds-wrap { display: grid; gap: 22px; }
 .deeds-main { display: grid; gap: 14px; align-content: start; }
-.groster { order: 2; }
+/* The guild page leads with its stats; the roster sits closed at the bottom until opened. */
+#app[data-route="guild"] .deeds-main .plately { display: block; contain: none !important; overflow: visible !important; }
+.groster .frame-title small { margin-left: auto; }
+details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-shadow: none; }
 .grow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 16px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rim); }
 .grow:last-child { border-bottom: 0; }
 .grow .who { display: grid; min-width: 0; }
@@ -739,21 +770,14 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .glead .plink { overflow: hidden; }
 /* The tag reads as part of the name: same font, size and baseline, a dimmer shade of the name colour, and a tighter gap. */
 .glead .gtag a.glink { font-weight: inherit; color: color-mix(in srgb, var(--accent) 50%, var(--muted)); }
-.glead .gtag { font: 400 16px/1.1 var(--hf); letter-spacing: .01em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: baseline; margin-right: -4px; }
+.glead .gtag { font: 400 16px/1.1 var(--sf); letter-spacing: .01em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: baseline; margin-right: -4px; }
 .glead.wg .plink { align-self: baseline; }
-.glead .cname { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.glead .cname { color: var(--cc, var(--accent)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plately .lh { font: 400 13px var(--pf); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 0 6px; }
 .plately .lh ~ .lh { margin-top: 14px; }
 .plately .clog { max-height: none; overflow: visible; padding-right: 0; }
 @media (min-width: 1000px) {
   .pside { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: stretch; }
-  #app[data-route="guild"] .deeds-wrap { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: stretch; }
-  #app[data-route="guild"] .groster { order: 0; }
-  #app[data-route="guild"] .deeds-main { grid-template-rows: auto auto 1fr; }
-  #app[data-route="guild"] .deeds-main .sec-head { text-align: left; justify-items: start; margin: 0; }
-  #app[data-route="guild"] .deeds-main .sec-head h2 { font-size: 34px; }
-  #app[data-route="guild"] .deeds-main .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #app[data-route="guild"] .deeds-main .plately { display: block; contain: size; min-height: 120px; overflow-y: auto; }
   .pside > .pside-main { align-self: start; }
   .pside-stats { grid-template-rows: auto auto 1fr; }
   /* size-contained: it takes only the height left beside the gear (at least 120px) and scrolls inside */
@@ -819,7 +843,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 
 /* ---------- Dashboard cards ---------- */
 .card { padding: 0; gap: 0; overflow: hidden; }
-.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; min-height: 72px; padding: 14px 20px; box-shadow: inset 0 -1px 0 var(--line); }
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; min-height: 60px; padding: 14px 20px; box-shadow: inset 0 -1px 0 var(--line); }
 .card-head > div:first-child { display: grid; gap: 2px; min-width: 0; }
 .card-head h2 { font: 400 24px/1.1 var(--hf); }
 .card > .chart { margin: 16px 20px 14px; }
@@ -854,7 +878,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .mw-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--bad) 14%, transparent); }
 .mostwanted div { display: grid; min-width: 0; }
 .mostwanted p { font: 700 10px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--bad); }
-.mostwanted strong { font: 400 20px/1.15 var(--hf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mostwanted strong { font: 400 20px/1.15 var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mostwanted span { font-size: 12px; color: var(--muted); }
 .mostwanted > b { font: 400 26px var(--sf); color: var(--bad); }
 /* hero standings: a quiet table, each row a link to the character */
@@ -898,7 +922,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .bd-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--track); }
 .bestdrop div { display: grid; min-width: 0; }
 .bestdrop span { font: 700 10px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.bestdrop strong { font: 400 19px/1.2 var(--hf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bestdrop strong { font: 400 19px/1.2 var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bestdrop p { font-size: 12px; color: var(--muted); }
 .bestdrop > b { font-size: 12px; }
 footer { padding: 6px 0 0; }
@@ -915,3 +939,57 @@ body.loading .loader { display: flex; flex-direction: column; align-items: cente
   html:not(.calm) .loader-dots i:nth-child(2) { animation-delay: .15s; }
   html:not(.calm) .loader-dots i:nth-child(3) { animation-delay: .3s; }
 }
+
+/* ---------- WoW assets: real icons, crests, factions, renders, journal art ---------- */
+/* Game icons get the in-game look: a dark rim and slightly rounded corners. */
+.wicon { display: inline-block; flex: none; vertical-align: middle; border-radius: 4px; box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(255,255,255,.12); background: #000; }
+.ticon .wicon, .mw-icon .wicon, .bd-icon .wicon { width: 38px; height: 38px; }
+.achic .wicon { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+.achbadge .wicon { width: 16px; height: 16px; border-radius: 3px; }
+.glead .wicon { width: 18px; height: 18px; border-radius: 3px; }
+.cicon .wicon { border-radius: 3px; }
+
+/* Guild tabard: Blizzard's border and emblem shapes, tinted with the guild's colours on its background colour. */
+.tabard { position: relative; display: inline-block; flex: none; width: var(--s); height: calc(var(--s) * 1.08); vertical-align: middle;
+  background: var(--bg); clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+.tabard i { position: absolute; inset: 12% 12% 22%; background: var(--ec); -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
+.tabard i.tb-b { inset: 0; background: var(--bc); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+.tabard.plain { width: auto; height: auto; background: none; clip-path: none; }
+.lvl-ic .tabard .wicon { width: 18px; height: 18px; }
+
+/* Factions: Alliance blue, Horde red, on the guild cards and the guild page. */
+.alliance { --fac: #2f6fd8; --fac-ink: #cfe0ff; }
+.horde { --fac: #c4231c; --fac-ink: #ffd6cf; }
+#app .gcard.alliance, #app .gcard.horde, #app .ghero.alliance, #app .ghero.horde {
+  background-image: linear-gradient(160deg, color-mix(in srgb, var(--fac) 22%, transparent), transparent 55%);
+}
+.facband { justify-self: start; align-self: flex-start; font: 700 11px var(--pf); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--fac-ink); background: color-mix(in srgb, var(--fac) 55%, #000); padding: 3px 10px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+.ghero.alliance .eyebrow, .ghero.horde .eyebrow { color: var(--fac-ink); }
+#s-guilds .sec-head { flex-wrap: wrap; }
+.facpick { display: flex; gap: 6px; flex-wrap: wrap; flex-basis: 100%; order: 3; }
+.facbtn { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--rs); border: 0; cursor: pointer;
+  background: var(--panel2); color: var(--muted); font: 600 13px var(--pf); box-shadow: inset 0 0 0 1px var(--line); }
+.facbtn .wicon { width: 16px; height: 16px; }
+.facbtn small { font-weight: 500; opacity: .8; }
+.facbtn[aria-pressed="true"] { color: var(--ink); background: color-mix(in srgb, var(--fac, var(--accent)) 30%, var(--panel2)); box-shadow: inset 0 0 0 1px var(--fac, var(--accent)); }
+
+/* Character page: Blizzard's full-body render stands behind the name, fading into the panel. */
+.phero.has-render::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 48%; pointer-events: none; border-radius: inherit;
+  background: var(--render) center 28% / auto 175% no-repeat; -webkit-mask: linear-gradient(90deg, transparent, #000 45%); mask: linear-gradient(90deg, transparent, #000 45%); }
+.phero.has-render > * { position: relative; z-index: 1; }
+
+/* Dungeons: Blizzard's journal art behind each instance card, a boss portrait beside each fight. */
+.runcard.has-art { background-image: linear-gradient(180deg, color-mix(in srgb, var(--panel2) 55%, transparent), var(--panel2) 70%), var(--art);
+  background-size: cover; background-position: center top; }
+.bosspic { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; box-shadow: 0 0 0 2px #000, 0 0 0 3px #b8862e; }
+.bosscell .bosspic { float: left; width: 34px; height: 34px; margin: 2px 10px 0 0; }
+
+/* Lately reads like the quest log: parchment and dark ink. */
+.plately { background: var(--parch) radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), transparent 60%);
+  color: var(--parch-ink); box-shadow: inset 0 0 0 1px #8a6a3a, inset 0 0 40px rgba(110,70,20,.35), var(--shadow); }
+#app[data-route="guild"] .plately.frame { background-color: var(--parch); }
+.plately .frame-title, #app[data-route="guild"] .plately .frame-title { color: var(--parch-ink); text-shadow: none; }
+.plately .frame-title small, .plately .muted, .plately .lh, .plately .empty { color: #6b4e2a; }
+.plately .q0 { color: #5d5d5d; } .plately .q1 { color: #2a2a2a; } .plately .q2 { color: #1a7a00; } .plately .q3 { color: #0055b0; } .plately .q4 { color: #7a22b8; } .plately .q5 { color: #b35a00; }
+.plately a { color: #7a2a12; }
