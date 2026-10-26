@@ -712,6 +712,10 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 14px; margin: 0; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; overflow-wrap: anywhere; }
+.cmds { gap: 8px 16px; }
+.cmds dt { color: var(--ink); white-space: nowrap; }
+.cmds dd { text-align: left; font-weight: 400; color: var(--muted); }
+@media (max-width: 640px) { .cmds { grid-template-columns: minmax(0, 1fr); gap: 2px; } .cmds dd { margin-bottom: 8px; } }
 .loot { display: grid; gap: 3px; font-size: 14px; }
 #lootFeed { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 5px 20px; }
 .q0 { color: #9d9d9d; } .q1 { color: #fff; } .q2 { color: #1eff00; } .q3 { color: #3d9bff; } .q4 { color: #c06cff; } .q5 { color: #ff8000; }

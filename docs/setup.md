@@ -88,15 +88,15 @@ To test one character without saving anything, open `https://nznnybzrqplsqyhotln
 2. Play, then log out so WoW saves the file.
 3. Upload `WTF\Account\YOUR_ACCOUNT\SavedVariables\FunStats.lua` on the site's **Add stats** page.
 
-In-game commands are all optional:
+Nothing needs typing in game. The addon records on its own, shares with other FunStats players in your group and guild, and also tracks guild mates and WoW friends who don't have it. The commands are optional (the site's **Add stats** page lists them too):
 
 | Command | What it does |
 |---|---|
-| `/funstats` | Today's numbers |
+| `/funstats` | Today's numbers and the options |
+| `/funstats bosses` | Your latest boss kills and the dungeon run you're in |
 | `/funstats sync` | Shows whose stats your addon has received (sharing itself is automatic) |
-| `/funstats add group` | Track everyone in your group in combat, even players without the addon |
-| `/funstats add Name` / `remove Name` / `friends` | Manage that tracking list |
-| `/funstats announce` | Post your deaths in group chat |
+| `/funstats announce` | Post your deaths in group chat (off by default) |
+| `/funstats add Name` / `add group` / `remove Name` / `friends` | Also track players outside your guild and friends list |
 
 ## Moderation
 

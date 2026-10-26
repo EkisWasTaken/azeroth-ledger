@@ -277,8 +277,8 @@ local function CountIn(map, key, n, cap)
 end
 
 ---------------------------------------------------------------------------
--- Friends: players on FunStatsDB.friends are recorded as we see them in
--- the combat log, so friends without the addon still get stats.
+-- Friends: guild mates, WoW friends and players added with /funstats add are
+-- recorded as we see them in the combat log, so they get stats without the addon.
 ---------------------------------------------------------------------------
 
 local ENV_CAUSE = {
@@ -322,6 +322,16 @@ local function OAdd(key, field, n)
   d[field] = (d[field] or 0) + (n or 1)
 end
 
+-- Guild mates and WoW friends are tracked on their own; anyone else only once added by hand.
+local function Tracked(guid, base)
+  if FunStatsDB.friends[base:lower()] then return true end
+  if IsGuildMember then
+    local ok, member = pcall(IsGuildMember, guid)
+    if ok and member then return true end
+  end
+  return C_FriendList and C_FriendList.IsFriend and C_FriendList.IsFriend(guid) or false
+end
+
 -- Returns the friend's "Name-Realm" for a combat log unit, or nil.
 local function FriendKey(guid, name)
   if not guid or not name or guid == playerGUID then return nil end
@@ -329,7 +339,7 @@ local function FriendKey(guid, name)
   if cached ~= nil then return cached or nil end
   if not guid:find("^Player%-") then friendByGUID[guid] = false; return nil end
   local base, realm = SplitName(name)
-  if not FunStatsDB.friends[base:lower()] then friendByGUID[guid] = false; return nil end
+  if not Tracked(guid, base) then friendByGUID[guid] = false; return nil end
   local key = base .. "-" .. realm
   friendByGUID[guid] = key
   local O = Observed(key)
@@ -414,7 +424,8 @@ local function GroupTick()
   for i = 1, count do
     local unit = prefix .. i
     local name, realm = UnitName(unit)
-    if name and FunStatsDB.friends[name:lower()] and not UnitIsUnit(unit, "player") then
+    if name and not UnitIsUnit(unit, "player") and (FunStatsDB.friends[name:lower()] or UnitIsInMyGuild(unit)
+      or (C_FriendList and C_FriendList.IsFriend and C_FriendList.IsFriend(UnitGUID(unit)))) then
       local key = name .. "-" .. ((realm and realm ~= "") and realm or GetRealmName())
       local d, O = ODay(key)
       O.name, O.realm = name, (realm and realm ~= "") and realm or GetRealmName()
@@ -732,9 +743,7 @@ local function OnCombatLog()
     FightTally(sub, srcGUID, srcFlags, dstGUID, dstName, dstFlags, a12, a15, a16)
   end
 
-  if next(FunStatsDB.friends) then
-    OnFriendCombat(sub, srcGUID, srcName, srcFlags, dstGUID, dstName, a12, a13, a15, a16)
-  end
+  OnFriendCombat(sub, srcGUID, srcName, srcFlags, dstGUID, dstName, a12, a13, a15, a16)
 end
 
 ---------------------------------------------------------------------------
@@ -1049,7 +1058,7 @@ function handlers.PLAYER_LOGIN()
       if cost and cost > 0 and not guild then Add("repair", cost) end
     end)
   end
-  Print("tracking " .. playerName .. ". Type /funstats to see today's numbers.")
+  Print("recording " .. playerName .. ". Nothing to set up; /funstats shows today's numbers and the options.")
 end
 
 function handlers.PLAYER_LOGOUT()
@@ -1123,6 +1132,10 @@ end
 function handlers.GUILD_ROSTER_UPDATE()
   UpdateGuild()
   ScanGuild()
+  wipe(friendByGUID) -- someone may have joined or left: look them up again
+end
+function handlers.FRIENDLIST_UPDATE()
+  wipe(friendByGUID)
 end
 handlers.PLAYER_EQUIPMENT_CHANGED = SheetSoon
 handlers.CHARACTER_POINTS_CHANGED = SheetSoon
@@ -1206,7 +1219,7 @@ local function FriendCommand(cmd, rest)
     local list = {}
     for _, display in pairs(FunStatsDB.friends) do list[#list + 1] = display end
     table.sort(list)
-    Print(#list > 0 and ("tracking " .. table.concat(list, ", ")) or "no friends tracked yet. Use /funstats add Name.")
+    Print(#list > 0 and ("tracking " .. table.concat(list, ", ")) or "nobody added by hand. Guild mates and WoW friends are tracked automatically.")
   end
 end
 
@@ -1238,22 +1251,17 @@ SlashCmdList.FUNSTATS = function(input)
     if r then Print(("this run: %s, %d bosses, %d wipes, %d deaths"):format(r.inst, r.bosses, r.wipes, r.deaths)) end
     return
   end
-  local arg = cmd
-  if arg == "announce" then
+  if cmd == "announce" then
     C.settings.announce = not C.settings.announce
     Print("death announcements in group chat are now " .. (C.settings.announce and "ON" or "OFF"))
     return
   end
+  if cmd ~= "" then Print("unknown command '" .. cmd .. "'.") end
   local d = Day()
-  Print(("Today: %d damage, %d healing, %d deaths, %d killing blows"):format(
-    d.dmg or 0, d.heal or 0, d.deaths or 0, d.kb or 0))
-  Print(("Jumps %d, ran %d yards, earned %s, spent %s"):format(
-    d.jumps or 0, d.dist or 0, Gold(d.goldIn), Gold(d.goldOut)))
-  Print(("All-time deaths: %d. Biggest hit: %s"):format(#C.deaths,
-    C.best.hit and (C.best.hit.amt .. " (" .. (C.best.hit.spell or "?") .. ")") or "none yet"))
-  Print("Type /reload or log out to save, then upload FunStats.lua on the website.")
-  Print("/funstats sync shows whose stats you've received from your group and guild.")
-  Print("/funstats bosses shows your latest boss kills and the dungeon run you're in.")
-  Print("/funstats add Name (or 'add group') tracks a friend, /funstats friends lists them.")
-  Print("/funstats announce toggles death announcements in group chat.")
+  Print(("Today: %d damage, %d healing, %d deaths, %d killing blows, %d jumps, earned %s"):format(
+    d.dmg or 0, d.heal or 0, d.deaths or 0, d.kb or 0, d.jumps or 0, Gold(d.goldIn)))
+  Print("Everything is automatic: stats save when you log out, the Ledger app uploads them, and guild mates and friends are tracked too.")
+  Print("Optional: |cffffd100/funstats bosses|r boss kills and this run, |cffffd100/funstats sync|r stats received from others, "
+    .. "|cffffd100/funstats announce|r deaths in group chat (" .. (C.settings.announce and "on" or "off") .. "), "
+    .. "|cffffd100/funstats add Name|r track someone else, |cffffd100/funstats friends|r list them.")
 end

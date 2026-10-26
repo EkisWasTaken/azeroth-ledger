@@ -87,7 +87,7 @@ To stop it, right-click the shield and untick **Start with Windows**, or choose 
 
 Download `FunStats.zip`, put the `FunStats` folder in `World of Warcraft\_anniversary_\Interface\AddOns` (or your WoW Forever folder), play, then drop `WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua` on the *Add stats* page. Without the app nothing updates by itself: download the zip again now and then, and upload after you play.
 
-In-game commands are optional: `/funstats` shows today's numbers, and `/funstats sync` shows whose stats your addon has received.
+Nothing needs typing in game: the addon records, shares with your group and guild, and tracks guild mates and WoW friends without it on its own. `/funstats` shows today's numbers and the optional commands.
 
 <br>
 
