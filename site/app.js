@@ -208,6 +208,7 @@
     "Every time you log out of WoW, your stats appear here.": "Varje gång du loggar ut ur WoW dyker din statistik upp här.",
     "Download for Windows": "Ladda ner för Windows",
     "If Windows says it protected your PC, click <b>More info</b>, then <b>Run anyway</b>. The app is small and only uploads your FunStats file.": "Om Windows säger att datorn skyddades, klicka på <b>Mer information</b> och sedan <b>Kör ändå</b>. Appen är liten och laddar bara upp din FunStats-fil.",
+    "If WoW lists FunStats as <b>out of date</b>, tick <b>Load out of date AddOns</b> on the character screen. It works fine; that just means a WoW patch came out before our next update.": "Om WoW visar FunStats som <b>out of date</b>, bocka i <b>Load out of date AddOns</b> på karaktärsskärmen. Den fungerar ändå; det betyder bara att en WoW-patch kom ut före vår nästa uppdatering.",
     "To stop it: right-click the shield icon in the tray and untick <b>Start with Windows</b>, or choose <b>Quit</b>.": "Stäng av den: högerklicka på sköldikonen i aktivitetsfältet och bocka ur <b>Start with Windows</b>, eller välj <b>Quit</b>.",
     "Mac, or without the app": "Mac, eller utan appen",
     "Download <a href=\"FunStats.zip\">FunStats.zip</a> and put the <code>FunStats</code> folder in <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.": "Ladda ner <a href=\"FunStats.zip\">FunStats.zip</a> och lägg mappen <code>FunStats</code> i <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.",

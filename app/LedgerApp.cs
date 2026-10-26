@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.4.0.0")]
+[assembly: AssemblyVersion("1.4.1.0")]
 
 namespace AzerothLedger
 {
@@ -671,7 +671,7 @@ namespace AzerothLedger
             {
                 int n = roots.Count;
                 tray.ShowBalloonTip(8000, "Azeroth Ledger is running",
-                    n > 0 ? "The FunStats addon is installed. Just play: your stats upload by themselves after you log out."
+                    n > 0 ? "The FunStats addon is installed. Just play: your stats upload by themselves after you log out. If WoW calls it out of date, tick Load out of date AddOns."
                           : "Couldn't find World of Warcraft yet. It will keep looking; your stats upload by themselves once it's installed.",
                     ToolTipIcon.Info);
             }
