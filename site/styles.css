@@ -421,6 +421,11 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .tile .lbl { font: 700 11px/1.3 var(--lf); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); overflow-wrap: break-word; hyphens: auto; }
 .tile .val { font: 400 30px/1.15 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.01em; }
 .tile .val.red { color: var(--bad); }
+.tile.dead { --tone: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent), var(--shadow); }
+.tile.dead .val { color: var(--bad); }
+/* Hardcore: three tiles fill the row, and long character names wrap instead of being cut. */
+#hcTiles { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+#hcTiles .foot { white-space: normal; }
 .tile .foot { font-size: 12px; line-height: 16px; min-height: 16px; color: color-mix(in srgb, var(--muted) 85%, var(--ink)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Coins (pixel squares) ---------- */
@@ -462,7 +467,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 @keyframes recblink { 50% { background: #ffd27a; } }
 
 /* ---------- Map of the Fallen ---------- */
-#s-map.nomap { display: none !important; }
+#app > section.nosec { display: none !important; }
 .mapbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .maptabs, .maplayers { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .chip[aria-pressed="true"] { color: var(--on-accent); background: var(--accent); }
@@ -557,6 +562,21 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .cname { font: 400 1.2em/1.1 var(--sf); color: var(--cc, inherit); letter-spacing: .01em; }
 a.plink { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 a.plink:hover .cname { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.rip { display: inline-flex; align-items: center; margin-left: 4px; vertical-align: middle; }
+a.face.fallen > :first-child { filter: grayscale(1) brightness(.6); }
+a.face.fallen { outline: 2px solid var(--bad); outline-offset: 1px; }
+
+/* Hardcore deaths are permanent, so they get gravestones in blood red. */
+.graves { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; max-height: 460px; overflow-y: auto; }
+.grave, .rip-banner { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 14px; border-radius: var(--r);
+  background: color-mix(in srgb, var(--bad) 12%, var(--panel2)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 50%, transparent), inset 4px 0 0 var(--bad); }
+.grave > div, .rip-banner > div { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.grave .gwhat, .rip-banner span { font-size: 14px; line-height: 1.4; }
+.gwhen { font-size: 12px !important; color: var(--muted); }
+.rip-banner b { font: 400 26px/1 var(--hf); color: var(--bad); letter-spacing: .04em; text-transform: uppercase; }
+#profile.fallen .phero { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent), inset 0 3px 0 var(--bad), var(--shadow); }
+#profile.fallen .phero.has-render::after, #profile.fallen :is(.portrait, .face) { filter: grayscale(1) brightness(.75); }
+.phero .facts .dead b { color: var(--bad); }
 
 /* ---------- Meter ---------- */
 .duo { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; }
@@ -608,10 +628,10 @@ a.mrow:hover .nm { color: var(--accent); }
 .clog { font-size: 14px; line-height: 1.5; max-height: 420px; overflow-y: auto; display: grid; gap: 7px; padding-right: 6px; }
 .clog .ln { overflow-wrap: anywhere; }
 .clog .ts { color: var(--muted); margin-right: 6px; font-size: 13px; }
-.clog .mob { color: var(--bad); font-weight: 700; }
-.clog .sp { color: var(--accent); }
-.clog .dmg { color: var(--bad); }
-.clog .where { color: var(--good); }
+:is(.clog, .grave, .rip-banner) .mob { color: var(--bad); font-weight: 700; }
+:is(.clog, .grave, .rip-banner) .sp { color: var(--accent); }
+:is(.clog, .grave, .rip-banner) .dmg { color: var(--bad); }
+:is(.clog, .grave, .rip-banner) .where { color: var(--good); }
 .clog .lvl { display: inline; position: static; min-height: 0; padding: 0; color: var(--muted); font-size: 12px; } /* not the sidebar's .lvl rows */
 .clog .alt { color: var(--muted); }
 

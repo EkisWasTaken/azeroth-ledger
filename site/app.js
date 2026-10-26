@@ -224,6 +224,10 @@
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
     "Loot quality": "Lootkvalitet", "Most wanted": "Mest efterlyst", "Responsible for {0} death": "Ansvarig för {0} dödsfall", "Responsible for {0} deaths": "Ansvarig för {0} dödsfall",
+    "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
+    "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
+    "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
+    "{0} of {1} fallen": "{0} av {1} fallna", "Still alive. Death is permanent in Hardcore.": "Fortfarande vid liv. Döden är permanent i Hardcore.",
     "Hero": "Hjälte", "{0} drop": "{0} drop", "{0} drops": "{0} drops", "Best drop": "Bästa dropen", "death": "dödsfall", "deaths": "dödsfall",
     "You are here": "Du är här", "Realm ledger": "Realmens liggare", "Go back": "Tillbaka", "Realm pages": "Realmens sidor", "Guild pages": "Guildens sidor",
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
@@ -635,7 +639,7 @@
         const scale = 1 + level / 12;
         const dmg = Math.round(ri(5000, 9000) * hours * scale * (cls === "PRIEST" ? 0.45 : cls === "SHAMAN" ? 0.8 : 1));
         const hits = Math.round(dmg / (40 * scale));
-        const nd = ri(0, cls === "MAGE" ? 4 : 2);
+        const nd = ri(0, cls === "MAGE" ? 4 : 2) * (pi === 5 ? 0 : 1); // Stonehoof is still alive on the hardcore demo realm
         const goldIn = Math.round(ri(400, 2200) * hours * scale), goldOut = Math.round(goldIn * (0.4 + rnd() * 0.5));
         goldNow = Math.max(0, goldNow + goldIn - goldOut);
         const q0 = ri(8, 30) * hours, q1 = ri(4, 12) * hours, q2 = ri(0, 3) * hours, q3 = rnd() < 0.35 ? 1 : 0, q4 = rnd() < 0.05 ? 1 : 0;
@@ -673,10 +677,13 @@
       others.forEach(([n]) => { healers[n] = ri(2000, 40000) * (n === "Mirelle" ? 4 : 1); });
       const duels = {};
       if (pi < 3) others.slice(0, 2).forEach(([n]) => { duels[n] = { w: ri(0, 5), l: ri(0, 5) }; });
+      const hc = pi === 3 || pi === 5;
+      if (pi === 3) { deaths.splice(1); if (deaths[0]) { level = deaths[0].lvl; Object.keys(levels).forEach(l => { if (+l > level) delete levels[l]; }); }
+        Object.entries(dmap).forEach(([k, d]) => { d.deaths = deaths[0] && localKey(deaths[0].t) === k ? 1 : 0; d.deaths_fall = 0; }); } // Tidepaw died once, for good
       chars[id] = {
-        key, name, realm: pi === 3 ? "Demo Hardcore" : "Demo Realm", class: cls, race, level,
+        key, name, realm: hc ? "Demo Hardcore" : "Demo Realm", class: cls, race, level,
         guild: pi >= 4 ? "Murloc Mafia" : "Example Guild", owner: pi === 2 || pi === 3 ? "demo-player-jordan" : "demo-player-" + pi,
-        game: { demo: true, hardcore: pi === 3 || undefined },
+        game: { demo: true, hardcore: hc || undefined },
         lastSeen: Date.now() / 1000, peakGold: goldNow * 1.4, gold: goldNow, deaths, levels, levelPlayed, dingAt, heat, zones: zoneT, spellDmg, casts, healers, duels,
         best: { hit: { amt: ri(900, 1500), spell: Object.keys(spells)[0], target: "Hogger", t: Date.now() / 1000 - 86400 * ri(1, 20) } },
         kills: Object.fromEntries(mobs.map(m => [m, ri(5, 90)])),
@@ -1001,7 +1008,7 @@
     return out.sort((a, b) => a.t - b.t);
   }
   function mapTip(e) {
-    const who = esc(e.d._char || e.p.name), when = shortDate(localKey(e.t)), where = esc(e.d.zone || "");
+    const who = esc(e.d._char || nameTxt(e.p)), when = shortDate(localKey(e.t)), where = esc(e.d.zone || "");
     if (e.kind === "deaths") {
       const how = e.d.cause === "fall" ? tr("fell to their death") : e.d.cause === "drown" ? tr("drowned")
         : e.d.by ? tr("killed by {0}", esc(e.d.by)) + (e.d.spell ? ` (${esc(e.d.spell)}${e.d.amt ? " " + num(e.d.amt) : ""})` : "") : tr("died");
@@ -1018,7 +1025,7 @@
     const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people);
     // Kalimdor and the Eastern Kingdoms always; Outland (TBC clients only) once something happened there; Azeroth on Mists of Pandaria.
     const conts = MAP_ART[game].filter(c => atlas[c] && (c !== "1945" || all.some(e => e.cont === c)));
-    $("s-map").classList.toggle("nomap", !conts.length);
+    $("s-map").classList.toggle("nosec", !conts.length);
     if (!conts.length) return;
     // Each realm starts on Azeroth (or, without it, on the continent where most happened).
     if (m.realm !== state.realm || !conts.includes(m.cont)) {
@@ -1031,7 +1038,7 @@
     const tabs = conts.filter(c => MAP_TABS.includes(c) || !worldOf(c));
     $("mapConts").innerHTML = tabs.map(c => `<button type="button" class="chip" data-cont="${c}" aria-pressed="${c === (worldOf(m.cont) || m.cont)}">${esc(atlas[c].n)}</button>`).join("");
     document.querySelectorAll("#s-map [data-layer]").forEach(b => b.setAttribute("aria-pressed", String(!!m.layers[b.dataset.layer])));
-    $("mapWho").innerHTML = `<option value="">${tr("Everyone")}</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+    $("mapWho").innerHTML = `<option value="">${tr("Everyone")}</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(nameTxt(p))}</option>`).join("");
     $("mapWho").value = m.who;
 
     const art = $("mapArt"), src = mapSrc(m.zone || m.cont);
@@ -1330,6 +1337,7 @@
     coinS: [["..####..",".#hlll#.","#hllmmd#","#llmmmd#","#lmmmmd#","#mmmmdd#",".#dddd#.","..####.."],{"#":"#33363e","h":"#ffffff","l":"#e8ebf2","m":"#c3c7d3","d":"#8a90a0"}],
     coinC: [["..####..",".#hlll#.","#hllmmd#","#llmmmd#","#lmmmmd#","#mmmmdd#",".#dddd#.","..####.."],{"#":"#4a2410","h":"#ffd2b0","l":"#f0a070","m":"#d07a40","d":"#9a4f22"}],
   };
+  SPRITES.grave = SPRITES.tomb; // the pixel gravestone, for icon(): WOWICON's "tomb" is a ghoul's face
   function sprite(name, px = 3) {
     const [rows, pal, glow = ""] = SPRITES[name]; // glow: colours that twinkle (see the Motion CSS)
     const w = rows[0].length, hgt = rows.length;
@@ -1395,9 +1403,13 @@
   const profileHref = p => charHref(p.id);
   const guildHref = (realm, guild) => "#/g/" + encodeURIComponent(realm) + "/" + encodeURIComponent(guild);
   const guildLink = ch => ch.guild ? `<a class="glink" href="${guildHref(realmKey(ch), ch.guild)}">&lt;${esc(ch.guild)}&gt;</a>` : "";
+  // Works for a person or a single character: both carry .fallen on Hardcore realms.
+  const ripHTML = (p, px = 1) => p.fallen ? `<span class="rip" title="${tr("Fallen")}" aria-label="${tr("Fallen")}">${sprite("tomb", px)}</span>` : "";
+  // Where only text fits (chart labels, dropdowns, tooltips).
+  const nameTxt = p => (p.fallen ? "🪦 " : "") + p.name;
   const nameHTML = p => p.id
-    ? `<a class="plink" href="${profileHref(p)}"><span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span></a>`
-    : `<span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span>`;
+    ? `<a class="plink" href="${profileHref(p)}"><span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span>${ripHTML(p)}</a>`
+    : `<span class="dot" style="background:${p.color || classOf(p)[1]}"></span><span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span>${ripHTML(p)}`;
   const rangeLabel = () => state.view === "all" ? tr("All time") : tr("Week of {0} – {1}", shortDate(state.week), shortDate(addDays(state.week, 6)));
 
   function renderWeekSelect(people) {
@@ -1421,6 +1433,7 @@
     $("nextWeek").disabled = state.view === "all" || idx <= 0;
   }
 
+  const tileHTML = ([ic, l, v, f, mod]) => `<div class="frame tile${mod ? " " + mod : ""}"><span class="ticon">${icon(ic, 2)}</span><span class="tbody"><span class="lbl">${l}</span><span class="val">${v}</span><span class="foot">${f || ""}</span></span></div>`;
   function renderTiles(rows, people) {
     const t = {};
     rows.forEach(r => Object.entries(r.s).forEach(([k, v]) => { if (typeof v === "number") t[k] = (t[k] || 0) + v; }));
@@ -1430,7 +1443,7 @@
     if (state.view === "all") people.forEach(p => Object.entries(p.kills).forEach(([m, c]) => kills[m] = (kills[m] || 0) + c));
     const topKill = Object.entries(kills).sort((a, b) => b[1] - a[1])[0];
     const tiles = [
-      ["skull", tr("Deaths"), num(Math.max(deathsN, t.deaths || 0)), t.ghost ? tr("{0} as ghosts", dur(t.ghost)) : ""],
+      ["skull", tr("Deaths"), num(Math.max(deathsN, t.deaths || 0)), state.hc ? tr("{0} of {1} fallen", num(people.filter(p => p.fallen).length), num(people.length)) : t.ghost ? tr("{0} as ghosts", dur(t.ghost)) : "", state.hc && people.some(p => p.fallen) ? "dead" : ""],
       ["sword", tr("Damage dealt"), compact(t.dmg), t.hits ? tr("{0} hits, {1} crits", num(t.hits), pct((t.crits || 0) / t.hits)) : ""],
       ["heart", tr("Healing done"), compact(t.heal), t.overheal ? tr("{0} overhealed", compact(t.overheal)) : ""],
       ["axe", tr("Killing blows"), num(t.kb), topKill ? `${num(topKill[1])}× ${esc(topKill[0])}` : ""],
@@ -1443,7 +1456,7 @@
     ];
     // Stats nobody has touched yet are left out; deaths always show (zero deaths is worth bragging about).
     const raw = [1, t.dmg, t.heal, t.kb, t.quests, t.goldIn, t.played, t.dist, t.jumps, t.dungeons];
-    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(([ic, l, v, f]) => `<div class="frame tile"><span class="ticon">${icon(ic, 2)}</span><span class="tbody"><span class="lbl">${l}</span><span class="val">${v}</span><span class="foot">${f || ""}</span></span></div>`).join("");
+    $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(tileHTML).join("");
   }
 
   const ACH = [
@@ -1536,8 +1549,8 @@
     $("meterRows").innerHTML = sorted.map((r, i) => {
       const v = val(r);
       const shown = m.html && !rate ? m.html(v) : (rate ? (m.fmt === dur ? dur(v) : (m.fmt === goldText ? goldText(v) : compact(v))) : m.fmt(v));
-      return `<a class="mrow" href="${profileHref(r.p)}" data-tip="${esc(r.p.name)}|${esc(rate ? "" : (m.full || m.fmt)(v))}"><div class="bar" style="width:${(v / max) * 100}%;--cc:${r.p.color}"></div>
-        <div class="txt"><span class="rk">${i + 1}.</span><span class="nm">${esc(r.p.name)}</span><span class="v">${shown}</span><span class="pct">${rate ? "" : ((v / total) * 100).toFixed(1) + "%"}</span></div></a>`;
+      return `<a class="mrow" href="${profileHref(r.p)}" data-tip="${esc(nameTxt(r.p))}|${esc(rate ? "" : (m.full || m.fmt)(v))}"><div class="bar" style="width:${(v / max) * 100}%;--cc:${r.p.color}"></div>
+        <div class="txt"><span class="rk">${i + 1}.</span><span class="nm">${esc(r.p.name)}${ripHTML(r.p)}</span><span class="v">${shown}</span><span class="pct">${rate ? "" : ((v / total) * 100).toFixed(1) + "%"}</span></div></a>`;
     }).join("") || `<p class="empty" style="padding:8px">${tr("Nobody on the meter yet.")}</p>`;
   }
 
@@ -1550,7 +1563,7 @@
     const scale = v => isGold ? v / 10000 : isDur ? v / 3600 : v;
     const series = p => keys.map(ks => scale(ks.reduce((a, k) => a + ((p.days[k] && p.days[k][m.k]) || 0), 0)));
     const { top, rest } = topSeries(people, p => series(p).reduce((a, b) => a + b, 0));
-    const datasets = top.map(p => ({ label: p.name, backgroundColor: p.color, data: series(p) }));
+    const datasets = top.map(p => ({ label: nameTxt(p), backgroundColor: p.color, data: series(p) }));
     if (rest.length) {
       const sums = rest.map(series);
       datasets.push({ label: tr("Others ({0})", rest.length), backgroundColor: OTHERS_COLOR, data: keys.map((_, i) => sums.reduce((a, s) => a + s[i], 0)) });
@@ -1600,7 +1613,7 @@
       ? `<div class="st-head"><span>${tr("Hero")}</span><span>${tr("Level")}</span><span>${tr("Damage")}</span><span>${tr("Deaths")}</span><span></span></div>` +
         list.slice(0, 6).map((r, i) => {
           const ch = r.p.chars[0] || {}, deaths = r.s.deaths || 0;
-          return `<a class="st-row" href="${profileHref(r.p)}"><span class="st-hero"><b>${i + 1}</b><span class="st-av" style="--c:${r.p.color}">${classIcon(ch, 2)}</span><span class="st-nm"><strong>${esc(r.p.name)}</strong><small>${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}</small></span></span><span class="st-lvl">${esc(ch.level || "–")}</span><strong class="st-n">${compact(r.s.dmg)}</strong><span class="st-n${deaths >= 5 ? " red" : ""}">${num(deaths)}</span><span class="st-go" aria-hidden="true">›</span></a>`;
+          return `<a class="st-row" href="${profileHref(r.p)}"><span class="st-hero"><b>${i + 1}</b><span class="st-av" style="--c:${r.p.color}">${classIcon(ch, 2)}</span><span class="st-nm"><strong>${esc(r.p.name)}${ripHTML(r.p)}</strong><small>${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}</small></span></span><span class="st-lvl">${esc(ch.level || "–")}</span><strong class="st-n">${compact(r.s.dmg)}</strong><span class="st-n${deaths >= 5 ? " red" : ""}">${num(deaths)}</span><span class="st-go" aria-hidden="true">›</span></a>`;
         }).join("")
       : `<p class="empty">${tr("No stats yet.")}</p>`;
   }
@@ -1634,7 +1647,7 @@
       if (mode === "date" && ch.level && ch.lastSeen && (!pts.length || pts[pts.length - 1].y < ch.level)) pts.push({ x: ch.lastSeen * 1000, y: ch.level });
       if (!pts.length) return null;
       return {
-        label: p.name === ch.name ? p.name : `${p.name} (${ch.name})`, data: pts, borderColor: p.color, backgroundColor: p.color,
+        label: p.name === ch.name ? nameTxt(p) : `${nameTxt(p)} (${ch.name})`, data: pts, borderColor: p.color, backgroundColor: p.color,
       };
     }).filter(Boolean);
     if (!datasets.length) return drawChart(canvasId, null);
@@ -1664,6 +1677,9 @@
       ? { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }
       : { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
     const alt = d._char && d._char !== p.name ? ` <span class="alt">(${esc(d._char)})</span>` : "";
+    return `<div class="ln"><span class="ts">[${esc(when)}]</span>${nameHTML(p)}${alt} ${deathWhat(d)}. <span class="lvl">${tr("Level {0}", esc(d.lvl || "?"))}</span></div>`;
+  }
+  function deathWhat(d) {
     let what;
     if (d.cause === "mob" || d.cause === "player") {
       const mob = `<span class="mob">${esc(d.by || tr("something"))}</span>`;
@@ -1671,8 +1687,9 @@
         + (d.amt ? ` <span class="dmg">(${num(d.amt)})</span>` : "");
     } else what = tr(DEATH_VERB[d.cause] || "died");
     const where = d.inst || d.zone;
-    return `<div class="ln"><span class="ts">[${esc(when)}]</span>${nameHTML(p)}${alt} ${what}${where ? tr(" in {0}", `<span class="where">${esc(where)}</span>`) : ""}. <span class="lvl">${tr("Level {0}", esc(d.lvl || "?"))}</span></div>`;
+    return what + (where ? tr(" in {0}", `<span class="where">${esc(where)}</span>`) : "");
   }
+  const fullDate = t => new Date(t * 1000).toLocaleDateString(LOC(), { year: "numeric", month: "short", day: "numeric" });
 
   function causeChart(canvasId, deaths, legendPos = "right") {
     const causes = {};
@@ -1704,7 +1721,7 @@
       data: { labels: brackets, datasets: (() => {
         const counts = p => brackets.map((_, i) => all.filter(x => x.p === p && bIdx(x.d.lvl) === i).length);
         const { top, rest } = topSeries(people, p => all.filter(x => x.p === p).length);
-        const ds = top.map(p => ({ label: p.name, backgroundColor: p.color, data: counts(p) }));
+        const ds = top.map(p => ({ label: nameTxt(p), backgroundColor: p.color, data: counts(p) }));
         if (rest.length) { const c = rest.map(counts); ds.push({ label: tr("Others ({0})", rest.length), backgroundColor: OTHERS_COLOR, data: brackets.map((_, i) => c.reduce((a, s) => a + s[i], 0)) }); }
         return ds;
       })() },
@@ -1737,6 +1754,28 @@
     const zmax = Math.max(1, ...zs.map(z => z[1]));
     $("deadZones").innerHTML = zs.map(([z, n]) => `<div class="hbar bad" data-tip="${esc(z)}|${esc(tr(n === 1 ? "{0} death" : "{0} deaths", n))}"><span>${esc(z)}</span><span class="track"><span class="fill" style="display:block;width:${(n / zmax) * 100}%"></span></span><span class="num">${n}</span></div>`).join("")
       || `<p class="empty">${tr("No deaths, no dangerous places.")}</p>`;
+  }
+
+  // Hardcore: death is permanent, so who has fallen matters more than how often. Always all time.
+  function renderGraveyard(people) {
+    $("s-grave").classList.toggle("nosec", !state.hc);
+    if (!state.hc) return;
+    const lvl = p => Math.max(0, ...p.chars.map(c => +c.level || 0));
+    const fallen = people.filter(p => p.fallen).sort((a, b) => b.fallen.t - a.fallen.t);
+    const alive = people.filter(p => !p.fallen).sort((a, b) => lvl(b) - lvl(a));
+    const avg = fallen.reduce((s, p) => s + (+p.fallen.lvl || 0), 0) / Math.max(1, fallen.length);
+    const best = fallen.slice().sort((a, b) => (b.fallen.lvl || 0) - (a.fallen.lvl || 0))[0];
+    $("hcTiles").innerHTML = [
+      ["heart", tr("Still standing"), num(alive.length), alive[0] ? tr("highest: {0}, level {1}", esc(alive[0].name), lvl(alive[0])) : ""],
+      ["grave", tr("Fallen"), num(fallen.length), people.length ? tr("{0} survival rate", pct(alive.length / people.length)) : "", fallen.length ? "dead" : ""],
+      ["skull", tr("Average level at death"), fallen.length ? dec(avg, 1) : "–", best ? tr("highest: {0}, level {1}", esc(best.name), esc(best.fallen.lvl || "?")) : ""],
+    ].map(tileHTML).join("");
+    $("hcFallen").innerHTML = fallen.map(p => `<div class="grave"><span class="gicon">${sprite("tomb", 2)}</span><div>
+        <div class="gname">${nameHTML(p)}</div><div class="gwhat">${deathWhat(p.fallen)}.</div>
+        <div class="gwhen">${tr("Level {0}", esc(p.fallen.lvl || "?"))} · ${fullDate(p.fallen.t)}</div></div></div>`).join("")
+      || `<p class="empty">${tr("Nobody has fallen. Yet.")}</p>`;
+    $("hcAlive").innerHTML = alive.map(p => `<a class="chip" href="${profileHref(p)}">${classIcon(p.chars[0])}${esc(p.name)} <span class="muted">${tr("Lvl {0}", lvl(p))}</span></a>`).join("")
+      || `<p class="empty">${tr("Everyone has fallen.")}</p>`;
   }
 
   // ---------- dungeons & raids ----------
@@ -1899,7 +1938,7 @@
     drawChart("cRadar", rows.length ? {
       type: "radar",
       data: { labels: R.map(r => r[0]), datasets: rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0)).slice(0, 6).map(r => ({
-        label: r.p.name, data: R.map(([, f], i) => Math.round((f(r.s) / maxes[i]) * 100)),
+        label: nameTxt(r.p), data: R.map(([, f], i) => Math.round((f(r.s) / maxes[i]) * 100)),
         borderColor: r.p.color, backgroundColor: r.p.color + "1f", pointBackgroundColor: r.p.color,
       })) },
       options: {
@@ -1912,14 +1951,14 @@
     const cr = rows.filter(r => (r.s.hits || 0) > 0).sort((a, b) => b.s.critRate - a.s.critRate).slice(0, 10);
     drawChart("cCrit", cr.length ? {
       type: "bar",
-      data: { labels: cr.map(r => r.p.name), datasets: [{ label: tr("Crit rate"), data: cr.map(r => +(r.s.critRate * 100).toFixed(1)), backgroundColor: cr.map(r => r.p.color), borderRadius: 4 }] },
+      data: { labels: cr.map(r => nameTxt(r.p)), datasets: [{ label: tr("Crit rate"), data: cr.map(r => +(r.s.critRate * 100).toFixed(1)), backgroundColor: cr.map(r => r.p.color), borderRadius: 4 }] },
       options: { indexAxis: "y", scales: { x: { ...gridY, ticks: { callback: v => v + "%" } }, y: gridX }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => " " + tr("{0}% crits ({1} of {2} hits)", dec(c.raw, 1), num(cr[c.dataIndex].s.crits), num(cr[c.dataIndex].s.hits)) } } } },
     } : null);
 
     const tk = rows.filter(r => r.s.taken || r.s.healedBy).sort((a, b) => (b.s.taken || 0) - (a.s.taken || 0)).slice(0, 10);
     drawChart("cTaken", tk.length ? {
       type: "bar",
-      data: { labels: tk.map(r => r.p.name), datasets: [
+      data: { labels: tk.map(r => nameTxt(r.p)), datasets: [
         { label: tr("Damage taken"), data: tk.map(r => r.s.taken || 0), backgroundColor: "#c0392b", borderRadius: 3 },
         { label: tr("Healing received"), data: tk.map(r => r.s.healedBy || 0), backgroundColor: "#4ade80", borderRadius: 3 },
       ] },
@@ -1942,7 +1981,7 @@
     const lr = rows.filter(r => [2, 3, 4, 5].some(q => r.s["q" + q])).sort((a, b) => (b.s.loot || 0) + (b.s.q2 || 0) - (a.s.loot || 0) - (a.s.q2 || 0)).slice(0, 10);
     drawChart("cLoot", lr.length ? {
       type: "bar",
-      data: { labels: lr.map(r => r.p.name), datasets: [2, 3, 4, 5].map(q => ({
+      data: { labels: lr.map(r => nameTxt(r.p)), datasets: [2, 3, 4, 5].map(q => ({
         label: tr(QUAL[q][0]), backgroundColor: QUAL[q][1], borderColor: "#17141b", borderWidth: 1, borderRadius: 2,
         data: lr.map(r => r.s["q" + q] || 0),
       })) },
@@ -1957,7 +1996,7 @@
     const gr = rows.filter(r => r.s.goldIn || r.s.goldOut).sort((a, b) => (b.s.goldIn || 0) - (a.s.goldIn || 0)).slice(0, 10);
     drawChart("cGold", gr.length ? {
       type: "bar",
-      data: { labels: gr.map(r => r.p.name), datasets: [
+      data: { labels: gr.map(r => nameTxt(r.p)), datasets: [
         { label: tr("Looted & earned"), data: gr.map(r => (r.s.goldIn || 0) / 10000), backgroundColor: "#ffd100", borderRadius: 3 },
         { label: tr("Spent"), data: gr.map(r => -((r.s.goldOut || 0) / 10000)), backgroundColor: "#c87533", borderRadius: 3 },
         { label: tr("Repairs"), data: gr.map(r => -((r.s.repair || 0) / 10000)), backgroundColor: "#8b8f99", borderRadius: 3 },
@@ -1982,7 +2021,7 @@
     const datasets = people.map(p => {
       const per = p.chars.map(ch => { let last = null; return labels.map(k => { const d = ch.days[k]; if (d && typeof d.gold === "number") last = d.gold; return last; }); });
       const data = labels.map((_, i) => { let s = 0, any = false; per.forEach(a => { if (a[i] != null) { s += a[i]; any = true; } }); return any ? +(s / 10000).toFixed(2) : null; });
-      return { label: p.name, data, borderColor: p.color, backgroundColor: p.color, spanGaps: true, _last: data.filter(v => v != null).pop() || 0 };
+      return { label: nameTxt(p), data, borderColor: p.color, backgroundColor: p.color, spanGaps: true, _last: data.filter(v => v != null).pop() || 0 };
     }).filter(d => d.data.some(v => v != null)).sort((a, b) => b._last - a._last).slice(0, MAX_SERIES);
     drawChart("cWealth", datasets.length ? {
       type: "line", data: { labels: labels.map(shortDate), datasets },
@@ -2017,7 +2056,7 @@
       data: { labels: top, datasets: (() => {
         const hours = p => top.map(z => +(((p.zones[z]) || 0) / 3600).toFixed(1));
         const { top: tp, rest } = topSeries(people, p => Object.values(p.zones).reduce((a, b) => a + b, 0));
-        const ds = tp.map(p => ({ label: p.name, backgroundColor: p.color, data: hours(p) }));
+        const ds = tp.map(p => ({ label: nameTxt(p), backgroundColor: p.color, data: hours(p) }));
         if (rest.length) { const hs = rest.map(hours); ds.push({ label: tr("Others ({0})", rest.length), backgroundColor: OTHERS_COLOR, data: top.map((_, i) => +hs.reduce((a, s) => a + s[i], 0).toFixed(1)) }); }
         return ds;
       })() },
@@ -2029,7 +2068,7 @@
   function renderSpells(people) {
     const withSpells = people.filter(p => Object.keys(p.spellDmg).length);
     if (!withSpells.find(p => p.id === state.spellWho)) state.spellWho = withSpells[0] && withSpells[0].id;
-    $("spellWho").innerHTML = withSpells.map(p => `<button type="button" class="chip" data-pid="${esc(p.id)}" aria-pressed="${p.id === state.spellWho}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</button>`).join("");
+    $("spellWho").innerHTML = withSpells.map(p => `<button type="button" class="chip" data-pid="${esc(p.id)}" aria-pressed="${p.id === state.spellWho}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}${ripHTML(p)}</button>`).join("");
     const p = withSpells.find(x => x.id === state.spellWho);
     if (!p) return drawChart("cSpells", null);
     const sp = Object.entries(p.spellDmg).sort((a, b) => b[1] - a[1]).slice(0, 12);
@@ -2054,7 +2093,7 @@
       c.w += r.w; c.l += r.l;
     }));
     const any = Object.keys(grid).length;
-    $("tDuels").tHead.innerHTML = any ? `<tr><th></th>${people.map(p => `<th style="text-align:center">${esc(p.name)}</th>`).join("")}</tr>` : "";
+    $("tDuels").tHead.innerHTML = any ? `<tr><th></th>${people.map(p => `<th style="text-align:center">${esc(p.name)}${ripHTML(p)}</th>`).join("")}</tr>` : "";
     $("tDuels").tBodies[0].innerHTML = any ? people.map(a => `<tr><td><span class="nm">${nameHTML(a)}</span></td>${people.map(b => {
       if (a === b) return `<td class="cell even">—</td>`;
       const c = grid[a.id] && grid[a.id][b.id];
@@ -2078,7 +2117,7 @@
     $("recNews").hidden = !fresh.length;
     if (!fresh.length) $("recNews").open = false;
     $("recNews").innerHTML = fresh.length ? `<summary>${sprite("sulfuras", 1)}${tr(fresh.length === 1 ? "A record fell!" : "{0} records fell!", fresh.length)}</summary><div class="menu"><small>${state.view === "all" ? tr("last 7 days") : rangeLabel()}</small>` +
-      fresh.map(r => `<button type="button" class="recchip" data-jump="s-glory-fame">${esc(r.p.name)} · ${r.t} · <b>${r.v}</b></button>`).join("") + `</div>` : "";
+      fresh.map(r => `<button type="button" class="recchip" data-jump="s-glory-fame">${esc(r.p.name)}${ripHTML(r.p)} · ${r.t} · <b>${r.v}</b></button>`).join("") + `</div>` : "";
     const none = `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
     // The overview shows a handful; the Hall of Fame page has them all, each with the runners-up.
     $("fame").innerHTML = recordsHTML(recs.slice(0, OVERVIEW_CARDS)) || none;
@@ -2096,7 +2135,7 @@
     + `</div>`).join("");
   const beatText = r => r.beat.p === r.p
     ? tr("Topped their own {0} from {1}", r.beat.v, shortDate(r.beat.k))
-    : tr("Beat {0}'s {1} from {2}", esc(r.beat.p.name), r.beat.v, shortDate(r.beat.k));
+    : tr("Beat {0}'s {1} from {2}", esc(r.beat.p.name) + ripHTML(r.beat.p), r.beat.v, shortDate(r.beat.k));
 
   // Every time a daily record was raised, oldest first: who set it, on which day, and what it beat.
   function recordHistory(people, f) {
@@ -2325,7 +2364,7 @@
     const profs = Array.isArray(ch.professions) ? ch.professions.filter(x => x && x.n) : [];
     const [cname] = classOf(ch);
     const head = `<div class="sheet-head">
-        <span>${classIcon(ch)} <b>${esc(ch.name)}</b> <span class="muted">${tr("Level {0} {1} {2}", esc(ch.level || "?"), esc(RACE[ch.race] || ch.race || ""), cname)}${ch.realm ? " · " + esc(ch.realm) : ""}${ch.guild ? " · &lt;" + esc(ch.guild) + "&gt;" : ""}</span></span>
+        <span>${classIcon(ch)} <b>${esc(ch.name)}</b>${ripHTML(ch)} <span class="muted">${tr("Level {0} {1} {2}", esc(ch.level || "?"), esc(RACE[ch.race] || ch.race || ""), cname)}${ch.realm ? " · " + esc(ch.realm) : ""}${ch.guild ? " · &lt;" + esc(ch.guild) + "&gt;" : ""}</span></span>
         ${talents.length ? `<span class="talents">${spec && spec.p ? `<span class="spec">${esc(spec.n)} ${esc(cname)}</span>` : ""}${talents.map(t => `<span class="talent">${esc(t.n)} <b>${num(t.p)}</b></span>`).join("")}</span>`
           : ch.spec ? `<span class="talents"><span class="spec">${esc(ch.spec)} ${esc(cname)}</span></span>` : ""}
       </div>`;
@@ -2353,7 +2392,7 @@
       $("pBosses").tHead.innerHTML = $("pBosses").tBodies[0].innerHTML = "";
       return;
     }
-    document.title = `${p.name} · Azeroth Ledger`;
+    document.title = `${nameTxt(p)} · Azeroth Ledger`;
     const rowsAll = people.map(x => ({ p: x, s: sumFor(x, true) }));
     const s = rowsAll.find(r => r.p === p).s;
     const sig = signatureStats(p, rowsAll);
@@ -2361,6 +2400,7 @@
     const main = p.chars[0];
 
     $("pHero").style.setProperty("--c", p.color);
+    $("profile").classList.toggle("fallen", !!p.fallen);
     const render = main && blizzImg(main.render);
     $("pHero").classList.toggle("has-render", !!render);
     $("pHero").style.setProperty("--render", render ? `url('${render}')` : "none");
@@ -2368,15 +2408,17 @@
     const otherChars = (state.allChars || []).filter(c => main && main.owner && !String(main.owner).startsWith("char:") && c.owner === main.owner && c.key !== main.key);
     $("pHero").innerHTML = `
       <span class="eyebrow">${main ? `${tr("Lvl {0}", esc(main.level || "?"))} ${esc(RACE[main.race] || main.race || "")} ${classOf(main)[0]}` : tr("Adventurer")}${main && main.guild ? ` · ${guildLink(main)}` : ""} · ${esc(realmLabel())}</span>
-      <h2 id="pName">${main ? classIcon(main, 4) : ""}${esc(p.name)}</h2>
+      <h2 id="pName">${main ? classIcon(main, 4) : ""}${esc(p.name)}${ripHTML(p, 2)}</h2>
       ${sig[0] ? `<p class="known">${tr("Known for: {0}", esc(sig[0].tag))}</p>` : ""}
+      ${p.fallen ? `<div class="rip-banner"><span class="gicon">${sprite("tomb", 3)}</span><div><b>${tr("Fallen")}</b><span>${deathWhat(p.fallen)}.</span><span class="gwhen">${tr("Level {0}", esc(p.fallen.lvl || "?"))} · ${fullDate(p.fallen.t)}</span></div></div>`
+        : state.hc ? `<p class="known">${tr("Still alive. Death is permanent in Hardcore.")}</p>` : ""}
       <div class="facts">
         <div><b>${top ? esc(top.level || "?") : "–"}</b><span>${tr("highest level")}</span></div>
         <div><b>${dur(s.played)}</b><span>${tr("played")}</span></div>
         <div><b>${compact(s.dmg)}</b><span>${tr("damage")}</span></div>
-        <div><b>${num(p.deaths.length || s.deaths)}</b><span>${tr("deaths")}</span></div>
+        ${state.hc ? `<div${p.fallen ? ` class="dead"` : ""}><b>${tr(p.fallen ? "Fallen" : "Alive")}</b><span>${tr("Hardcore")}</span></div>` : `<div><b>${num(p.deaths.length || s.deaths)}</b><span>${tr("deaths")}</span></div>`}
       </div>
-      ${otherChars.length ? `<div style="display:grid;gap:6px"><span class="eyebrow">${tr("Other characters by this player")}</span><div class="chips">${otherChars.map(c => `<a class="chip" href="${charHref(c.key)}">${classIcon(c)}${esc(c.name)} <span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} · ${esc(c.realm || "")}</span></a>`).join("")}</div></div>` : ""}`;
+      ${otherChars.length ? `<div style="display:grid;gap:6px"><span class="eyebrow">${tr("Other characters by this player")}</span><div class="chips">${otherChars.map(c => `<a class="chip" href="${charHref(c.key)}">${classIcon(c)}${esc(c.name)}${ripHTML(c)} <span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} · ${esc(c.realm || "")}</span></a>`).join("")}</div></div>` : ""}`;
     renderCompare(p, people);
 
     $("pSig").innerHTML = sig.slice(0, 6).map(x => `<div class="frame sigc" style="--c:${p.color}">
@@ -2387,7 +2429,7 @@
 
     // character sheet with a picker for alts
     if (!p.chars.some(ch => ch.key === state.profileChar)) state.profileChar = main && main.key;
-    $("pCharPick").innerHTML = p.chars.length > 1 ? p.chars.map(ch => `<button type="button" class="chip" data-key="${esc(ch.key)}" aria-pressed="${ch.key === state.profileChar}">${classIcon(ch)}${esc(ch.name)}</button>`).join("") : "";
+    $("pCharPick").innerHTML = p.chars.length > 1 ? p.chars.map(ch => `<button type="button" class="chip" data-key="${esc(ch.key)}" aria-pressed="${ch.key === state.profileChar}">${classIcon(ch)}${esc(ch.name)}${ripHTML(ch)}</button>`).join("") : "";
     const ch = p.chars.find(c => c.key === state.profileChar);
     $("pSheet").innerHTML = ch ? sheetHTML(ch, p.color) : `<p class="empty">${tr("No characters yet.")}</p>`;
     drawFaces($("pSheet"));
@@ -2467,7 +2509,7 @@
     if (!others.length) return;
     const dmgAll = x => sumFor(x, true).dmg || 0;
     if (!others.some(x => x.id === state.compareWith)) state.compareWith = others.slice().sort((a, b) => dmgAll(b) - dmgAll(a))[0].id;
-    $("cmpSel").innerHTML = others.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+    $("cmpSel").innerHTML = others.map(x => `<option value="${esc(x.id)}">${esc(nameTxt(x))}</option>`).join("");
     $("cmpSel").value = state.compareWith;
     const q = others.find(x => x.id === state.compareWith);
     const a = sumFor(p, true), b = sumFor(q, true);
@@ -2492,9 +2534,9 @@
       const topKills = Object.entries(p.kills).sort((a, b) => b[1] - a[1]).slice(0, 3);
       const loot = p.notable.filter(x => x.q >= 3).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 4);
       const onlyObserved = p.chars.length && p.chars.every(ch => !ch.self);
-      const rowsHTML = p.chars.map((ch, i) => `<li><span class="cn">${classIcon(ch)}${esc(ch.name)}</span>${p.chars.length > 1 && i === 0 ? `<span class="badge">${tr("Main")}</span>` : ""}<span class="meta">${charLine(ch)}${ch.guild ? " · " + guildLink(ch) : ""}${ch.self ? "" : " · " + tr("seen by friends")}</span></li>`).join("");
+      const rowsHTML = p.chars.map((ch, i) => `<li><span class="cn">${classIcon(ch)}${esc(ch.name)}${ripHTML(ch)}</span>${p.chars.length > 1 && i === 0 ? `<span class="badge">${tr("Main")}</span>` : ""}<span class="meta">${charLine(ch)}${ch.guild ? " · " + guildLink(ch) : ""}${ch.self ? "" : " · " + tr("seen by friends")}</span></li>`).join("");
       return `<div class="frame char" style="--c:${p.color}">
-        <div><h3><a class="plink" href="${profileHref(p)}"><span class="cname">${esc(p.name)}</span></a></h3><span class="muted">${tr(p.deaths.length === 1 ? "{0} death" : "{0} deaths", num(p.deaths.length))}${total.played ? " · " + tr("{0} played", dur(total.played)) : ""}</span></div>
+        <div><h3><a class="plink" href="${profileHref(p)}"><span class="cname">${esc(p.name)}</span>${ripHTML(p)}</a></h3><span class="muted">${tr(p.deaths.length === 1 ? "{0} death" : "{0} deaths", num(p.deaths.length))}${total.played ? " · " + tr("{0} played", dur(total.played)) : ""}</span></div>
         <ul class="alts">${rowsHTML}</ul>
         <dl class="kv">
           <dt>${tr("Damage dealt")}</dt><dd>${num(total.dmg)}</dd>
@@ -2528,7 +2570,7 @@
       const ch = p.chars[0];
       const deaths = p.deaths.filter(d => d.t && inRange(localKey(d.t))).length || s.deaths || 0;
       return `<div class="grow">
-        <span class="who"><a class="plink" href="${profileHref(p)}">${classIcon(ch)}<span class="cname" style="--cc:${classOf(ch)[1]}">${esc(p.name)}</span></a>
+        <span class="who"><a class="plink" href="${profileHref(p)}">${classIcon(ch)}<span class="cname" style="--cc:${classOf(ch)[1]}">${esc(p.name)}</span>${ripHTML(p)}</a>
           <small>${[tr("Lvl {0}", esc(ch.level || "?")), esc(RACE[ch.race] || ch.race || ""), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
         <span class="n">${compact(s.dmg)}<small>${tr("damage")}</small></span>
         <span class="n${deaths ? " red" : ""}">${num(deaths)}<small>${tr("deaths")}</small></span>
@@ -2577,6 +2619,11 @@
     // Example characters are only added while nobody has uploaded yet, on their own "Example data" realms.
     const allChars = live ? real : (demoOnly ? [] : real).concat(characters(demoData()));
     state.allChars = allChars;
+    // Hardcore: a character's first death is its last.
+    allChars.forEach(c => {
+      const hc = /Hardcore/.test(gameName(c.game, c.realm)) || /Hardcore/.test(c.realm || "") || (c.game && c.game.hardcore);
+      c.fallen = hc ? c.deaths.reduce((a, d) => d && d.t && (!a || d.t < a.t) ? d : a, null) : null;
+    });
 
     // Character and guild links carry their own realm.
     const route = parseRoute();
@@ -2605,6 +2652,8 @@
     // Every character stands on its own.
     const players = Object.fromEntries(scope.map(c => [c.key, { name: c.name, chars: [c.key] }]));
     const people = buildPeople(scope, players).people.filter(p => p.chars.length);
+    state.hc = /Hardcore/.test(state.realm) || realmChars.some(c => c.game && c.game.hardcore);
+    people.forEach(p => { p.fallen = p.chars.map(c => c.fallen).find(Boolean) || null; });
     state.people = people;
     renderNav(people, route);
 
@@ -2644,6 +2693,7 @@
     renderMeter(active.length ? active : rows);
     renderDaily(people);
     renderDeaths(people);
+    renderGraveyard(people);
     renderDungeons(people);
     renderMap(people);
     renderCombat(active);
@@ -2694,7 +2744,7 @@
   const faceLink = c => {
     const [cls, color] = classOf(c), meta = [tr("Lvl {0}", esc(c.level || "?")), cls].join(" ");
     const pic = CLASS[c.class] ? zam("classicon_" + String(c.class).toLowerCase(), 32) : `<span class="dot" style="background:${color}"></span>`;
-    return `<a class="face" href="${charHref(c.key)}" aria-label="${esc(c.name)}, ${meta}">${pic}<span class="tip" aria-hidden="true"><b style="color:${color}">${esc(c.name)}</b><small>${meta}</small></span></a>`;
+    return `<a class="face${c.fallen ? " fallen" : ""}" href="${charHref(c.key)}" aria-label="${esc(c.name)}, ${meta}${c.fallen ? ", " + tr("Fallen") : ""}">${pic}<span class="tip" aria-hidden="true"><b style="color:${color}">${esc(c.name)}</b>${ripHTML(c)}<small>${meta}</small></span></a>`;
   };
   const FAC_ORDER = { alliance: 0, horde: 1, "": 2 };
   document.addEventListener("click", e => {
@@ -2728,7 +2778,7 @@
           <span class="muted">${[tr(list.length === 1 ? "{0} member" : "{0} members", list.length), lvl ? tr("Top level {0}", lvl) : ""].filter(Boolean).join(" · ")}</span></div></div>
         <div class="gstats">${stat(compact(tot.dmg), "Damage", tot.dmg)}${stat(compact(tot.heal), "Healing", tot.heal)}${stat(num(tot.deaths), "Deaths", 1)}
           ${stat(num(tot.quests), "Quests", tot.quests)}${stat(goldHTML(tot.goldIn), "Gold", tot.goldIn)}${stat(dur(tot.played), "Played", tot.played)}</div>
-        ${top && top.v ? `<div class="gmvp">${tr("Top damage")}: <a class="plink" href="${charHref(top.c.key)}">${classIcon(top.c)}<span class="cname" style="--cc:${classOf(top.c)[1]}">${esc(top.c.name)}</span></a></div>` : ""}
+        ${top && top.v ? `<div class="gmvp">${tr("Top damage")}: <a class="plink" href="${charHref(top.c.key)}">${classIcon(top.c)}<span class="cname" style="--cc:${classOf(top.c)[1]}">${esc(top.c.name)}</span>${ripHTML(top.c)}</a></div>` : ""}
         <div class="gfaces">${list.slice(0, 24).map(c => faceLink(c)).join("")}${list.length > 24 ? `<span class="muted" style="align-self:center">+${list.length - 24}</span>` : ""}</div>
         ${g ? `<a class="btn" href="${guildHref(state.realm, g)}">${tr("Open guild page")}</a>` : ""}
       </div>`;
@@ -2907,7 +2957,7 @@
   state.sub = {};
   function applySubs(pg) {
     const secs = pg && pg !== "overview"
-      ? [...document.querySelectorAll("#app > section[data-pg]")].filter(s => !s.hidden && !s.classList.contains("nomap") && s.querySelector(".sec-head h2"))
+      ? [...document.querySelectorAll("#app > section[data-pg]")].filter(s => !s.hidden && !s.classList.contains("nosec") && s.querySelector(".sec-head h2"))
       : [];
     const box = $("subTabs"), multi = secs.length > 1;
     $("app").classList.toggle("subbed", multi);
@@ -2960,14 +3010,14 @@
     const levels = [{ label: tr("Realm ledger"), name: realmName, href: "#", icon: crestHTML(1) }];
     if (guildName) levels.push({ label: tr("Guild"), name: `<${guildName}>`, href: guildHref(state.realm, guildName),
       icon: guildCrest(state.realm, guildName, (state.allChars || []).filter(c => c.guild === guildName && realmMatch(c)), 18) });
-    if (focusChar) levels.push({ label: tr("Character"), name: focusChar.name, href: charHref(route.key), icon: classIcon(focusChar, 1) });
+    if (focusChar) levels.push({ label: tr("Character"), name: focusChar.name, href: charHref(route.key), icon: classIcon(focusChar, 1), rip: ripHTML(focusChar) });
     const at = levels.length - 1;
-    const lvlInner = l => `<span class="lvl-ic">${l.icon}</span><span class="lvl-t"><small>${esc(l.label)}</small><b>${esc(l.name)}</b></span>`;
+    const lvlInner = l => `<span class="lvl-ic">${l.icon}</span><span class="lvl-t"><small>${esc(l.label)}</small><b>${esc(l.name)}${l.rip || ""}</b></span>`;
     $("scope").innerHTML = `<span class="nav-label">${tr("You are here")}</span>` + levels.map((l, i) => i === at
       ? `<span class="lvl here" aria-current="page">${lvlInner(l)}</span>`
       : `<a class="lvl" href="${l.href}">${lvlInner(l)}<span class="lvl-back">‹ ${tr("Go back")}</span></a>`).join("");
     $("navLabel").textContent = kind === "profile" ? tr("{0}'s pages", focusChar ? focusChar.name : "") : tr(kind === "guild" ? "Guild pages" : "Realm pages");
-    $("crumbs").innerHTML = levels.map((l, i) => i === at ? `<span>${esc(l.name)}</span>` : `<a href="${l.href}">${esc(l.name)}</a>`)
+    $("crumbs").innerHTML = levels.map((l, i) => i === at ? `<span>${esc(l.name)}${l.rip || ""}</span>` : `<a href="${l.href}">${esc(l.name)}${l.rip || ""}</a>`)
       .concat(`<strong>${esc(pageName)}</strong>`).join('<span class="sep" aria-hidden="true">›</span>');
     $("pageTitle").textContent = cur !== "overview" ? pageName : route.kind === "main" ? realmName : "";
     const pid = route.kind === "char" ? route.key : null;
@@ -3044,7 +3094,7 @@
       .sort((a, b) => String(a.name).toLowerCase().startsWith(q) ? -1 : String(b.name).toLowerCase().startsWith(q) ? 1 : 0).slice(0, 8);
     box.innerHTML = [
       ...gl.map(g => `<a class="sr" href="${guildHref(g.realm, g.guild)}"><span class="sr-k">${tr("Guild")}</span><b>&lt;${esc(g.guild)}&gt;</b><span class="muted">${esc(g.realm.replace("|", " · "))} · ${tr(g.n === 1 ? "{0} member" : "{0} members", g.n)}</span></a>`),
-      ...cl.map(c => `<a class="sr" href="${charHref(c.key)}">${classIcon(c)}<b>${esc(c.name)}</b><span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} ${classOf(c)[0]} · ${esc(c.realm || "")}${c.guild ? " · &lt;" + esc(c.guild) + "&gt;" : ""}</span></a>`),
+      ...cl.map(c => `<a class="sr" href="${charHref(c.key)}">${classIcon(c)}<b>${esc(c.name)}</b>${ripHTML(c)}<span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} ${classOf(c)[0]} · ${esc(c.realm || "")}${c.guild ? " · &lt;" + esc(c.guild) + "&gt;" : ""}</span></a>`),
     ].join("") || `<p class="empty" style="padding:8px 10px">${tr("No characters or guilds match.")}</p>`;
     box.hidden = false;
   }
