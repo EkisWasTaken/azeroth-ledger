@@ -156,7 +156,9 @@
     "Keeps hitting dead things": "Fortsätter slå på döda saker", "Swings at air": "Slår i luften", "Slippery": "Hal som en ål",
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
-    "Epic drops": "Epic drops", "Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
+    "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
+    "Grudge match": "Gammalt groll", "{0} was slain by {1} {2} times": "{0} dödades av {1} {2} gånger", "{0} dealt {1} damage": "{0} gjorde {1} damage",
+    "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
     "Missed attacks": "Missade attacker",
@@ -1462,6 +1464,27 @@
     // Stats nobody has touched yet are left out; deaths always show (zero deaths is worth bragging about).
     const raw = [1, t.dmg, t.heal, t.kb, t.quests, t.goldIn, t.played, t.dist, t.jumps, t.dungeons];
     $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(tileHTML).join("");
+    renderLead(rows, people);
+  }
+
+  // The one thing worth telling first: a fall, a legendary drop, a grudge, a bad week, or the top pumper.
+  function renderLead(rows, people) {
+    if (!$("lead")) return; // a cached older index.html has no slot for it
+    const cands = [];
+    people.forEach(p => {
+      if (p.fallen && inRange(localKey(p.fallen.t))) cands.push([100, "tomb", tr("Fallen"), `${nameHTML(p)} ${deathWhat(p.fallen)}`, tr("Level {0}", esc(p.fallen.lvl || "?")) + " · " + fullDate(p.fallen.t), "dead"]);
+      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push([70 + n.q * 2 + n.t / 1e10, "lotus", tr("Best drop"),
+        `${nameHTML(p)} ${tr("looted {0}", `<span class="q${n.q}">[${esc(n.item)}]</span>`)}`, fullDate(n.t)]));
+      const by = {};
+      p.deaths.forEach(d => { if (d.by && d.t && inRange(localKey(d.t))) by[d.by] = (by[d.by] || 0) + 1; });
+      const [mob, n] = Object.entries(by).sort((a, b) => b[1] - a[1])[0] || [];
+      if (n >= 2) cands.push([60 + n, "skull", tr("Grudge match"), tr("{0} was slain by {1} {2} times", nameHTML(p), `<span class="mob">${esc(mob)}</span>`, num(n)), tr("Most Wanted")]);
+    });
+    const top = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0))[0];
+    if (top && top.s.dmg) cands.push([10, "sword", tr("Big Pumper"), tr("{0} dealt {1} damage", nameHTML(top.p), compact(top.s.dmg)), top.s.maxHit ? tr("Hit for {0} with {1}", num(top.s.maxHit), esc(top.s.maxHitSpell || tr("something"))) : ""]);
+    const best = cands.sort((a, b) => b[0] - a[0])[0];
+    $("lead").innerHTML = best ? `<div class="frame lead ${best[5] || ""}"><span class="ticon">${icon(best[1], 3)}</span>
+      <div><span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best[2]}</span><p class="lead-h">${best[3]}</p><span class="muted">${best[4]}</span></div></div>` : "";
   }
 
   const ACH = [
@@ -1599,11 +1622,13 @@
     const { labels, keys } = periodDays(people);
     const sum = f => keys.map(ks => people.reduce((a, p) => a + ks.reduce((b, k) => b + ((p.days[k] && p.days[k][f]) || 0), 0), 0));
     const dmg = sum("dmg"), heal = sum("heal");
-    drawChart("cMomentum", labels.length && (dmg.some(Boolean) || heal.some(Boolean)) ? {
-      type: "line",
+    // With only a day or two of play a line is one cliff that reads as a crash; bars show the days as they are.
+    const played = dmg.filter((v, i) => v || heal[i]).length;
+    drawChart("cMomentum", labels.length && played ? {
+      type: played < 3 ? "bar" : "line",
       data: { labels, datasets: [
-        { label: tr("Damage"), data: dmg, borderColor: css("--accent"), area: true },
-        { label: tr("Healing"), data: heal, borderColor: css("--good"), borderDash: [5, 5] },
+        { label: tr("Damage"), data: dmg, borderColor: css("--accent"), backgroundColor: css("--accent"), area: true },
+        { label: tr("Healing"), data: heal, borderColor: css("--good"), backgroundColor: css("--good"), borderDash: [5, 5] },
       ] },
       options: { scales: { x: gridX, y: { ...gridY, beginAtZero: true, ticks: { ...gridY.ticks, callback: v => compact(v) } } },
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${num(c.raw)}` } } } },
