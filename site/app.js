@@ -157,7 +157,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "{0} looted {1} out in the world": "{0} lootade {1} ute i världen", "{0} was slain by {1} {2} times": "{0} dödades av {1} {2} gånger", "{0} dealt {1} damage": "{0} gjorde {1} damage",
+    "Grudge match": "Gammalt groll", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -1472,25 +1472,36 @@
   }
 
   // The one thing worth telling first: a fall, a legendary drop, a grudge, a bad week, or the top pumper.
+  // Laid out like the character of the week beside it: icon, the character's name, what happened, then the details as chips.
   function renderLead(rows, people) {
     if (!$("lead")) return; // a cached older index.html has no slot for it
-    const cands = [];
+    const cands = [], chip = t => `<span class="chip">${t}</span>`;
     people.forEach(p => {
-      if (p.fallen && inRange(localKey(p.fallen.t))) cands.push([100, "tomb", tr("Fallen"), `${nameHTML(p)} ${deathWhat(p.fallen)}`, tr("Level {0}", esc(p.fallen.lvl || "?")) + " · " + fullDate(p.fallen.t), "dead"]);
-      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push([70 + dropRank(n) / 5 + n.t / 1e10, "lotus", tr("Best drop"),
-        n.world ? tr("{0} looted {1} out in the world", nameHTML(p), itemHTML(n)) : `${nameHTML(p)} ${tr("looted {0}", itemHTML(n))}`,
-        `${dropTags(n)} ${fullDate(n.t)}${n.zone ? " · " + esc(n.zone) : ""}`, n.q === 5 ? "legendary" : "epic"]));
+      if (p.fallen && inRange(localKey(p.fallen.t))) cands.push({ s: 100, icon: "tomb", label: tr("Fallen"), p, tone: "dead", line: deathWhat(p.fallen),
+        chips: [tr("Level {0}", esc(p.fallen.lvl || "?")), fullDate(p.fallen.t)] });
+      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push({ s: 70 + dropRank(n) / 5 + n.t / 1e10, icon: "lotus", label: tr("Best drop"), p,
+        tone: n.q === 5 ? "legendary" : "epic", line: tr(n.world ? "looted {0} out in the world" : "looted {0}", itemHTML(n)),
+        tags: dropTags(n), chips: [n.zone && esc(n.zone), fullDate(n.t)] }));
       const by = {};
       p.deaths.forEach(d => { if (d.by && d.t && inRange(localKey(d.t))) by[d.by] = (by[d.by] || 0) + 1; });
       const [mob, n] = Object.entries(by).sort((a, b) => b[1] - a[1])[0] || [];
-      if (n >= 2) cands.push([60 + n, "skull", tr("Grudge match"), tr("{0} was slain by {1} {2} times", nameHTML(p), `<span class="mob">${esc(mob)}</span>`, num(n)), tr("Most Wanted")]);
+      if (n >= 2) cands.push({ s: 60 + n, icon: "skull", label: tr("Grudge match"), p, line: tr("was slain by {0} {1} times", `<span class="mob">${esc(mob)}</span>`, num(n)), chips: [tr("Most Wanted")] });
     });
     const top = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0))[0];
-    if (top && top.s.dmg) cands.push([10, "sword", tr("Big Pumper"), tr("{0} dealt {1} damage", nameHTML(top.p), compact(top.s.dmg)), top.s.maxHit ? tr("Hit for {0} with {1}", num(top.s.maxHit), esc(top.s.maxHitSpell || tr("something"))) : ""]);
-    const best = cands.sort((a, b) => b[0] - a[0])[0];
-    $("lead").innerHTML = best ? `<div class="frame lead ${best[5] || ""}">
-      <span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best[2]}</span>
-      <div class="ghead"><span class="ticon">${icon(best[1], 2)}</span><div><p class="lead-h">${best[3]}</p><span class="muted">${best[4]}</span></div></div></div>` : "";
+    const groupDmg = rows.reduce((a, r) => a + (r.s.dmg || 0), 0);
+    if (top && top.s.dmg) cands.push({ s: 10, icon: "sword", label: tr("Big Pumper"), p: top.p, line: tr("dealt {0} damage", compact(top.s.dmg)), chips: [
+      top.s.dmg < groupDmg && tr("{0} of the group's damage", pct(top.s.dmg / groupDmg)),
+      top.s.maxHit && tr("Hit for {0} with {1}", num(top.s.maxHit), esc(top.s.maxHitSpell || tr("something"))),
+      top.s.hits && tr("{0} hits, {1} crits", num(top.s.hits), pct((top.s.crits || 0) / top.s.hits))] });
+    const best = cands.sort((a, b) => b.s - a.s)[0];
+    if (!best) return void ($("lead").innerHTML = "");
+    const ch = best.p.chars[0];
+    $("lead").innerHTML = `<div class="frame lead ${best.tone || ""}">
+      <span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best.label}</span>
+      <div class="ghead"><span class="ticon">${icon(best.icon, 2)}</span><div>
+        <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(best.p.name)}</a>
+        <p class="lead-h">${best.line}</p></div></div>
+      <div class="chips">${best.tags || ""}${best.chips.filter(Boolean).map(chip).join("")}</div></div>`;
     whRefresh();
   }
 

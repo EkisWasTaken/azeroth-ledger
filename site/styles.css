@@ -1097,15 +1097,16 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .potw.has-render > * { position: relative; z-index: 1; }
 @media (max-width: 560px) { .potw.has-render::after { opacity: .35; } }
 .lead.epic { --tone: #a335ee; } .lead.legendary { --tone: #ff8000; }
-.lead { grid-template-rows: auto 1fr; }
-.lead .ghead { gap: 16px; align-self: center; }
+.lead .ghead { gap: 16px; }
 .lead .ticon { width: 64px; height: 64px; flex: none; border-radius: 12px; }
 .lead .ticon .wicon { width: 44px; height: 44px; }
-.lead-h { margin: 0 0 2px; font: 400 clamp(19px, 1.8vw, 23px)/1.25 var(--sf); color: var(--ink); overflow-wrap: anywhere; }
-.lead-h .dot { width: 8px; height: 8px; vertical-align: middle; }
+.lead .gname { font-size: clamp(22px, 2.2vw, 28px); text-shadow: 2px 2px 0 #000; }
+.lead-h { margin: 2px 0 0; font: 400 15px/1.35 var(--body); color: var(--ink); overflow-wrap: anywhere; }
 .lead-h a[data-wowhead] { text-decoration: none; }
 .lead .mob { color: var(--bad); }
-.lead .muted { font-size: 13px; }
+.lead .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lead .chip { cursor: default; color: var(--ink); padding: 4px 10px; }
+.lead .dtag { margin-left: 0; }
 
 /* Parchment: the combat-log colours are made for dark panels, so they get darker ink here. */
 .plately .cname { color: color-mix(in srgb, var(--cc) 35%, #2a1608); }
