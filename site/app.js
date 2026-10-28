@@ -216,7 +216,8 @@
     "Download <a href=\"FunStats.zip\">FunStats.zip</a> and put the <code>FunStats</code> folder in <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.": "Ladda ner <a href=\"FunStats.zip\">FunStats.zip</a> och lägg mappen <code>FunStats</code> i <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.",
     "Play, then log out so WoW saves your stats.": "Spela och logga sedan ut så att WoW sparar din statistik.",
     "Drop <code>WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\FunStats.lua</code> here:": "Släpp <code>WTF\\Account\\DITT_KONTO\\SavedVariables\\FunStats.lua</code> här:",
-    "Guild mates without the addon still show up: with their level and class from the guild roster, and their gear from the Blizzard armory.": "Guildmedlemmar utan addonen syns ändå: med level och class från guildens roster och gear från Blizzards armory.",
+    "Guild mates without the addon show as greyed names on their guild's roster, and get their own page once they install FunStats.": "Guildmedlemmar utan addonen syns som gråa namn på guildens roster och får en egen sida när de installerar FunStats.",
+    "Shows up once this character has FunStats.": "Syns när den här karaktären har FunStats.",
     "Gear appears once this character has the Ledger app, or after the next armory update.": "Gear syns när karaktären har Ledger-appen, eller efter nästa armory-uppdatering.",
     "Gear from the Blizzard armory. Fun stats need the FunStats addon.": "Gear från Blizzards armory. Den roliga statistiken kräver FunStats-addonen.", "The Race to {0}": "Racet till {0}", "No deaths yet.": "Inga dödsfall än.", "Leaders": "Ledare", "newest first": "nyast först", "Example data": "Exempeldata",
     "<strong>Example data.</strong> These characters are made up so you can see how the site works. Pick your realm in the Realm menu, or get the addon to add your own.": "<strong>Exempeldata.</strong> Karaktärerna är påhittade så att du kan se hur sidan fungerar. Välj din realm i Realm-menyn, eller hämta addonen och lägg till din egen.",
@@ -2697,6 +2698,9 @@
 
   function renderGuildSide(rows, people) {
     const list = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0) || (b.p.chars[0].level || 0) - (a.p.chars[0].level || 0));
+    const route = parseRoute();
+    const ghosts = (state.rosterOnly || []).filter(c => realmMatch(c) && c.guild === route.guild)
+      .sort((a, b) => (b.level || 0) - (a.level || 0) || String(a.name).localeCompare(String(b.name)));
     $("gRoster").innerHTML = list.map(({ p, s }) => {
       const ch = p.chars[0];
       const deaths = p.deaths.filter(d => d.t && inRange(localKey(d.t))).length || s.deaths || 0;
@@ -2706,7 +2710,10 @@
         <span class="n">${compact(s.dmg)}<small>${tr("damage")}</small></span>
         <span class="n${deaths ? " red" : ""}">${num(deaths)}<small>${tr("deaths")}</small></span>
       </div>`;
-    }).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
+    }).join("") + ghosts.map(ch => `<div class="grow ghost" title="${esc(tr("Shows up once this character has FunStats."))}">
+        <span class="who"><span>${classIcon(ch)}<span class="cname">${esc(ch.name)}</span></span>
+          <small>${[tr("Lvl {0}", esc(ch.level || "?")), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
+      </div>`).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
     $("gCount").textContent = tr(list.length === 1 ? "{0} member" : "{0} members", num(list.length));
     $("oLeads").innerHTML = leadsHTML(rows, LEAD.length, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
 
@@ -2749,7 +2756,11 @@
     if (state.status === "loading") { $("loaderText").textContent = tr("Opening the ledger…"); return; }
     requestAnimationFrame(fitText); // after this render has laid the page out
     const d = state.data;
-    const real = characters(d);
+    const parsed = characters(d);
+    // Characters without the addon (guild rosters, combat log) only show as greyed names on their guild's roster:
+    // no stats, no page, not searchable. They count once they upload their own stats.
+    const real = parsed.filter(c => c.self);
+    state.rosterOnly = parsed.filter(c => !c.self);
     // ?demo shows only the example data (for screenshots and trying the site out)
     const demoOnly = /[?&]demo\b/.test(location.search);
     const live = state.status === "ok" && real.length > 0 && !demoOnly;

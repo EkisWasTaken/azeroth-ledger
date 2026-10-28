@@ -180,8 +180,18 @@ ns.GameInfo = GameInfo
 -- While logging in or out the game briefly reports "not in a guild", so the guild is only
 -- cleared when asked to (canClear), well after login.
 local function UpdateGuild(canClear)
+  local old = C.guild
   local g = GetGuildInfo("player")
   if g then C.guild = g elseif canClear and not IsInGuild() then C.guild = nil end
+  if not old or old == C.guild then return end
+  -- Left a guild: forget its roster, unless another of my characters on this realm is still in it.
+  local realm = GetRealmName()
+  for _, c in pairs(FunStatsDB.chars) do
+    if c.guild == old and c.realm == realm then return end
+  end
+  for key, O in pairs(FunStatsDB.observed) do
+    if O.roster and O.guild == old and O.realm == realm and not next(O.days or {}) then FunStatsDB.observed[key] = nil end
+  end
 end
 
 local function UpdateProfile()

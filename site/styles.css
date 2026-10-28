@@ -810,6 +810,8 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .grow .n { font: 800 14px var(--nf); font-variant-numeric: tabular-nums; text-align: right; }
 .grow .n small { display: block; font: 400 11px var(--pf); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .grow .n.red { color: var(--bad); }
+.grow.ghost { opacity: .55; }
+.grow.ghost .cname { color: var(--muted); }
 .groster .lh { font: 400 13px var(--pf); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 6px; }
 .gleads { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 6px 18px; }
 /* Fixed column shares, so names start at the same spot on every row; the <guild> tag sits right-aligned just in front. */
