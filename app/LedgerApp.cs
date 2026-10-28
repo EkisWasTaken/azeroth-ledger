@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.5.0.0")]
+[assembly: AssemblyVersion("1.5.1.0")]
 
 namespace AzerothLedger
 {
@@ -657,6 +657,8 @@ namespace AzerothLedger
             autoItem.Checked = IsAutostart();
             menu.Items.Add(autoItem);
             menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(new ToolStripMenuItem("Version " + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)) { Enabled = false });
+            if (Config.SiteUrl != "") menu.Items.Add("Check for updates", null, (s, e) => ThreadPool.QueueUserWorkItem(_ => CheckForUpdate(true)));
             menu.Items.Add("Quit", null, (s, e) => { tray.Visible = false; ExitThread(); });
 
             tray = new NotifyIcon { Icon = MakeIcon(), Text = Config.AppName, ContextMenuStrip = menu, Visible = true };
@@ -712,9 +714,10 @@ namespace AzerothLedger
         // Every 6 hours (and at start), asks the website for sitepp-version.txt ("<version> <sha256>", written by
         // build.cmd). When it names a newer version, downloads the new app, checks it against the hash and starts it;
         // like a fresh download, it closes this copy and installs itself in its place. The addon comes with it.
-        void CheckForUpdate()
+        // From the tray menu (manual), it skips the 6-hour wait and says what it found.
+        void CheckForUpdate(bool manual = false)
         {
-            if (Config.SiteUrl == "" || (DateTime.UtcNow - lastUpdateCheck).TotalHours < 6) return;
+            if (Config.SiteUrl == "" || (!manual && (DateTime.UtcNow - lastUpdateCheck).TotalHours < 6)) return;
             lastUpdateCheck = DateTime.UtcNow;
             try
             {
@@ -723,19 +726,39 @@ namespace AzerothLedger
                 using (var wc = new WebClient()) parts = wc.DownloadString(site + "/app-version.txt?t=" + DateTime.UtcNow.Ticks).Trim().Split(' ');
                 Version latest;
                 if (parts.Length < 2 || !Version.TryParse(parts[0], out latest)) return;
-                if (latest <= Assembly.GetExecutingAssembly().GetName().Version) return;
+                if (latest <= Assembly.GetExecutingAssembly().GetName().Version)
+                {
+                    if (manual) Notify("You're up to date", "Azeroth Ledger " + Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + " is the newest version.");
+                    return;
+                }
+                if (manual) Notify("Updating Azeroth Ledger", "Downloading version " + latest.ToString(3) + ". The app restarts by itself.");
                 byte[] exe;
                 using (var wc = new WebClient()) exe = wc.DownloadData(site + "/AzerothLedger.exe?v=" + latest);
                 string hash;
                 using (var sha = SHA256.Create()) hash = BitConverter.ToString(sha.ComputeHash(exe)).Replace("-", "");
-                if (!string.Equals(hash, parts[1], StringComparison.OrdinalIgnoreCase)) { Log("Update to " + latest + " skipped: the download didn't match app-version.txt"); return; }
+                if (!string.Equals(hash, parts[1], StringComparison.OrdinalIgnoreCase))
+                {
+                    Log("Update to " + latest + " skipped: the download didn't match app-version.txt");
+                    if (manual) Notify("Update failed", "The download didn't match. Try again in a few minutes.");
+                    return;
+                }
                 string path = Path.Combine(DataDir, "update", "AzerothLedger.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllBytes(path, exe);
                 Log("Updating to version " + latest);
                 Process.Start(new ProcessStartInfo(path, "--updated") { UseShellExecute = false });
             }
-            catch (Exception e) { Log("Update check failed: " + e.Message); }
+            catch (Exception e)
+            {
+                Log("Update check failed: " + e.Message);
+                if (manual) Notify("Couldn't check for updates", "Check your internet connection and try again.");
+            }
+        }
+
+        void Notify(string title, string text)
+        {
+            try { tray.ContextMenuStrip.BeginInvoke((Action)(() => tray.ShowBalloonTip(6000, title, text, ToolTipIcon.Info))); }
+            catch { /* tray not ready */ }
         }
 
         // Copies the addon bundled in this app into a flavour's AddOns folder when it's missing or different.
