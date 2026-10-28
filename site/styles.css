@@ -411,10 +411,16 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 /* ---------- Stat tiles ---------- */
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
 @media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-/* the deed tiles grow to fill each row, so a short last row has no empty holes */
-#tiles { display: flex; flex-wrap: wrap; }
-#tiles > .tile { flex: 1 1 150px; }
-@media (max-width: 560px) { #tiles > .tile { flex-basis: calc(50% - 5px); } }
+/* deed tiles: fitText picks the column count so every row is full; any height left beside the guild card is shared out,
+   and wider tiles get a bigger number */
+#tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
+#app[data-route="main"] .deeds-main { grid-template-rows: auto auto 1fr; }
+#app[data-route="main"] .deeds-row, #app[data-route="main"] #tiles { height: 100%; }
+#app[data-route="main"] #tiles { grid-auto-rows: minmax(min-content, 1fr); }
+#app[data-route="main"] #tiles > .tile { max-height: 120px; }
+#tiles > .tile { container-type: inline-size; align-content: center; }
+@container (min-width: 230px) { #tiles .tile .val { font-size: 28px; } }
+@container (min-width: 300px) { #tiles .tile .val { font-size: 32px; } }
 /* every tile has the same three parts (label, value, note); a long label wraps to a second line and the value
    and note sit at the bottom, so the numbers still line up across the row */
 .tile { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 10px 11px; }
@@ -1091,7 +1097,8 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .potw.has-render > * { position: relative; z-index: 1; }
 @media (max-width: 560px) { .potw.has-render::after { opacity: .35; } }
 .lead.epic { --tone: #a335ee; } .lead.legendary { --tone: #ff8000; }
-.lead .ghead { gap: 16px; }
+.lead { grid-template-rows: auto 1fr; }
+.lead .ghead { gap: 16px; align-self: center; }
 .lead .ticon { width: 64px; height: 64px; flex: none; border-radius: 12px; }
 .lead .ticon .wicon { width: 44px; height: 44px; }
 .lead-h { margin: 0 0 2px; font: 400 clamp(19px, 1.8vw, 23px)/1.25 var(--sf); color: var(--ink); overflow-wrap: anywhere; }

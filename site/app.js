@@ -2712,6 +2712,15 @@
   // whatever still doesn't fit keeps its ellipsis and shows the full text on hover.
   const FIT = ".tile .foot, .ach .t, .ach .d, .rec .t, .rec .w .muted, .rec .when, .rec .beat, .glead .lbl, .sigc .cmp, .sec-head p";
   function fitText() {
+    // Deed tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
+    // still spans the full width, on a grid of lcm(cols, last) columns.
+    const tl = $("tiles");
+    if (tl && tl.offsetWidth && tl.children.length) {
+      const n = tl.children.length, rows = Math.ceil(n / Math.max(1, Math.floor((tl.clientWidth + 10) / 160)));
+      const cols = Math.ceil(n / rows), last = n - cols * (rows - 1), gcd = (a, b) => b ? gcd(b, a % b) : a, lcm = cols * last / gcd(cols, last);
+      tl.style.setProperty("--cols", lcm);
+      [...tl.children].forEach((c, i) => { c.style.gridColumn = `span ${i >= cols * (rows - 1) ? lcm / last : lcm / cols}`; });
+    }
     document.querySelectorAll(FIT).forEach(el => {
       if (!el.offsetWidth) return;
       el.style.fontSize = "";
