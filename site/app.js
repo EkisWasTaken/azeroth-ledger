@@ -234,7 +234,10 @@
     "You are here": "Du är här", "Realm ledger": "Realmens liggare", "Go back": "Tillbaka", "Realm pages": "Realmens sidor", "Guild pages": "Guildens sidor",
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
     "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
-    "Atlas": "Atlas", "Loot & Gold": "Loot & guld", "Back to {0}": "Tillbaka till {0}",
+    "Atlas": "Atlas", "Loot & Gold": "Loot & guld",
+    "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "Open character page": "Öppna karaktärssidan", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer",
+    "Gold before max level": "Guld innan maxnivå", "looted and spent while levelling": "lootat och spenderat under levlingen",
+    "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
     "Click a zone to open its map. Right-click to zoom back out.": "Klicka på en zon för att öppna dess karta. Högerklicka för att zooma ut igen.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
     "Achievements": "Achievements", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
@@ -1465,6 +1468,7 @@
     const raw = [1, t.dmg, t.heal, t.kb, t.quests, t.goldIn, t.played, t.dist, t.jumps, t.dungeons];
     $("tiles").innerHTML = tiles.filter((_, i) => raw[i]).map(tileHTML).join("");
     renderLead(rows, people);
+    renderPotw(people);
   }
 
   // The one thing worth telling first: a fall, a legendary drop, a grudge, a bad week, or the top pumper.
@@ -1485,6 +1489,56 @@
     const best = cands.sort((a, b) => b[0] - a[0])[0];
     $("lead").innerHTML = best ? `<div class="frame lead ${best[5] || ""}"><span class="ticon">${icon(best[1], 3)}</span>
       <div><span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best[2]}</span><p class="lead-h">${best[3]}</p><span class="muted">${best[4]}</span></div></div>` : "";
+  }
+
+  // Character of the week: the best all-rounder of the last finished week. Each stat scores its share of the
+  // week's top value, so leading many things beats topping one.
+  const POTW = [["dmg", "Damage dealt", compact], ["heal", "Healing done", compact], ["kb", "Killing blows", num], ["quests", "Quests completed", num],
+    ["xp", "XP", compact], ["levels", "Levels gained", num], ["goldIn", "Gold looted", goldHTML], ["dungeons", "Dungeon runs", num], ["played", "Time played", dur]];
+  // The week's winner among these characters, or nothing when fewer than two played or nobody did anything.
+  function potwOf(people, wk) {
+    const rows = people.map(p => {
+      const s = {};
+      for (const [k, d] of Object.entries(p.days)) if (k >= wk && k <= addDays(wk, 6)) for (const [f, v] of Object.entries(d)) if (typeof v === "number" && f !== "gold" && f !== "maxHit") s[f] = (s[f] || 0) + v;
+      return { p, s };
+    });
+    const top = Object.fromEntries(POTW.map(([f]) => [f, Math.max(0, ...rows.map(r => r.s[f] || 0))]));
+    const share = (r, f) => top[f] ? (r.s[f] || 0) / top[f] : 0;
+    rows.forEach(r => r.score = POTW.reduce((a, [f]) => a + share(r, f), 0));
+    const best = rows.sort((a, b) => b.score - a.score)[0];
+    return best && best.score && rows.length > 1 ? { best, top, share } : null;
+  }
+  // Every finished week each character won, keyed by character: { key: [week, …] }.
+  function potwWins(people) {
+    const cur = weekOf(todayKey()), wins = {};
+    weeksAvailable(people).filter(w => w < cur).forEach(w => { const r = potwOf(people, w); if (r) (wins[r.best.p.id] ||= []).push(w); });
+    return wins;
+  }
+  function renderPotw(people) {
+    if (!$("potw")) return;
+    const cur = weekOf(todayKey());
+    const wk = state.view === "week" && state.week < cur ? state.week : addDays(cur, -7);
+    const res = potwOf(people, wk);
+    if (!res) return void ($("potw").innerHTML = "");
+    const { best, top, share } = res;
+    const why = POTW.filter(([f]) => best.s[f]).sort((a, b) => share(best, b[0]) - share(best, a[0])).slice(0, 3)
+      .map(([f, l, fmt]) => `<span class="chip">${best.s[f] === top[f] ? `<span class="rank1">#1</span>` : ""}${tr(l)} <b>${fmt(best.s[f])}</b></span>`);
+    const ch = best.p.chars[0], bs = best.s;
+    const render = blizzImg(ch.render);
+    const stat = (v, label, raw) => raw ? `<div><b>${v}</b><span>${tr(label)}</span></div>` : "";
+    const stats = [stat(compact(bs.dmg), "Damage", bs.dmg), stat(compact(bs.heal), "Healing", bs.heal), stat(num(bs.kb), "KBs", bs.kb),
+      stat(num(bs.quests), "Quests", bs.quests), stat(goldHTML(bs.goldIn), "Gold", bs.goldIn), stat(dur(bs.played), "Played", bs.played),
+      stat(num(bs.levels), "Levels gained", bs.levels), stat(num(bs.dungeons), "Dungeon runs", bs.dungeons), stat(num(bs.deaths || 0), "Deaths", 1)].filter(Boolean).slice(0, 6);
+    $("potw").innerHTML = `<div class="frame gcard potw${render ? " has-render" : ""}" style="--c:${classOf(ch)[1]}${render ? `;--render:url('${render}')` : ""}">
+      <span class="eyebrow">${icon("sulfuras", 1)} ${tr("Character of the week")} · ${shortDate(wk)} – ${shortDate(addDays(wk, 6))}</span>
+      <div class="ghead">${portraitHTML(ch)}<div>
+        <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(best.p.name)}</a>
+        <span class="muted">${tr("Lvl {0}", esc(ch.level || "?"))} ${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}${ch.guild ? ` · ${guildLink(ch)}` : ""}</span></div></div>
+      <div class="chips">${why.join("")}</div>
+      <div class="gstats">${stats.join("")}</div>
+      <a class="btn" href="${charHref(ch.key)}">${tr("Open character page")}</a>
+    </div>`;
+    drawFaces($("potw"));
   }
 
   const ACH = [
@@ -2035,6 +2089,25 @@
         plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${goldText(Math.abs(c.raw) * 10000)}` } } } },
     } : null);
 
+    // All time, whatever week is picked: gold looted and spent on the days before each character hit the level cap.
+    // shortcut: the day of the ding counts as after it (days have no hours), fine unless someone levels to cap and farms on one day.
+    const pre = people.map(p => {
+      const capT = (p.chars[0].levels || {})[state.cap], end = capT ? localKey(capT) : "9999";
+      let i = 0, o = 0;
+      for (const [k, d] of Object.entries(p.days)) if (k < end) { i += d.goldIn || 0; o += d.goldOut || 0; }
+      return { p, i, o, capT };
+    }).filter(r => r.i || r.o).sort((a, b) => b.i - a.i).slice(0, 10);
+    drawChart("cGoldPre", pre.length ? {
+      type: "bar",
+      data: { labels: pre.map(r => nameTxt(r.p)), datasets: [
+        { label: tr("Looted & earned"), data: pre.map(r => r.i / 10000), backgroundColor: "#ffd100", borderRadius: 3 },
+        { label: tr("Spent"), data: pre.map(r => -r.o / 10000), backgroundColor: "#c87533", borderRadius: 3 },
+      ] },
+      options: { interaction: { mode: "index", intersect: false }, scales: { x: gridX, y: { ...gridY, ticks: { callback: v => v + "g" } } },
+        plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${goldText(Math.abs(c.raw) * 10000)}`,
+          footer: items => { const r = pre[items[0].dataIndex]; return r.capT ? tr("Reached {0} on {1}", state.cap, fullDate(r.capT)) : tr("Still levelling"); } } } } },
+    } : null);
+
     const feed = [];
     people.forEach(p => p.notable.forEach(n => { if (n.t && inRange(localKey(n.t)) && n.q >= 3) feed.push({ p, n }); }));
     feed.sort((a, b) => b.n.t - a.n.t);
@@ -2446,6 +2519,7 @@
         <div><b>${top ? esc(top.level || "?") : "–"}</b><span>${tr("highest level")}</span></div>
         <div><b>${dur(s.played)}</b><span>${tr("played")}</span></div>
         <div><b>${compact(s.dmg)}</b><span>${tr("damage")}</span></div>
+        <div title="${esc((state.potwWins[p.id] || []).map(w => `${shortDate(w)} – ${shortDate(addDays(w, 6))}`).join(", "))}"><b>${num((state.potwWins[p.id] || []).length)}</b><span>${tr("times character of the week")}</span></div>
         ${state.hc ? `<div${p.fallen ? ` class="dead"` : ""}><b>${tr(p.fallen ? "Fallen" : "Alive")}</b><span>${tr("Hardcore")}</span></div>` : `<div><b>${num(p.deaths.length || s.deaths)}</b><span>${tr("deaths")}</span></div>`}
       </div>
       ${otherChars.length ? `<div style="display:grid;gap:6px"><span class="eyebrow">${tr("Other characters by this player")}</span><div class="chips">${otherChars.map(c => `<a class="chip" href="${charHref(c.key)}">${classIcon(c)}${esc(c.name)} <span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} · ${esc(c.realm || "")}</span></a>`).join("")}</div></div>` : ""}`;
@@ -2699,6 +2773,8 @@
     $("app").dataset.route = route.kind === "char" ? "profile" : route.kind;
     renderScopeHead(route, people);
     if (route.kind === "char") {
+      // wins are counted across the whole realm, the same field the overview's card picks from
+      state.potwWins = potwWins(buildPeople(realmChars, Object.fromEntries(realmChars.map(c => [c.key, { name: c.name, chars: [c.key] }]))).people);
       renderProfile(people, route.key);
       return;
     }
