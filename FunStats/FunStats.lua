@@ -828,7 +828,10 @@ local function OnLoot(msg)
   Add("q" .. q)
   if q >= 3 then
     local spot = Spot()
+    local bindType = select(14, GetItemInfo(link)) -- 2 = binds when equipped; nil while the item isn't cached yet
+    local inInstance = IsInInstance()
     PushCapped(C.notable, { t = time(), q = q, item = link:match("%[(.-)%]"), id = tonumber(link:match("item:(%d+)")),
+      boe = bindType == 2 or nil, world = not inInstance or nil, inst = inInstance and (GetInstanceInfo()) or nil,
       zone = spot.zone, cont = spot.cont, cx = spot.cx, cy = spot.cy }, MAX_NOTABLE)
   end
 end

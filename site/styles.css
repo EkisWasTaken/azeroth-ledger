@@ -283,14 +283,19 @@ header.hero { display: grid; gap: 16px; }
 @media (hover: none) { .car-arrow { display: none; } }
 /* the overview's top row: one guild at a time beside the Ledger of Deeds */
 .toprow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-#s-guilds { grid-template-rows: auto 1fr; }
-/* the guild card and the Ledger of Deeds share one height, so their tops and bottoms line up */
-#s-guilds .car, #s-guilds .guilds { height: 100%; min-height: 0; }
-#s-guilds .guilds { padding-block: 0; }
-#app[data-route="main"] .deeds-main, #app[data-route="main"] .deeds-row { grid-template-rows: auto 1fr; }
+/* each column keeps its own height: the guild card and Leaders on the left, the stories and tiles on the right */
+#s-guilds { align-content: start; gap: 12px; }
+#s-guilds .guilds { padding-block: 0; align-items: start; }
 #app[data-route="main"] .deeds-main { gap: 12px; }
-.toprow .gcard { display: flex; flex-direction: column; }
-.toprow .gcard .btn { margin-top: auto; align-self: flex-start; }
+/* Leaders in the narrow guild column: one line each, the stat's icon says which (its name is the hover title and stays for screen readers) */
+@media (min-width: 1000px) {
+  #s-guilds .oleads .glead { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; padding: 3px 0; }
+  #s-guilds .oleads .glead .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+/* the tiles take up any height left beside the guild column, so both columns end on the same line */
+#app[data-route="main"] .deeds-main { grid-template-rows: auto auto 1fr; }
+#app[data-route="main"] .deeds-row, #app[data-route="main"] .tiles { height: 100%; }
+#app[data-route="main"] .tiles { grid-auto-rows: 1fr; }
 @media (min-width: 1000px) {
   #app[data-route="main"] .toprow { grid-template-columns: 280px minmax(0, 1fr); }
   #s-guilds .sec-head p:first-of-type { display: none; }
@@ -411,15 +416,18 @@ header.hero { display: block; }
 code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--track); padding: 1px 6px; box-shadow: none; border-radius: 5px; overflow-wrap: anywhere; }
 
 /* ---------- Stat tiles ---------- */
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* every tile has the same three parts (label, value, note); a long label wraps to a second line and the value
    and note sit at the bottom, so the numbers still line up across the row */
-.tile { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; padding: 16px; }
+.tile { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; padding: 11px 13px; }
+.tile .ticon { width: 38px; height: 38px; border-radius: 10px; }
+.tile .ticon .wicon { width: 28px; height: 28px; }
 .ticon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--tone, var(--accent)) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--accent)) 24%, transparent); }
 .tile:nth-child(4n+2) { --tone: var(--accent2); } .tile:nth-child(4n+3) { --tone: var(--good); } .tile:nth-child(4n+4) { --tone: #e8b440; }
 .tbody { display: grid; min-width: 0; }
 .tile .lbl { font: 700 11px/1.3 var(--lf); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); overflow-wrap: break-word; hyphens: auto; }
-.tile .val { font: 400 30px/1.15 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.01em; }
+.tile .val { font: 400 23px/1.15 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.01em; }
 .tile .val.red { color: var(--bad); }
 .tile.dead { --tone: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent), var(--shadow); }
 .tile.dead .val { color: var(--bad); }
@@ -856,7 +864,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .portrait { position: relative; }
 .portrait::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--c); pointer-events: none; }
 .portrait .face { width: 96px; height: 96px; display: block; image-rendering: pixelated; }
-.portrait .lvl { position: absolute; right: -10px; bottom: -10px; z-index: 1; font: 800 16px/1 var(--nf); color: var(--ink); background: var(--track); padding: 4px 7px; box-shadow: inset 0 0 0 2px var(--c); text-shadow: 2px 2px 0 #000; }
+.portrait .lvl { display: block; min-height: 0; position: absolute; right: -10px; bottom: -10px; z-index: 1; font: 800 16px/1 var(--nf); color: var(--ink); background: var(--track); padding: 4px 7px; box-shadow: inset 0 0 0 2px var(--c); text-shadow: 2px 2px 0 #000; }
 .mid.solo { display: flex; padding: 4px 0 4px 8px; }
 .ilvl b { font: 400 34px var(--sf); color: var(--accent); display: block; line-height: 1; }
 .ilvl span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
@@ -956,14 +964,27 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .qlegend span { font-size: 12px; color: var(--muted); }
 .qlegend strong { font-size: 15px; }
 .qlegend small { grid-column: 2 / -1; font-size: 11px; color: var(--muted); }
-.bestdrop { margin: 0 20px 20px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px;
-  border-radius: 12px; background: color-mix(in srgb, var(--ink) 5%, transparent); box-shadow: inset 0 0 0 1px var(--line); }
-.bd-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--track); }
-.bestdrop div { display: grid; min-width: 0; }
-.bestdrop span { font: 700 10px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.bestdrop strong { font: 400 19px/1.2 var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bestdrop p { font-size: 12px; color: var(--muted); }
-.bestdrop > b { font-size: 12px; }
+.drops { display: grid; gap: 8px; margin: 0 20px 20px; }
+.drop { --qc: #0070dd; display: grid; gap: 3px; text-align: left; justify-items: start; padding: 11px 14px; border-radius: 10px;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--qc) 20%, var(--panel)), var(--panel) 75%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qc) 50%, var(--line)), inset 3px 0 0 var(--qc); }
+.drop.qb4 { --qc: #a335ee; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qc) 70%, var(--line)), inset 3px 0 0 var(--qc), 0 0 18px color-mix(in srgb, var(--qc) 35%, transparent); }
+.drop.qb5 { --qc: #ff8000; box-shadow: inset 0 0 0 1px var(--qc), inset 3px 0 0 var(--qc), 0 0 22px color-mix(in srgb, var(--qc) 45%, transparent); }
+.drop .eyebrow { display: flex; justify-content: flex-start; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--qc); }
+.drop strong { font: 400 19px/1.25 var(--sf); overflow-wrap: anywhere; }
+.drop strong a { text-decoration: none; }
+.drop p { font-size: 12px; color: var(--muted); }
+.qlegend .hot strong { color: #c06cff; text-shadow: 0 0 10px rgba(163, 53, 238, .6); }
+#s-lootq.has-epic { box-shadow: inset 0 0 0 1px color-mix(in srgb, #a335ee 45%, var(--line)), 0 0 26px rgba(163, 53, 238, .18), var(--shadow); }
+/* BoE and world-drop badges next to an item */
+.dtag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font: 700 10px/1.5 var(--body); letter-spacing: .06em; text-transform: uppercase; vertical-align: middle; }
+.dtag.world { color: #1b1206; background: #f2d57e; }
+.dtag.boe { color: #f2d57e; box-shadow: inset 0 0 0 1px #f2d57e; }
+.dtag.inst { color: var(--ink); background: color-mix(in srgb, var(--ink) 14%, transparent); text-transform: none; letter-spacing: 0; }
+.drop .eyebrow .dtag { margin-left: 0; }
+.loot .epic-row { padding: 4px 8px; margin: 0 -8px; border-radius: 6px; background: linear-gradient(90deg, rgba(163, 53, 238, .18), transparent 80%); box-shadow: inset 2px 0 0 #a335ee; }
+@media (prefers-reduced-motion: no-preference) { html:not(.calm) .drop.qb4, html:not(.calm) .drop.qb5 { animation: epicglow 2.4s ease-in-out infinite alternate; } }
+@keyframes epicglow { to { filter: brightness(1.15); } }
 footer { padding: 6px 0 0; }
 
 /* loading: only the loader shows until the ledger arrives */
@@ -982,7 +1003,7 @@ body.loading .loader { display: flex; flex-direction: column; align-items: cente
 /* ---------- WoW assets: real icons, crests, factions, renders, journal art ---------- */
 /* Game icons get the in-game look: a dark rim and slightly rounded corners. */
 .wicon { display: inline-block; flex: none; vertical-align: middle; border-radius: 4px; box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(255,255,255,.12); background: #000; }
-.ticon .wicon, .mw-icon .wicon, .bd-icon .wicon { width: 38px; height: 38px; }
+.ticon .wicon, .mw-icon .wicon { width: 38px; height: 38px; }
 .achic .wicon { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
 .achbadge .wicon { width: 16px; height: 16px; border-radius: 3px; }
 .glead .wicon { width: 18px; height: 18px; border-radius: 3px; }
@@ -1002,16 +1023,10 @@ body.loading .loader { display: flex; flex-direction: column; align-items: cente
 #app .gcard.alliance, #app .gcard.horde, #app .ghero.alliance, #app .ghero.horde {
   background-image: linear-gradient(160deg, color-mix(in srgb, var(--fac) 22%, transparent), transparent 55%);
 }
-.facband { justify-self: start; align-self: flex-start; font: 700 11px var(--pf); letter-spacing: .12em; text-transform: uppercase;
+.facband .wicon { width: 16px; height: 16px; border-radius: 2px; }
+.facband { display: inline-flex; align-items: center; gap: 6px; justify-self: start; align-self: flex-start; font: 700 11px var(--pf); letter-spacing: .12em; text-transform: uppercase;
   color: var(--fac-ink); background: color-mix(in srgb, var(--fac) 55%, #000); padding: 3px 10px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
 .ghero.alliance .eyebrow, .ghero.horde .eyebrow { color: var(--fac-ink); }
-#s-guilds .sec-head { flex-wrap: wrap; }
-.facpick { display: flex; gap: 6px; flex-wrap: wrap; flex-basis: 100%; order: 3; }
-.facbtn { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--rs); border: 0; cursor: pointer;
-  background: var(--panel2); color: var(--muted); font: 600 13px var(--pf); box-shadow: inset 0 0 0 1px var(--line); }
-.facbtn .wicon { width: 16px; height: 16px; }
-.facbtn small { font-weight: 500; opacity: .8; }
-.facbtn[aria-pressed="true"] { color: var(--ink); background: color-mix(in srgb, var(--fac, var(--accent)) 30%, var(--panel2)); box-shadow: inset 0 0 0 1px var(--fac, var(--accent)); }
 
 /* Character page: Blizzard's full-body render stands behind the name, fading into the panel. */
 .phero.has-render::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 48%; pointer-events: none; border-radius: inherit;
@@ -1056,31 +1071,44 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 @media (max-width: 640px) { .sec-head h2 { white-space: normal; font-size: 26px; } }
 
 /* Overview: one lead story above the tiles, so the page opens with something to tell. */
-#lead:empty, #potw:empty { display: none; }
-#lead, #potw { margin-bottom: 12px; }
-.lead { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 20px 22px;
+/* The story of the week and the character of the week share one row; either fills it alone, and they stack when narrow. */
+.headline { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.headline:has(#lead:empty):has(#potw:empty), #lead:empty, #potw:empty { display: none; }
+.headline > div > .frame { height: 100%; }
+.lead { gap: 10px; padding: 14px 18px; align-content: start;
   background: linear-gradient(110deg, color-mix(in srgb, var(--tone, var(--accent)) 16%, var(--panel)), var(--panel) 65%);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--accent)) 35%, var(--line)), inset 4px 0 0 var(--tone, var(--accent)), var(--shadow); }
 .lead.dead { --tone: var(--bad); }
 /* Player of the week: a guild-style gold frame with the winner's portrait, and Blizzard's render fading in on the right. */
-.potw { position: relative; gap: 12px; padding: 18px 20px; background: linear-gradient(110deg, color-mix(in srgb, var(--c) 22%, var(--panel)), var(--panel) 60%); }
+.potw { position: relative; gap: 10px; padding: 14px 18px; align-content: start; background: linear-gradient(110deg, color-mix(in srgb, var(--c) 22%, var(--panel)), var(--panel) 60%); }
 .potw > .eyebrow { display: flex; align-items: center; gap: 6px; color: #f2d57e; }
-.potw .gname { font-size: clamp(30px, 4vw, 44px); text-shadow: 2px 2px 0 #000; }
-.potw .ghead { gap: 18px; }
+.potw .gname { font-size: clamp(22px, 2.2vw, 28px); text-shadow: 2px 2px 0 #000; }
+.potw .ghead { gap: 16px; }
+.potw .emblem { width: 64px; height: 64px; border-radius: 12px; font-size: 16px; }
+.potw .portrait .face { width: 64px; height: 64px; }
+.potw .portrait .lvl { font-size: 12px; line-height: 1; padding: 3px 5px; right: -8px; bottom: -8px; }
 .potw .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.potw .chip { cursor: default; color: var(--ink); }
-.potw .gstats { max-width: 520px; }
+.potw .chip { cursor: default; color: var(--ink); padding: 4px 10px; }
 .potw.has-render::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 42%; pointer-events: none;
   background: var(--render) center 25% / auto 170% no-repeat; -webkit-mask: linear-gradient(90deg, transparent, #000 50%); mask: linear-gradient(90deg, transparent, #000 50%); }
 .potw.has-render > * { position: relative; z-index: 1; }
-@media (max-width: 560px) { .potw .portrait .face { width: 64px; height: 64px; } .potw.has-render::after { opacity: .35; } }
-.lead .ticon { width: 64px; height: 64px; border-radius: 14px; }
-.lead-h { margin: 4px 0 2px; font: 400 clamp(20px, 2.4vw, 28px)/1.2 var(--sf); color: var(--ink); overflow-wrap: anywhere; }
+@media (max-width: 560px) { .potw.has-render::after { opacity: .35; } }
+.lead.epic { --tone: #a335ee; } .lead.legendary { --tone: #ff8000; }
+.lead .ghead { gap: 16px; }
+.lead .ticon { width: 64px; height: 64px; flex: none; border-radius: 12px; }
+.lead .ticon .wicon { width: 44px; height: 44px; }
+.lead-h { margin: 0 0 2px; font: 400 clamp(19px, 1.8vw, 23px)/1.25 var(--sf); color: var(--ink); overflow-wrap: anywhere; }
+.lead-h .dot { width: 8px; height: 8px; vertical-align: middle; }
+.lead-h a[data-wowhead] { text-decoration: none; }
 .lead .mob { color: var(--bad); }
-@media (max-width: 560px) { .lead { padding: 16px; gap: 12px; } .lead .ticon { width: 48px; height: 48px; } }
+.lead .muted { font-size: 13px; }
 
 /* Parchment: the combat-log colours are made for dark panels, so they get darker ink here. */
-.plately .cname { color: color-mix(in srgb, var(--cc) 45%, #2a1608); }
+.plately .cname { color: color-mix(in srgb, var(--cc) 35%, #2a1608); }
+/* drop tags drawn for dark panels: darker ink on the parchment */
+.plately .dtag.world { color: #f6e7c1; background: #6b4e2a; }
+.plately .dtag.boe { color: #7a4a00; box-shadow: inset 0 0 0 1px #7a4a00; }
+.plately .dtag.inst { color: #3a2a12; background: rgba(58, 42, 18, .14); }
 .plately .clog .ts, .plately .clog .lvl, .plately .clog .alt { color: #6b4e2a; }
 .plately .clog .mob, .plately .clog .dmg { color: #9b1c12; }
 .plately .clog .sp { color: #5a3d8a; }

@@ -157,7 +157,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "{0} was slain by {1} {2} times": "{0} dödades av {1} {2} gånger", "{0} dealt {1} damage": "{0} gjorde {1} damage",
+    "Grudge match": "Gammalt groll", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "{0} looted {1} out in the world": "{0} lootade {1} ute i världen", "{0} was slain by {1} {2} times": "{0} dödades av {1} {2} gånger", "{0} dealt {1} damage": "{0} gjorde {1} damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -235,7 +235,7 @@
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
     "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
     "Atlas": "Atlas", "Loot & Gold": "Loot & guld",
-    "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "Open character page": "Öppna karaktärssidan", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer",
+    "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer",
     "Gold before max level": "Guld innan maxnivå", "looted and spent while levelling": "lootat och spenderat under levlingen",
     "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
     "Click a zone to open its map. Right-click to zoom back out.": "Klicka på en zon för att öppna dess karta. Högerklicka för att zooma ut igen.",
@@ -698,7 +698,7 @@
         gear: demoGear(cls, level, ri),
         talents: DEMO_TALENTS[cls].map(([n, pts]) => ({ n, p: Math.round(pts * Math.max(0, level - 9) / 51) })),
         professions: DEMO_PROFS[pi].map(([n, r]) => ({ n, r: Math.min(r, level * 5), m: 300 })),
-        notable: [...Array(ri(3, 7))].map(() => { const zone = pickOne(zones); return { t: Date.now() / 1000 - 86400 * ri(0, SPAN), q: rnd() < 0.15 ? 4 : 3, item: pickOne(loot), zone, ...fallbackSpot(zone, rnd) }; }),
+        notable: [...Array(ri(3, 7))].map(() => { const zone = pickOne(zones); const q = rnd() < 0.15 ? 4 : 3; return { t: Date.now() / 1000 - 86400 * ri(0, SPAN), q, item: pickOne(loot), zone, ...(q === 4 ? { boe: true, world: true } : { inst: "The Deadmines" }), ...fallbackSpot(zone, rnd) }; }),
       };
       days[id + "_x"] = { char: id, days: dmap };
     });
@@ -1477,8 +1477,9 @@
     const cands = [];
     people.forEach(p => {
       if (p.fallen && inRange(localKey(p.fallen.t))) cands.push([100, "tomb", tr("Fallen"), `${nameHTML(p)} ${deathWhat(p.fallen)}`, tr("Level {0}", esc(p.fallen.lvl || "?")) + " · " + fullDate(p.fallen.t), "dead"]);
-      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push([70 + n.q * 2 + n.t / 1e10, "lotus", tr("Best drop"),
-        `${nameHTML(p)} ${tr("looted {0}", `<span class="q${n.q}">[${esc(n.item)}]</span>`)}`, fullDate(n.t)]));
+      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push([70 + dropRank(n) / 5 + n.t / 1e10, "lotus", tr("Best drop"),
+        n.world ? tr("{0} looted {1} out in the world", nameHTML(p), itemHTML(n)) : `${nameHTML(p)} ${tr("looted {0}", itemHTML(n))}`,
+        `${dropTags(n)} ${fullDate(n.t)}${n.zone ? " · " + esc(n.zone) : ""}`, n.q === 5 ? "legendary" : "epic"]));
       const by = {};
       p.deaths.forEach(d => { if (d.by && d.t && inRange(localKey(d.t))) by[d.by] = (by[d.by] || 0) + 1; });
       const [mob, n] = Object.entries(by).sort((a, b) => b[1] - a[1])[0] || [];
@@ -1487,8 +1488,10 @@
     const top = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0))[0];
     if (top && top.s.dmg) cands.push([10, "sword", tr("Big Pumper"), tr("{0} dealt {1} damage", nameHTML(top.p), compact(top.s.dmg)), top.s.maxHit ? tr("Hit for {0} with {1}", num(top.s.maxHit), esc(top.s.maxHitSpell || tr("something"))) : ""]);
     const best = cands.sort((a, b) => b[0] - a[0])[0];
-    $("lead").innerHTML = best ? `<div class="frame lead ${best[5] || ""}"><span class="ticon">${icon(best[1], 3)}</span>
-      <div><span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best[2]}</span><p class="lead-h">${best[3]}</p><span class="muted">${best[4]}</span></div></div>` : "";
+    $("lead").innerHTML = best ? `<div class="frame lead ${best[5] || ""}">
+      <span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best[2]}</span>
+      <div class="ghead"><span class="ticon">${icon(best[1], 2)}</span><div><p class="lead-h">${best[3]}</p><span class="muted">${best[4]}</span></div></div></div>` : "";
+    whRefresh();
   }
 
   // Character of the week: the best all-rounder of the last finished week. Each stat scores its share of the
@@ -1523,20 +1526,14 @@
     const { best, top, share } = res;
     const why = POTW.filter(([f]) => best.s[f]).sort((a, b) => share(best, b[0]) - share(best, a[0])).slice(0, 3)
       .map(([f, l, fmt]) => `<span class="chip">${best.s[f] === top[f] ? `<span class="rank1">#1</span>` : ""}${tr(l)} <b>${fmt(best.s[f])}</b></span>`);
-    const ch = best.p.chars[0], bs = best.s;
+    const ch = best.p.chars[0];
     const render = blizzImg(ch.render);
-    const stat = (v, label, raw) => raw ? `<div><b>${v}</b><span>${tr(label)}</span></div>` : "";
-    const stats = [stat(compact(bs.dmg), "Damage", bs.dmg), stat(compact(bs.heal), "Healing", bs.heal), stat(num(bs.kb), "KBs", bs.kb),
-      stat(num(bs.quests), "Quests", bs.quests), stat(goldHTML(bs.goldIn), "Gold", bs.goldIn), stat(dur(bs.played), "Played", bs.played),
-      stat(num(bs.levels), "Levels gained", bs.levels), stat(num(bs.dungeons), "Dungeon runs", bs.dungeons), stat(num(bs.deaths || 0), "Deaths", 1)].filter(Boolean).slice(0, 6);
     $("potw").innerHTML = `<div class="frame gcard potw${render ? " has-render" : ""}" style="--c:${classOf(ch)[1]}${render ? `;--render:url('${render}')` : ""}">
       <span class="eyebrow">${icon("sulfuras", 1)} ${tr("Character of the week")} · ${shortDate(wk)} – ${shortDate(addDays(wk, 6))}</span>
       <div class="ghead">${portraitHTML(ch)}<div>
         <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(best.p.name)}</a>
         <span class="muted">${tr("Lvl {0}", esc(ch.level || "?"))} ${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}${ch.guild ? ` · ${guildLink(ch)}` : ""}</span></div></div>
       <div class="chips">${why.join("")}</div>
-      <div class="gstats">${stats.join("")}</div>
-      <a class="btn" href="${charHref(ch.key)}">${tr("Open character page")}</a>
     </div>`;
     drawFaces($("potw"));
   }
@@ -1709,13 +1706,20 @@
     $("lootTotal").textContent = total ? tr(total === 1 ? "{0} drop" : "{0} drops", num(total)) : "";
     const best = [];
     people.forEach(p => p.notable.forEach(n => { if (n.t && n.q >= 3 && inRange(localKey(n.t))) best.push({ p, n }); }));
-    best.sort((a, b) => b.n.q - a.n.q || b.n.t - a.n.t);
-    const b = best[0];
+    best.sort((a, b) => dropRank(b.n) - dropRank(a.n) || b.n.t - a.n.t);
+    // The showcase: up to three epics or better, else the single best drop.
+    const show = best.filter(x => x.n.q >= 4).slice(0, 3);
+    if (!show.length && best[0]) show.push(best[0]);
+    $("s-lootq").classList.toggle("has-epic", best.some(x => x.n.q >= 4));
     $("lootQ").innerHTML = (total
       ? `<div class="qbar">${qs.map(x => `<i style="width:${(x.n / total) * 100}%;background:${QUAL[x.q][1]}"></i>`).join("")}</div>
-        <div class="qlegend">${qs.map(x => `<div><i style="background:${QUAL[x.q][1]}"></i><span>${tr(QUAL[x.q][0])}</span><strong>${num(x.n)}</strong><small>${Math.round((x.n / total) * 100)}%</small></div>`).join("")}</div>`
+        <div class="qlegend">${qs.map(x => `<div class="${x.q >= 4 ? "hot" : ""}"><i style="background:${QUAL[x.q][1]}"></i><span>${tr(QUAL[x.q][0])}</span><strong>${num(x.n)}</strong><small>${Math.round((x.n / total) * 100)}%</small></div>`).join("")}</div>`
       : `<p class="empty">${tr("No rare drops yet. Keep rolling Need.")}</p>`)
-      + (b ? `<div class="bestdrop"><span class="bd-icon">${icon("loot", 2)}</span><div><span>${tr("Best drop")}</span><strong class="q${b.n.q}">${esc(b.n.item)}</strong><p>${esc(b.p.name)}${b.n.zone ? " · " + esc(b.n.zone) : ""}</p></div><b class="q${b.n.q}">${tr(QUAL[b.n.q][0])}</b></div>` : "");
+      + (show.length ? `<div class="drops">${show.map(({ p, n }) => `<div class="drop qb${n.q}">
+          <span class="eyebrow">${tr(n.q >= 4 ? QUAL[n.q][0] : "Best drop")}${dropTags(n)}</span>
+          <strong>${itemHTML(n, "medium")}</strong>
+          <p>${nameHTML(p)}${n.zone ? ` · ${esc(n.zone)}` : ""} · ${shortDate(localKey(n.t))}</p></div>`).join("")}</div>` : "");
+    whRefresh();
   }
 
   function renderRace(people, canvasId = "cRace", mode = state.raceMode) {
@@ -2112,7 +2116,7 @@
     people.forEach(p => p.notable.forEach(n => { if (n.t && inRange(localKey(n.t)) && n.q >= 3) feed.push({ p, n }); }));
     feed.sort((a, b) => b.n.t - a.n.t);
     $("lootFeed").innerHTML = feed.slice(0, 24).map(({ p, n }) =>
-      `<div>${nameHTML(p)} ${tr("receives loot:")} <span class="q${n.q}">[${esc(n.item)}]</span> <span class="muted" style="font-size:13px">${new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" })}</span></div>`).join("")
+      `<div class="${n.q >= 4 ? "epic-row" : ""}">${nameHTML(p)} ${tr("receives loot:")} ${itemHTML(n)}${dropTags(n)} <span class="muted" style="font-size:13px">${new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" })}</span></div>`).join("")
       || `<p class="empty">${tr("No rare drops yet. Keep rolling Need.")}</p>`;
   }
 
@@ -2282,6 +2286,12 @@
     }
     const rich = people.filter(p => p.peakGold).sort((a, b) => b.peakGold - a.peakGold)[0];
     if (rich) recs.push({ t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, top: podiumOf(people, p => p.peakGold, goldHTML), when: tr("most gold held at once") });
+    // Lucky looters: bind-on-equip drops anywhere, and rare or better loot in dungeons and raids (recorded from FunStats 1.5).
+    const drops = n => tr(n === 1 ? "{0} drop" : "{0} drops", num(n));
+    [["Luckiest looter", n => n.boe, "bind-on-equip drops"], ["Dungeon loot", n => n.inst, "rare or better in dungeons"]].forEach(([t, ok, when]) => {
+      const top = podiumOf(people, p => p.notable.filter(n => n.q >= 3 && ok(n)).length, drops);
+      if (top.length) recs.push({ t: tr(t), v: top[0].v, p: top[0].p, top, when: tr(when) });
+    });
     let mob = null;
     people.forEach(p => Object.entries(p.kills).forEach(([m, c]) => { if (!mob || c > mob.c) mob = { p, m, c }; }));
     if (mob) {
@@ -2327,6 +2337,13 @@
   }
   const whDomain = () => state.mop ? "mop-classic" : state.tbc ? "tbc" : "classic";
   const whItem = id => `href="https://www.wowhead.com/${whDomain()}/item=${encodeURIComponent(id)}" data-wowhead="item=${encodeURIComponent(id)}&domain=${whDomain()}"`;
+  const itemHTML = (n, size) => n.id
+    ? `<a class="q${n.q}" ${whItem(n.id)}${size ? ` data-wh-icon-size="${size}"` : ""} target="_blank" rel="noopener">[${esc(n.item)}]</a>`
+    : `<span class="q${n.q}">[${esc(n.item)}]</span>`;
+  // Bind on equip and dropped outside dungeons: the drops worth shouting about (recorded by the addon from 1.5 on).
+  const dropTags = n => (n.world ? `<span class="dtag world">${tr("World drop")}</span>` : "") + (n.inst ? `<span class="dtag inst">${esc(n.inst)}</span>` : "") + (n.boe ? `<span class="dtag boe">${tr("BoE")}</span>` : "");
+  const dropRank = n => n.q * 10 + (n.world && n.boe ? 5 : n.boe ? 2 : 0);
+  const whRefresh = () => { if (window.$WowheadPower && window.$WowheadPower.refreshLinks) { try { window.$WowheadPower.refreshLinks(); } catch (e) { /* tooltips are optional */ } } };
 
   function gameName(g, realm) {
     if (g && g.demo) return "Example data";
@@ -2593,8 +2610,7 @@
       || `<p class="empty">${tr("Zones appear once {0} has played with the addon.", esc(p.name))}</p>`;
     const loot = p.notable.filter(n => n.q >= 3).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 30);
     const lootLine = n => {
-      const name = n.id ? `<a class="q${n.q}" ${whItem(n.id)} target="_blank" rel="noopener">[${esc(n.item)}]</a>` : `<span class="q${n.q}">[${esc(n.item)}]</span>`;
-      return `<div>${name}${n._char && n._char !== p.name ? ` <span class="muted">${tr("on {0}", esc(n._char))}</span>` : ""} <span class="muted" style="font-size:13px">${n.t ? new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" }) : ""}</span></div>`;
+      return `<div>${itemHTML(n)}${dropTags(n)}${n._char && n._char !== p.name ? ` <span class="muted">${tr("on {0}", esc(n._char))}</span>` : ""} <span class="muted" style="font-size:13px">${n.t ? new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" }) : ""}</span></div>`;
     };
     $("pLoot").innerHTML = loot.map(lootLine).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`;
     // Lately: fills the space beside the gear with the newest loot and deaths.
@@ -2603,7 +2619,7 @@
       `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.slice(0, 5).map(lootLine).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
       `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${lastDeaths.map(d => deathLine(p, d, true)).join("") || `<p class="empty">${tr("{0} hasn't died yet. Impressive.", esc(p.name))}</p>`}</div>`;
 
-    if (window.$WowheadPower && window.$WowheadPower.refreshLinks) { try { window.$WowheadPower.refreshLinks(); } catch (e) { /* tooltips are optional */ } }
+    whRefresh();
   }
 
   // Two characters side by side, all time.
@@ -2665,7 +2681,7 @@
   const leadsHTML = (rows, n = LEAD.length, guilds = true) => LEAD.slice(0, n).map(([icon, label, f, fmt]) => {
     const best = rows.slice().sort((a, b) => (b.s[f] || 0) - (a.s[f] || 0))[0];
     const g = guilds && best && best.p.chars[0] && best.p.chars[0].guild ? guildLink(best.p.chars[0]) : "";
-    return best && best.s[f] ? `<div class="glead${guilds ? " wg" : ""}">${zam(WOWICON[icon], 18)}<span class="lbl">${tr(label)}</span>${guilds ? `<span class="gtag">${g}</span>` : ""}<a class="plink" href="${profileHref(best.p)}"><span class="cname" style="--cc:${classOf(best.p.chars[0])[1]}">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
+    return best && best.s[f] ? `<div class="glead${guilds ? " wg" : ""}" title="${tr(label)}">${zam(WOWICON[icon], 18)}<span class="lbl">${tr(label)}</span>${guilds ? `<span class="gtag">${g}</span>` : ""}<a class="plink" href="${profileHref(best.p)}"><span class="cname" style="--cc:${classOf(best.p.chars[0])[1]}">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
   }).join("");
 
   function renderGuildSide(rows, people) {
@@ -2685,11 +2701,8 @@
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
     const deaths = people.flatMap(p => p.deaths.filter(d => d.t).map(d => ({ d, p }))).sort((a, b) => b.d.t - a.d.t).slice(0, 4);
-    const item = n => n.id
-      ? `<a class="q${n.q}" ${whItem(n.id)} target="_blank" rel="noopener">[${esc(n.item)}]</a>`
-      : `<span class="q${n.q}">[${esc(n.item)}]</span>`;
     $("gLately").innerHTML =
-      `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.map(({ n, p }) => `<div>${item(n)} <span class="muted">${tr("on {0}", esc(n._char || p.name))}</span></div>`).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
+      `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.map(({ n, p }) => `<div>${itemHTML(n)}${dropTags(n)} <span class="muted">${tr("on {0}", esc(n._char || p.name))}</span></div>`).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
       `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${deaths.map(({ d, p }) => deathLine(p, d, true)).join("") || `<p class="empty">${tr("No deaths yet.")}</p>`}</div>`;
   }
 
@@ -2787,10 +2800,12 @@
     const rows = people.map(p => ({ p, s: sumFor(p) }));
     const active = rows.filter(r => Object.keys(r.s).length > 5);
     renderTiles(rows, people);
+    // Leaders sit under the guild card on the overview, so both columns of the top row end together; beside the tiles elsewhere.
+    (route.kind === "main" ? $("s-guilds") : document.querySelector(".deeds-row")).append(document.querySelector(".oleads"));
     if (route.kind === "guild") renderGuildSide(rows, people);
     if (route.kind === "main") {
       renderGuilds(realmChars);
-      $("oLeads").innerHTML = leadsHTML(rows, 7) || `<p class="empty">${tr("No stats yet.")}</p>`;
+      $("oLeads").innerHTML = leadsHTML(rows, 7, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
     }
     renderMomentum(people);
     renderStandings(rows);
@@ -2853,10 +2868,6 @@
     return `<a class="face${c.fallen ? " fallen" : ""}" href="${charHref(c.key)}" aria-label="${esc(c.name)}, ${meta}${c.fallen ? ", " + tr("Fallen") : ""}">${pic}<span class="tip" aria-hidden="true"><b style="color:${color}">${esc(c.name)}</b><small>${meta}</small></span></a>`;
   };
   const FAC_ORDER = { alliance: 0, horde: 1, "": 2 };
-  document.addEventListener("click", e => {
-    const b = e.target.closest(".facbtn");
-    if (b) { state.gfac = b.dataset.fac; render(); }
-  });
   function renderGuilds(realmChars) {
     const groups = {};
     realmChars.forEach(c => (groups[c.guild || ""] ||= []).push(c));
@@ -2867,19 +2878,12 @@
       const top = list.map(c => ({ c, v: dmgOf(c) })).sort((a, b) => b.v - a.v)[0];
       return { g, list: list.slice().sort((a, b) => dmgOf(b) - dmgOf(a)), tot, top, fac: g ? factionOf(list, crestOf(state.realm, g)) : "" };
     }).sort((a, b) => (a.g === "") - (b.g === "") || FAC_ORDER[a.fac] - FAC_ORDER[b.fac] || b.list.length - a.list.length || a.g.localeCompare(b.g));
-    // Alliance and Horde guilds get their own tab once a realm has both.
-    const counts = { alliance: cards.filter(c => c.fac === "alliance").length, horde: cards.filter(c => c.fac === "horde").length };
-    const split = counts.alliance && counts.horde;
-    if (!split || !counts[state.gfac]) state.gfac = "all";
-    $("facPick").hidden = !split;
-    $("facPick").innerHTML = split ? [["all", tr("All"), ""], ["alliance", tr("Alliance"), icon("alliance", 1)], ["horde", tr("Horde"), icon("horde", 1)]]
-      .map(([f, label, ic]) => `<button type="button" class="facbtn ${f}" data-fac="${f}" aria-pressed="${state.gfac === f}">${ic}${label}${f !== "all" ? ` <small>${counts[f]}</small>` : ""}</button>`).join("") : "";
-    $("guilds").innerHTML = cards.filter(c => state.gfac === "all" || c.fac === state.gfac).map(({ g, list, tot, top, fac }) => {
+    $("guilds").innerHTML = cards.map(({ g, list, tot, top, fac }) => {
       const name = g ? `&lt;${esc(g)}&gt;` : esc(tr("No guild"));
       const lvl = Math.max(0, ...list.map(c => c.level || 0));
       const stat = (v, label, raw) => raw ? `<div><b>${v}</b><span>${tr(label)}</span></div>` : "";
       return `<div class="frame gcard ${fac}">
-        ${fac ? `<span class="facband">${tr(fac === "horde" ? "Horde" : "Alliance")}</span>` : ""}
+        ${fac ? `<span class="facband">${icon(fac, 1)}${tr(fac === "horde" ? "Horde" : "Alliance")}</span>` : ""}
         <div class="ghead">${g ? guildCrest(state.realm, g, list, 44) : ""}<div>${g ? `<a class="gname" href="${guildHref(state.realm, g)}">${name}</a>` : `<span class="gname">${name}</span>`}
           <span class="muted">${[tr(list.length === 1 ? "{0} member" : "{0} members", list.length), lvl ? tr("Top level {0}", lvl) : ""].filter(Boolean).join(" · ")}</span></div></div>
         <div class="gstats">${stat(compact(tot.dmg), "Damage", tot.dmg)}${stat(compact(tot.heal), "Healing", tot.heal)}${stat(num(tot.deaths), "Deaths", 1)}
