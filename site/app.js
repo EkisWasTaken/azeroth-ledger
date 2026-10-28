@@ -1457,7 +1457,7 @@
       ["sword", tr("Damage dealt"), compact(t.dmg), t.hits ? tr("{0} hits, {1} crits", num(t.hits), pct((t.crits || 0) / t.hits)) : ""],
       ["heart", tr("Healing done"), compact(t.heal), t.overheal ? tr("{0} overhealed", compact(t.overheal)) : ""],
       ["axe", tr("Killing blows"), num(t.kb), topKill ? `${num(topKill[1])}× ${esc(topKill[0])}` : ""],
-      ["scroll", tr("Quests completed"), num(t.quests), t.xp ? tr("{0} XP earned", compact(t.xp)) : ""],
+      ["scroll", tr("Quests"), num(t.quests), t.xp ? tr("{0} XP earned", compact(t.xp)) : ""],
       ["coin", tr("Gold looted"), goldHTML(t.goldIn), t.goldOut ? tr("spent {0}", goldHTML(t.goldOut)) : ""],
       ["clock", tr("Time played"), dur(t.played), t.together ? tr("{0} grouped up", dur(t.together)) : ""],
       ["boot", tr("Distance"), yards(t.dist), t.dist ? tr("about {0} miles", num(LANG === "sv" ? t.dist * 0.0009144 : t.dist / 1760)) : ""],
@@ -2800,8 +2800,8 @@
     const rows = people.map(p => ({ p, s: sumFor(p) }));
     const active = rows.filter(r => Object.keys(r.s).length > 5);
     renderTiles(rows, people);
-    // Leaders sit under the guild card on the overview, so both columns of the top row end together; beside the tiles elsewhere.
-    (route.kind === "main" ? $("s-guilds") : document.querySelector(".deeds-row")).append(document.querySelector(".oleads"));
+    // On the overview Leaders spans the whole top row under the guild card and the tiles; elsewhere it sits beside the tiles.
+    (route.kind === "main" ? document.querySelector(".toprow") : document.querySelector(".deeds-row")).append(document.querySelector(".oleads"));
     if (route.kind === "guild") renderGuildSide(rows, people);
     if (route.kind === "main") {
       renderGuilds(realmChars);
