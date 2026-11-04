@@ -12,6 +12,7 @@ if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
   /resource:..\FunStats\FunStats.toc,addon.FunStats.toc ^
   /resource:..\FunStats\FunStats.lua,addon.FunStats.lua ^
   /resource:..\FunStats\Sync.lua,addon.Sync.lua ^
+  /resource:..\FunStats\App.lua,addon.App.lua ^
   LedgerApp.cs
 if errorlevel 1 exit /b 1
 copy /y AzerothLedger.exe ..\site\AzerothLedger.exe >nul

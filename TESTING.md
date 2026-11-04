@@ -90,6 +90,22 @@ In Supabase, open **Table Editor**. Delete all rows in **entries**, then all row
 
 The app can stay installed: it picks up the WoW Forever folder by itself and installs the addon there too.
 
+## WoW Forever: first login
+
+The addon was checked against Forever's published API and run in a stand-in for the game, but never on the live client. Before logging in, make sure Show log says FunStats 1.7 was installed (right-click the shield, **Check for updates**). Then type `/console scriptErrors 1`.
+
+1. Log in. Chat says FunStats is recording your full **First Surname**, and AddOns doesn't call it out of date.
+2. Kill a few mobs, wait until you're out of combat, and die once if you can. `/funstats` shows damage.
+3. Check the game's meter is available, in case it's the reason for empty numbers:
+
+   ```
+   /run print(C_DamageMeter.IsDamageMeterAvailable()) print(C_CVar.GetCVar("damageMeterEnabled"))
+   ```
+4. Loot something blue or better, in the open world and in a dungeon.
+5. Log out. **Check on the site:** the Realm menu shows your ruleset under WoW Forever, and your character page has your full name, gear, spec, professions, damage, and what killed you.
+6. Log file stats: `_forever_\Logs` has a `WoWCombatLog-*.txt`, and your character page shows crits and a biggest hit. **Show log** says if the format was skipped. `/funstats logging off` stops new logs.
+7. If numbers are missing, send `WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua` from the `_forever_` folder. `meterError` in that file says why the meter couldn't be read.
+
 ## What to report back
 
 - Any Lua errors (screenshot plus what you were doing)

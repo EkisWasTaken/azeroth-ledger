@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.6.0.0")]
+[assembly: AssemblyVersion("1.7.0.0")]
 
 namespace AzerothLedger
 {
@@ -451,6 +451,501 @@ namespace AzerothLedger
         }
     }
 
+    // ------------------------------------------------------------------ combat log files
+
+    // WoW Forever doesn't let addons read the combat log, but the game can still write it to Logs\WoWCombatLog-*.txt.
+    // This turns those files into the stats the addon can't record: only the player's own numbers, never the log itself.
+    // Totals and read positions are saved together, so a line is never counted twice. The addon's numbers come from the
+    // game's damage meter and cover the same damage, so the two are merged per day by the higher value, never added.
+    static class CombatLogs
+    {
+        const int BlockLength = 19; // the unit details WoW Forever writes before amounts
+        const string SupportedVersion = "22";
+        static readonly HashSet<string> Events = new HashSet<string> {
+            "COMBAT_LOG_VERSION", "SWING_DAMAGE", "SPELL_DAMAGE", "SPELL_PERIODIC_DAMAGE", "RANGE_DAMAGE", "DAMAGE_SHIELD", "ENVIRONMENTAL_DAMAGE",
+            "SWING_MISSED", "SPELL_MISSED", "RANGE_MISSED", "SPELL_HEAL", "SPELL_PERIODIC_HEAL", "SPELL_CAST_SUCCESS", "PARTY_KILL" };
+
+        static Dictionary<string, object> Dict(Dictionary<string, object> d, string k)
+        {
+            object v;
+            if (d.TryGetValue(k, out v) && v is Dictionary<string, object>) return (Dictionary<string, object>)v;
+            var n = new Dictionary<string, object>();
+            d[k] = n;
+            return n;
+        }
+
+        static double Num(Dictionary<string, object> d, string k)
+        {
+            object v;
+            return d.TryGetValue(k, out v) && v is double ? (double)v : 0;
+        }
+
+        static void Bump(Dictionary<string, object> d, string k, double n) { d[k] = Num(d, k) + n; }
+
+        static void Count(Dictionary<string, object> d, string k, double n, int cap)
+        {
+            if (k == null || k == "nil") return;
+            if (d.ContainsKey(k) || d.Count < cap) Bump(d, k, n);
+        }
+
+        // ---------- reading
+
+        class Reader
+        {
+            public readonly Dictionary<string, Dictionary<string, object>> Players = new Dictionary<string, Dictionary<string, object>>();
+            public bool Supported;
+            public string Me;
+            public int Checked, Bad;
+            public string Refused;
+
+            Dictionary<string, object> For(string guid)
+            {
+                Dictionary<string, object> p;
+                if (!Players.TryGetValue(guid, out p)) Players[guid] = p = new Dictionary<string, object>();
+                return p;
+            }
+
+            static long Flags(string s)
+            {
+                try { return s.StartsWith("0x") ? Convert.ToInt64(s.Substring(2), 16) : 0; }
+                catch (FormatException) { return 0; }
+            }
+
+            static List<string> Fields(string s)
+            {
+                var o = new List<string>(48);
+                var sb = new StringBuilder();
+                bool quoted = false;
+                foreach (char c in s)
+                {
+                    if (quoted) { if (c == '"') quoted = false; else sb.Append(c); }
+                    else if (c == '"') quoted = true;
+                    else if (c == ',') { o.Add(sb.ToString()); sb.Clear(); }
+                    else sb.Append(c);
+                }
+                o.Add(sb.ToString());
+                return o;
+            }
+
+            static bool IsGuid(string s)
+            {
+                return s == "0000000000000000" || s.StartsWith("Player-") || s.StartsWith("Creature-") || s.StartsWith("Pet-")
+                    || s.StartsWith("Vehicle-") || s.StartsWith("GameObject-");
+            }
+
+            // "John Smith-PvE-" in the log is "John Smith" on the site. Mobs keep their names as they are.
+            static string Who(string guid, string name)
+            {
+                if (name == "nil") return null;
+                if (!guid.StartsWith("Player-")) return name;
+                string n = name.TrimEnd('-');
+                int cut = n.LastIndexOf('-');
+                return (cut > 0 ? n.Substring(0, cut) : n).Replace('-', ' ');
+            }
+
+            static bool Long(List<string> f, int i, out long v)
+            {
+                v = 0;
+                return i < f.Count && long.TryParse(f[i], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out v);
+            }
+
+            // The fields around an amount have to make sense, or the layout isn't what this reader expects.
+            bool Damage(List<string> f, int i, out long amount, out long overkill, out bool crit)
+            {
+                long b, school;
+                overkill = 0;
+                crit = false;
+                Checked++;
+                bool ok = Long(f, i, out amount) && amount >= 0 && Long(f, i + 1, out b) && b >= 0 && Long(f, i + 2, out overkill) && overkill >= -1
+                    && Long(f, i + 3, out school) && school >= 0 && school <= 127;
+                if (!ok) { Bad++; return false; }
+                crit = i + 7 < f.Count && f[i + 7] != "nil" && f[i + 7] != "0" && f[i + 7] != "";
+                return true;
+            }
+
+            bool Heal(List<string> f, int i, out long amount, out long over)
+            {
+                long b;
+                over = 0;
+                Checked++;
+                bool ok = Long(f, i, out amount) && amount >= 0 && Long(f, i + 1, out b) && b >= 0 && Long(f, i + 2, out over) && over >= 0 && over <= amount;
+                if (!ok) Bad++;
+                return ok;
+            }
+
+            static string DayKey(string stamp)
+            {
+                int sp = stamp.IndexOf(' ');
+                string[] d = (sp > 0 ? stamp.Substring(0, sp) : stamp).Split('/');
+                int y, m, day;
+                if (d.Length != 3 || !int.TryParse(d[0], out m) || !int.TryParse(d[1], out day) || !int.TryParse(d[2], out y)) return null;
+                return y.ToString("0000") + "-" + m.ToString("00") + "-" + day.ToString("00");
+            }
+
+            static double Unix(string stamp)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(stamp, @"^(\d+)/(\d+)/(\d+) (\d+):(\d+):(\d+)\.\d+([-+][\d.]+)?$");
+                if (!match.Success) return 0;
+                Func<int, int> g = i => int.Parse(match.Groups[i].Value, CultureInfo.InvariantCulture);
+                try
+                {
+                    var local = new DateTime(g(3), g(1), g(2), g(4), g(5), g(6), DateTimeKind.Unspecified);
+                    TimeSpan offset = match.Groups[7].Success ? TimeSpan.FromHours(double.Parse(match.Groups[7].Value, CultureInfo.InvariantCulture)) : TimeZoneInfo.Local.GetUtcOffset(local);
+                    return new DateTimeOffset(local, offset).ToUnixTimeSeconds();
+                }
+                catch (ArgumentException) { return 0; }
+            }
+
+            public void Line(string line)
+            {
+                int gap = line.IndexOf("  ", StringComparison.Ordinal);
+                if (gap < 0) return;
+                int comma = line.IndexOf(',', gap);
+                if (comma < 0 || !Events.Contains(line.Substring(gap + 2, comma - gap - 2))) return;
+                string stamp = line.Substring(0, gap);
+                var f = Fields(line.Substring(gap + 2));
+                string ev = f[0];
+                if (ev == "COMBAT_LOG_VERSION")
+                {
+                    // Only a log format this reader knows; anything else waits for an app update rather than guessing.
+                    string build = f.Count > 5 ? f[5] : "";
+                    Supported = f.Count > 1 && f[1] == SupportedVersion && System.Text.RegularExpressions.Regex.IsMatch(build, @"^1\.[6-9]\d");
+                    Me = null;
+                    if (!Supported) Refused = "version " + (f.Count > 1 ? f[1] : "?") + ", build " + build;
+                    return;
+                }
+                if (!Supported || f.Count < 9) return;
+
+                string src = f[1], srcName = f[2], dst = f[5], dstName = f[6];
+                long srcFlags = Flags(f[3]), dstFlags = Flags(f[7]);
+                bool fromMine = (srcFlags & 1) != 0;
+                if (fromMine && src.StartsWith("Player-")) Me = src;
+                else if ((dstFlags & 1) != 0 && dst.StartsWith("Player-")) Me = dst;
+                if (Me == null) return;
+                bool toMe = dst == Me;
+                if (!fromMine && !toMe) return; // everyone else nearby
+
+                string dayKey = DayKey(stamp);
+                if (dayKey == null) return;
+                var p = For(Me);
+                var day = Dict(Dict(p, "days"), dayKey);
+
+                if (ev == "PARTY_KILL")
+                {
+                    if (!fromMine || toMe) return;
+                    Bump(day, "kb", 1);
+                    Count(Dict(p, "kills"), Who(dst, dstName), 1, 400);
+                    if ((dstFlags & 0x400) != 0) Bump(day, "hk", 1);
+                    return;
+                }
+
+                int i = 9;
+                string spell = "Melee";
+                bool spellEvent = ev.StartsWith("SPELL_") || ev.StartsWith("RANGE_") || ev == "DAMAGE_SHIELD";
+                if (spellEvent)
+                {
+                    if (f.Count < 12) return;
+                    spell = f[10];
+                    i = 12;
+                }
+
+                if (ev.EndsWith("_MISSED"))
+                {
+                    if (i >= f.Count) return;
+                    string miss = f[i];
+                    if (fromMine && !toMe) { Bump(day, "whiffs", 1); if (miss == "RESIST") Bump(day, "resisted", 1); }
+                    if (toMe && !fromMine)
+                        Bump(day, miss == "DODGE" ? "dodges" : miss == "PARRY" ? "parries" : miss == "BLOCK" ? "blocks" : miss == "RESIST" ? "resists" : "avoided", 1);
+                    return;
+                }
+
+                if (i < f.Count && IsGuid(f[i])) i += BlockLength;
+
+                if (ev == "SPELL_CAST_SUCCESS")
+                {
+                    if (src != Me) return;
+                    Bump(day, "casts", 1);
+                    Count(Dict(p, "casts"), spell, 1, 200);
+                    if (f[9] == "8690") Bump(day, "hearth", 1);
+                    return;
+                }
+
+                if (ev.EndsWith("_HEAL"))
+                {
+                    long amount, over;
+                    if (!Heal(f, i, out amount, out over)) return;
+                    long effective = amount - over;
+                    if (fromMine)
+                    {
+                        Bump(day, "heal", effective);
+                        if (over > 0) Bump(day, "overheal", over);
+                        var best = Dict(p, "best");
+                        object old;
+                        if (!best.TryGetValue("heal", out old) || !(old is Dictionary<string, object>) || effective > Num((Dictionary<string, object>)old, "amt"))
+                            best["heal"] = new Dictionary<string, object> { { "amt", (double)effective }, { "spell", spell }, { "t", Unix(stamp) } };
+                    }
+                    else if (toMe && effective > 0)
+                    {
+                        Bump(day, "healedBy", effective);
+                        Count(Dict(p, "healers"), Who(src, srcName), effective, 100);
+                    }
+                    return;
+                }
+
+                // Damage. The environment's type comes first there, after the unit details.
+                bool environment = ev == "ENVIRONMENTAL_DAMAGE";
+                string envType = null;
+                if (environment)
+                {
+                    if (i >= f.Count) return;
+                    envType = f[i];
+                    i++;
+                }
+                long dmg, overkill;
+                bool crit;
+                if (!Damage(f, i, out dmg, out overkill, out crit) || dmg <= 0) return;
+                if (toMe)
+                {
+                    Bump(day, "taken", dmg);
+                    if (environment && envType.Equals("Falling", StringComparison.OrdinalIgnoreCase)) Bump(day, "fallDmg", dmg);
+                }
+                if (fromMine && !toMe && !environment)
+                {
+                    string target = Who(dst, dstName);
+                    Bump(day, "dmg", dmg);
+                    Bump(day, "hits", 1);
+                    if (crit) Bump(day, "crits", 1);
+                    if (overkill > 0) Bump(day, "overkill", overkill);
+                    Count(Dict(p, "spellDmg"), spell, dmg, 200);
+                    if (dmg > Num(day, "maxHit"))
+                    {
+                        day["maxHit"] = (double)dmg;
+                        day["maxHitSpell"] = spell;
+                        if (target != null) day["maxHitTarget"] = target;
+                    }
+                    var best = Dict(p, "best");
+                    object old;
+                    if (!best.TryGetValue("hit", out old) || !(old is Dictionary<string, object>) || dmg > Num((Dictionary<string, object>)old, "amt"))
+                    {
+                        var hit = new Dictionary<string, object> { { "amt", (double)dmg }, { "spell", spell }, { "t", Unix(stamp) } };
+                        if (target != null) hit["target"] = target;
+                        if (crit) hit["crit"] = true;
+                        best["hit"] = hit;
+                    }
+                }
+            }
+        }
+
+        // ---------- adding up
+
+        // Adds freshly read numbers to the running totals.
+        static void AddUp(Dictionary<string, object> total, Dictionary<string, object> fresh)
+        {
+            foreach (var d in Dict(fresh, "days"))
+            {
+                var to = Dict(Dict(total, "days"), d.Key);
+                foreach (var kv in (Dictionary<string, object>)d.Value)
+                {
+                    if (kv.Key == "maxHit" || kv.Key == "maxHitSpell" || kv.Key == "maxHitTarget") continue;
+                    Bump(to, kv.Key, (double)kv.Value);
+                }
+                KeepBiggestHit(to, (Dictionary<string, object>)d.Value);
+            }
+            foreach (var pair in new[] { new { k = "spellDmg", cap = 200 }, new { k = "casts", cap = 200 }, new { k = "kills", cap = 400 }, new { k = "healers", cap = 100 } })
+                foreach (var kv in Dict(fresh, pair.k)) Count(Dict(total, pair.k), kv.Key, (double)kv.Value, pair.cap);
+            KeepBest(Dict(total, "best"), Dict(fresh, "best"));
+        }
+
+        static void KeepBiggestHit(Dictionary<string, object> to, Dictionary<string, object> from)
+        {
+            if (Num(from, "maxHit") <= Num(to, "maxHit")) return;
+            to["maxHit"] = from["maxHit"];
+            foreach (var k in new[] { "maxHitSpell", "maxHitTarget" })
+            {
+                object v;
+                if (from.TryGetValue(k, out v)) to[k] = v; else to.Remove(k);
+            }
+        }
+
+        static void KeepBest(Dictionary<string, object> to, Dictionary<string, object> from)
+        {
+            foreach (var kv in from)
+            {
+                var candidate = kv.Value as Dictionary<string, object>;
+                if (candidate == null) continue;
+                object old;
+                to.TryGetValue(kv.Key, out old);
+                var current = old as Dictionary<string, object>;
+                if (current == null || Num(candidate, "amt") > Num(current, "amt")) to[kv.Key] = candidate;
+            }
+        }
+
+        // Log numbers into a character from the save file. The higher value wins, except killing blows: the addon's are
+        // only an estimate from experience messages, so the log's exact count replaces them.
+        public static void MergeInto(Dictionary<string, object> c, Dictionary<string, object> log)
+        {
+            var days = Dict(c, "days");
+            foreach (var d in Dict(log, "days"))
+            {
+                var to = Dict(days, d.Key);
+                var from = (Dictionary<string, object>)d.Value;
+                foreach (var kv in from)
+                {
+                    if (kv.Key == "maxHit" || kv.Key == "maxHitSpell" || kv.Key == "maxHitTarget") continue;
+                    double v = (double)kv.Value;
+                    if (kv.Key == "kb" || v > Num(to, kv.Key)) to[kv.Key] = v;
+                }
+                KeepBiggestHit(to, from);
+            }
+            foreach (var k in new[] { "spellDmg", "casts", "healers", "kills" })
+                foreach (var kv in Dict(log, k))
+                {
+                    var map = Dict(c, k);
+                    if (k == "kills" || (double)kv.Value > Num(map, kv.Key)) map[kv.Key] = kv.Value;
+                }
+            KeepBest(Dict(c, "best"), Dict(log, "best"));
+        }
+
+        // ---------- saved totals (written as Lua, which LuaReader already reads)
+
+        static void WriteLua(StringBuilder sb, object v)
+        {
+            var d = v as Dictionary<string, object>;
+            if (d != null)
+            {
+                sb.Append('{');
+                foreach (var kv in d) { sb.Append('['); WriteLua(sb, kv.Key); sb.Append("]="); WriteLua(sb, kv.Value); sb.Append(",\n"); }
+                sb.Append('}');
+            }
+            else if (v is double) sb.Append(((double)v).ToString("R", CultureInfo.InvariantCulture));
+            else if (v is bool) sb.Append((bool)v ? "true" : "false");
+            else sb.Append('"').Append(((v as string) ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", " ").Replace("\n", " ")).Append('"');
+        }
+
+        static Dictionary<string, object> Load(string path)
+        {
+            try
+            {
+                object v;
+                if (File.Exists(path) && LuaReader.Parse(File.ReadAllText(path, Encoding.UTF8)).TryGetValue("LedgerLogs", out v) && v is Dictionary<string, object>)
+                    return (Dictionary<string, object>)v;
+            }
+            catch (Exception) { /* unreadable: the logs are read again from the start */ }
+            return new Dictionary<string, object>();
+        }
+
+        static void Save(string path, Dictionary<string, object> state)
+        {
+            var sb = new StringBuilder("LedgerLogs = ");
+            WriteLua(sb, state);
+            string tmp = path + ".tmp";
+            File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(false));
+            if (File.Exists(path)) File.Delete(path);
+            File.Move(tmp, path);
+        }
+
+        // ---------- files
+
+        // Reads what's new in one log, up to its last complete line. Returns the new position.
+        static long ReadFrom(string path, long offset, Reader reader)
+        {
+            using (var st = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            {
+                st.Seek(offset, SeekOrigin.Begin);
+                var buf = new byte[1 << 16];
+                var line = new MemoryStream();
+                long pos = offset; // just after the last complete line
+                int n;
+                while ((n = st.Read(buf, 0, buf.Length)) > 0)
+                {
+                    long chunk = st.Position - n;
+                    int start = 0;
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (buf[i] != (byte)'\n') continue;
+                        line.Write(buf, start, i - start);
+                        reader.Line(Encoding.UTF8.GetString(line.GetBuffer(), 0, (int)line.Length).TrimEnd('\r').TrimStart('\uFEFF'));
+                        line.SetLength(0);
+                        start = i + 1;
+                        pos = chunk + start;
+                    }
+                    line.Write(buf, start, n - start);
+                }
+                return pos;
+            }
+        }
+
+        // Brings the saved totals up to date with the log files, then adds them to the characters that made them.
+        // A batch whose damage and heal lines don't fit the expected layout is refused whole: no stats beat wrong stats.
+        public static void Apply(Dictionary<string, object> db, string logsDir, string statePath, Action<string> log)
+        {
+            var state = Load(statePath);
+            var players = Dict(state, "players");
+            var files = Dict(state, "files");
+            bool changed = false;
+            if (Directory.Exists(logsDir))
+            {
+                foreach (var path in Directory.GetFiles(logsDir, "WoWCombatLog*.txt").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+                {
+                    string name = Path.GetFileName(path);
+                    var entry = Dict(files, name);
+                    long offset = (long)Num(entry, "o");
+                    long length;
+                    try { length = new FileInfo(path).Length; } catch (IOException) { continue; }
+                    if (length == offset) continue;
+                    if (length < offset) { entry["o"] = (double)length; changed = true; continue; } // cut short: never count it again
+                    object meObj;
+                    entry.TryGetValue("me", out meObj);
+                    object okObj;
+                    entry.TryGetValue("ok", out okObj);
+                    var reader = new Reader { Me = meObj as string, Supported = okObj is bool && (bool)okObj };
+                    long pos;
+                    try { pos = ReadFrom(path, offset, reader); }
+                    catch (IOException e) { log("Couldn't read " + name + ": " + e.Message); continue; }
+                    if (reader.Refused != null) log("Skipped " + name + ": unknown combat log format (" + reader.Refused + ").");
+                    if (reader.Bad * 20 > reader.Checked)
+                    {
+                        log("Skipped new lines in " + name + ": " + reader.Bad + " of " + reader.Checked + " didn't fit the expected format.");
+                        continue;
+                    }
+                    foreach (var kv in reader.Players) AddUp(Dict(players, kv.Key), kv.Value);
+                    entry["o"] = (double)pos;
+                    entry["ok"] = reader.Supported;
+                    if (reader.Me != null) entry["me"] = reader.Me;
+                    changed = true;
+                }
+            }
+            if (changed) Save(statePath, state);
+
+            object charsObj;
+            if (!db.TryGetValue("chars", out charsObj) || !(charsObj is Dictionary<string, object>)) return;
+            foreach (var kv in (Dictionary<string, object>)charsObj)
+            {
+                var c = kv.Value as Dictionary<string, object>;
+                object guid, stats;
+                if (c == null || !c.TryGetValue("guid", out guid) || !(guid is string) || !players.TryGetValue((string)guid, out stats)) continue;
+                var s = stats as Dictionary<string, object>;
+                if (s != null) MergeInto(c, s);
+            }
+        }
+
+        // Only clients where the addon can't read the combat log itself: their logs are the ones worth reading.
+        public static bool Wanted(Dictionary<string, object> db)
+        {
+            object charsObj;
+            if (!db.TryGetValue("chars", out charsObj) || !(charsObj is Dictionary<string, object>)) return false;
+            foreach (var v in ((Dictionary<string, object>)charsObj).Values)
+            {
+                var c = v as Dictionary<string, object>;
+                object game, version;
+                if (c == null || !c.TryGetValue("game", out game) || !(game is Dictionary<string, object>)) continue;
+                if (((Dictionary<string, object>)game).TryGetValue("version", out version) && version is string
+                    && System.Text.RegularExpressions.Regex.IsMatch((string)version, @"^1\.[6-9]\d")) return true;
+            }
+            return false;
+        }
+    }
+
     // ------------------------------------------------------------------ finding WoW
 
     static class Wow
@@ -568,6 +1063,7 @@ namespace AzerothLedger
         static readonly string InstalledExe = Path.Combine(DataDir, "AzerothLedger.exe");
         static readonly string StatePath = Path.Combine(DataDir, "uploaded.txt");
         static readonly string LogPath = Path.Combine(DataDir, "log.txt");
+        static readonly string CombatTotalsPath = Path.Combine(DataDir, "combat-log-totals.txt");
 
         readonly NotifyIcon tray;
         readonly ToolStripMenuItem statusItem, autoItem;
@@ -593,6 +1089,20 @@ namespace AzerothLedger
                 db.TryGetValue("FunStatsDB", out fs);
                 using (var stdout = Console.OpenStandardOutput())
                     foreach (var r in Rows.Build((Dictionary<string, object>)fs)) { var b = Encoding.UTF8.GetBytes(r.Json + "\n"); stdout.Write(b, 0, b.Length); }
+                return;
+            }
+            if (args.Length >= 4 && args[0] == "--logs-dry-run")
+            {
+                // Prints the rows a save file would upload with the combat logs in a folder, for testing: --logs-dry-run <save> <logs> <totals>
+                var db = LuaReader.Parse(File.ReadAllText(args[1], Encoding.UTF8));
+                object fs;
+                db.TryGetValue("FunStatsDB", out fs);
+                var save = (Dictionary<string, object>)fs;
+                using (var stdout = Console.OpenStandardOutput())
+                {
+                    if (CombatLogs.Wanted(save)) CombatLogs.Apply(save, args[2], args[3], m => { var b = Encoding.UTF8.GetBytes("# " + m + "\n"); stdout.Write(b, 0, b.Length); });
+                    foreach (var r in Rows.Build(save)) { var b = Encoding.UTF8.GetBytes(r.Json + "\n"); stdout.Write(b, 0, b.Length); }
+                }
                 return;
             }
             if (args.Length >= 1 && args[0] == "--uninstall") { Uninstall(); return; }
@@ -768,7 +1278,7 @@ namespace AzerothLedger
             {
                 string dir = Path.Combine(flavour, @"Interface\AddOns\FunStats");
                 var asm = Assembly.GetExecutingAssembly();
-                foreach (var name in new[] { "FunStats.toc", "FunStats.lua", "Sync.lua" })
+                foreach (var name in new[] { "FunStats.toc", "FunStats.lua", "Sync.lua", "App.lua" })
                 {
                     byte[] bytes;
                     using (var st = asm.GetManifestResourceStream("addon." + name))
@@ -805,6 +1315,18 @@ namespace AzerothLedger
             db.TryGetValue("secret", out sec);
             string secret = sec as string;
             if (secret == null || secret.Length < 32) { Log("No upload code yet in " + file + " (log in once with the new addon)."); return true; }
+
+            // ...\_forever_\WTF\Account\<account>\SavedVariables\FunStats.lua: the logs are in ...\_forever_\Logs.
+            try
+            {
+                if (CombatLogs.Wanted(db))
+                {
+                    string flavour = file;
+                    for (int up = 0; up < 5; up++) flavour = Path.GetDirectoryName(flavour);
+                    CombatLogs.Apply(db, Path.Combine(flavour, "Logs"), CombatTotalsPath, Log);
+                }
+            }
+            catch (Exception e) { Log("Couldn't read the combat logs: " + e.Message); }
 
             var rows = Rows.Build(db);
             string tag = secret.Substring(0, 8);

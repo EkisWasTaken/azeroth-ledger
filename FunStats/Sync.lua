@@ -398,7 +398,7 @@ local buffers = {}
 
 local function OnAddonMessage(prefix, text, channel, sender)
   if prefix ~= PREFIX or not FunStatsDB or not FunStatsDB.synced or not sender then return end
-  if Ambiguate(sender, "none") == UnitName("player") then return end
+  if ns.SplitName(sender) == (ns.FullName("player")) then return end
   local id, i, n, body = text:match("^(%x+):(%d+):(%d+):(.*)$")
   i, n = tonumber(i), tonumber(n)
   if not id or not i or not n or n < 1 or n > 400 or i < 1 or i > n then return end

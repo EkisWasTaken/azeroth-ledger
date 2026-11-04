@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>A WoW addon, a tiny Windows app and a website that turn your adventures into leaderboards, charts and bragging rights.</b><br>
-  Built for <b>WoW Forever</b> (launching Nov 4, 2026). Works on the Anniversary and Classic Era realms today.
+  Built for <b>WoW Forever</b>. Also works on the Anniversary and Classic Era realms.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@ The **FunStats** addon quietly records everything worth laughing about, per char
 
 | | |
 |---|---|
-| ⚔️ **Combat** | damage, healing, crits, overkill, killing blows, biggest hits, damage by ability |
+| ⚔️ **Combat** | damage, healing, damage taken and damage by ability; on Anniversary and Classic Era also crits, overkill, exact killing blows and biggest hits (WoW Forever doesn't let addons see those) |
 | 🐉 **Dungeons & raids** | boss kills and wipes, fastest kills, a damage and healing meter for every boss fight, dungeon run times and who you ran with |
 | 💀 **Deaths** | who or what killed you, where, at what level, falling and drowning included, plus your nemeses |
 | 💰 **Loot & gold** | rare drops, gold looted and spent, repairs, your richest moment |
@@ -32,7 +32,7 @@ The **FunStats** addon quietly records everything worth laughing about, per char
 | 🛡️ **Your character** | gear with Wowhead icons and tooltips, talents, professions, level-ups |
 | 🏆 **Glory** | achievements like *Can't stop jumping* and *Spends ages dead*, personal bests, a Hall of Fame |
 
-Everything is shown **per realm**, with **guild pages**, **search**, **character comparisons**, **weekly and all-time** views, three themes (**Horde**, **Alliance**, **Felfire**) and **English or Swedish**.
+Everything is shown **per realm**, with **guild pages**, **search**, **character comparisons**, **weekly and all-time** views, four themes (**Forever**, **Horde**, **Alliance**, **Felfire**) and **English or Swedish**.
 
 <br>
 

@@ -1,6 +1,6 @@
 /* Dashboard style. The site name: Jacquard 12 (pixel). Headings and big numbers: Instrument Serif. Text, labels and
    table numbers: DM Sans. Icons stay pixel sprites. Colours come from the theme tokens below; the picker sets
-   data-theme on <html> (Felfire by default). */
+   data-theme on <html> (Forever by default; its frames and map are at the end of this file). */
 :root, :root[data-theme="horde"] {
   color-scheme: dark;
   --bg: #1a0c0a; --grid: rgba(255,120,80,.05); --panel: #2a1410; --panel2: #3d1d16; --rim: #5a2a1c; --track: #120706;
@@ -10,6 +10,13 @@
 :root[data-theme="alliance"] {
   --bg: #0b1530; --grid: rgba(120,170,255,.05); --panel: #13224a; --panel2: #1c2f60; --rim: #2c4482; --track: #070d20;
   --ink: #eef3ff; --muted: #a2b4dc; --accent: #ffd84a; --accent2: #1f4fd1; --on-accent: #14204a; --good: #7fd4ff; --bad: #ff6b6b;
+}
+/* WoW Forever: the night sky, gold and gem teal of its emblem. */
+:root[data-theme="forever"] {
+  --bg: #06202a; --grid: rgba(143,214,207,.05); --panel: #0c2c38; --panel2: #123c49; --rim: #2f6670; --track: #041620;
+  --ink: #f3eee0; --muted: #a3bfbe; --accent: #e6c26f; --accent2: #2fb3b0; --on-accent: #2b1c05; --good: #8fe6d2; --bad: #ff7a66;
+  --logo: "Cinzel", "Instrument Serif", serif;
+  --r: 5px; --rs: 5px;
 }
 :root[data-theme="fel"] {
   --bg: #0a0a0d; --grid: rgba(140,255,90,.04); --panel: #15131b; --panel2: #211c2c; --rim: #3a2d52; --track: #060608;
@@ -1126,3 +1133,67 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c, var(--rim)) 40%, var(--line)), inset 0 4px 0 var(--c, var(--rim)), var(--shadow); }
 .phero h2 { text-shadow: 0 0 28px color-mix(in srgb, var(--c, var(--rim)) 45%, transparent); }
 .phero .known { font: 400 clamp(20px, 2.2vw, 26px)/1.2 var(--sf); color: color-mix(in srgb, var(--c, var(--good)) 70%, var(--ink)); }
+
+/* ---------- Forever theme: an engraved sea chart behind the page, and square gold-bound panels with gem studs.
+   The heavy gold frames above stay on guilds and the character sheet, so they still stand out. ---------- */
+:root[data-theme="forever"] body {
+  background-image: url("forever-map.svg"),
+    radial-gradient(circle at 70% 0%, rgba(47,179,176,.18), transparent 42rem),
+    radial-gradient(circle at 12% 90%, rgba(230,194,111,.07), transparent 34rem);
+  background-size: cover, auto, auto;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+:root[data-theme="forever"] .frame:not(.gcard):not(#p-sheet), :root[data-theme="forever"] .card {
+  border: 12px solid transparent; border-image: url("forever-frame.svg") 16 / 12px stretch;
+  border-radius: 0; background-clip: padding-box;
+  box-shadow: 0 18px 34px rgba(0,0,0,.34);
+}
+:root[data-theme="forever"] #app[data-route="guild"] .frame { border-width: 9px; }
+:root[data-theme="forever"] :is(.tile, .ach, .rec, .realm-pick, .lvl, .pagetab, .subtab) { border-radius: 4px; }
+:root[data-theme="forever"] :is(.tile, .ach, .rec) {
+  box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(230,194,111,.22), 0 8px 18px rgba(0,0,0,.24);
+}
+:root[data-theme="forever"] .ach.shame { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 50%, var(--line)); }
+
+:root[data-theme="forever"] #pageTitle, :root[data-theme="forever"] .sec-head h2 {
+  background: linear-gradient(180deg, #fff8e4 25%, #e6c26f 95%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,.65)); letter-spacing: .01em;
+}
+/* a gold rule with a gem under the page title */
+:root[data-theme="forever"] #pageTitle:not(:empty)::after {
+  content: ""; display: block; height: 11px; width: min(420px, 100%); margin-top: 10px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11'%3E%3Cpath d='M5.5.5l5 5-5 5-5-5z' fill='%232fb3b0' stroke='%23e6c26f'/%3E%3C/svg%3E") left center no-repeat,
+    linear-gradient(90deg, #e6c26f, rgba(230,194,111,.5) 55%, transparent) 14px center / calc(100% - 14px) 1px no-repeat;
+}
+
+:root[data-theme="forever"] .brand-name {
+  font: 700 19px/1.1 var(--logo); letter-spacing: .02em; text-shadow: none;
+  background: linear-gradient(180deg, #fff3cf, #d8ae56); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+:root[data-theme="forever"] .sidebar {
+  background: color-mix(in srgb, var(--track) 90%, transparent);
+  box-shadow: inset -1px 0 0 rgba(230,194,111,.4), 8px 0 32px rgba(0,0,0,.3);
+}
+:root[data-theme="forever"] .brand { box-shadow: inset 0 -1px 0 rgba(230,194,111,.25); margin-bottom: 8px; }
+:root[data-theme="forever"] .pagetab[aria-selected="true"] {
+  color: var(--accent); background: linear-gradient(90deg, rgba(230,194,111,.14), transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+:root[data-theme="forever"] .pagetab[aria-selected="true"]::after {
+  border-radius: 0; transform: rotate(45deg); background: var(--accent2); box-shadow: 0 0 0 1px var(--accent);
+}
+:root[data-theme="forever"] .lvl.here { background: rgba(230,194,111,.07); box-shadow: inset 0 0 0 1px rgba(230,194,111,.4); }
+:root[data-theme="forever"] .btn.dl, :root[data-theme="forever"] .getaddon {
+  background: linear-gradient(180deg, #f4dc94, #cfa24c); color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 0 0 1px #6d4f1c;
+}
+@media (max-width: 1120px) {
+  :root[data-theme="forever"] body:not(.menu-open) .sidebar { box-shadow: none; }
+}
+@media (max-width: 640px) {
+  :root[data-theme="forever"] .frame:not(.gcard):not(#p-sheet), :root[data-theme="forever"] .card {
+    border-width: 8px; border-image-width: 8px;
+  }
+}

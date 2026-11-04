@@ -403,7 +403,7 @@
     sort: { k: "dmg", dir: -1 },
     userPickedWeek: false,
     people: [],
-    realm: (() => { try { return localStorage.getItem("ledger-realm-v2") || ""; } catch (e) { return ""; } })(),
+    realm: (() => { try { return localStorage.getItem("ledger-realm-v3") || ""; } catch (e) { return ""; } })(),
   };
 
   const enc = new TextEncoder();
@@ -1457,7 +1457,8 @@
       ["skull", tr("Deaths"), num(Math.max(deathsN, t.deaths || 0)), state.hc ? tr("{0} of {1} fallen", num(people.filter(p => p.fallen).length), num(people.length)) : t.ghost ? tr("{0} as ghosts", dur(t.ghost)) : "", state.hc && people.some(p => p.fallen) ? "dead" : ""],
       ["sword", tr("Damage dealt"), compact(t.dmg), t.hits ? tr("{0} hits, {1} crits", num(t.hits), pct((t.crits || 0) / t.hits)) : ""],
       ["heart", tr("Healing done"), compact(t.heal), t.overheal ? tr("{0} overhealed", compact(t.overheal)) : ""],
-      ["axe", tr("Killing blows"), num(t.kb), topKill ? `${num(topKill[1])}× ${esc(topKill[0])}` : ""],
+      // WoW Forever has no killing blows to show: addons can't read its combat log.
+      ...(t.kb ? [["axe", tr("Killing blows"), num(t.kb), topKill ? `${num(topKill[1])}× ${esc(topKill[0])}` : ""]] : []),
       ["scroll", tr("Quests"), num(t.quests), t.xp ? tr("{0} XP earned", compact(t.xp)) : ""],
       ["coin", tr("Gold looted"), goldHTML(t.goldIn), t.goldOut ? tr("spent {0}", goldHTML(t.goldOut)) : ""],
       ["clock", tr("Time played"), dur(t.played), t.together ? tr("{0} grouped up", dur(t.together)) : ""],
@@ -2033,7 +2034,7 @@
       [tr("Damage"), s => s.dmg || 0], [tr("Healing"), s => s.heal || 0], [tr("Killing blows"), s => s.kb || 0],
       [tr("Survival"), s => (s.played || 0) / 3600 / Math.max(1, s.deaths || 0)], [tr("Exploration"), s => s.dist || 0],
       [tr("Wealth"), s => s.goldIn || 0], [tr("Questing"), s => s.quests || 0], [tr("Chatter"), s => (s.msgs || 0) + (s.emotes || 0)],
-    ];
+    ].filter(([, f]) => rows.some(r => f(r.s) > 0));
     const maxes = R.map(([, f]) => Math.max(1e-9, ...rows.map(r => f(r.s))));
     drawChart("cRadar", rows.length ? {
       type: "radar",
@@ -2072,6 +2073,10 @@
       ["Dodges", s => num(s.dodges)], ["Parries", s => num(s.parries)], ["Blocks", s => num(s.blocks)], ["Taken", s => num(s.taken)],
       ["Healed by others", s => num(s.healedBy)], ["Overheal", s => num(s.overheal)], ["Casts", s => num(s.casts)], ["Fall damage", s => num(s.fallDmg)],
     ];
+    // Columns nobody has a number for stay out (WoW Forever records no hits, crits or dodges).
+    const shown = cols.filter(c => rows.some(r => !["0", "–"].includes(String(c[1](r.s)))));
+    cols.length = 0;
+    cols.push(...shown);
     $("tCombat").tHead.innerHTML = `<tr><th>${tr("Friend")}</th>${cols.map(c => `<th>${tr(c[0])}</th>`).join("")}</tr>`;
     $("tCombat").tBodies[0].innerHTML = rows.map(r => `<tr class="${fr(r.p)}"><td><span class="nm">${nameHTML(r.p)}</span></td>${cols.map(c => `<td>${c[1](r.s)}</td>`).join("")}</tr>`).join("")
       || `<tr><td colspan="${cols.length + 1}" class="empty">${tr("Nobody on the roster yet.")}</td></tr>`;
@@ -2384,14 +2389,13 @@
     };
     allChars.forEach(ch => add(gameName(ch.game, ch.realm), ch.realm || "Unknown realm", 1, ch.lastSeen));
     const def = CONFIG.defaultGame || "WoW Forever";
+    const order = g => g === def ? 0 : g === "Hardcore Forever" ? 1 : g === "Example data" ? 3 : 2;
     const keys = Object.keys(realms);
     if (!keys.includes(state.realm)) {
       const withData = keys.filter(k => realms[k].n > 0 && (live ? realms[k].game !== "Example data" : true));
-      withData.sort((x, y) => (realms[x].game === "Example data") - (realms[y].game === "Example data")
-        || (realms[y].game === def) - (realms[x].game === def) || realms[y].n - realms[x].n || realms[y].last - realms[x].last);
+      withData.sort((x, y) => order(realms[x].game) - order(realms[y].game) || realms[y].n - realms[x].n || realms[y].last - realms[x].last);
       state.realm = live ? (withData[0] || keys[0] || "") : (keys.find(k => realms[k].game === "Example data" && realms[k].n) || withData[0] || keys[0] || "");
     }
-    const order = g => g === def ? 0 : g === "Example data" ? 2 : 1;
     const games = [...new Set(Object.values(realms).map(r => r.game))].sort((x, y) => order(x) - order(y) || x.localeCompare(y));
     const sel = $("realmSel");
     sel.innerHTML = games.map(g => `<optgroup label="${esc(g === "Other" || g === "Example data" ? tr(g) : g)}">` +
@@ -2793,7 +2797,7 @@
       if (mates.length > 1) { scope = mates; state.scopeGuild = focus.guild; }
     }
 
-    const theme = document.documentElement.dataset.theme || "fel";
+    const theme = document.documentElement.dataset.theme || "forever";
     document.querySelectorAll(".theme-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.theme === theme)));
     document.querySelectorAll(".lang-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
 
@@ -3160,7 +3164,10 @@
     $("navLabel").textContent = kind === "profile" ? tr("{0}'s pages", focusChar ? focusChar.name : "") : tr(kind === "guild" ? "Guild pages" : "Realm pages");
     $("crumbs").innerHTML = levels.map((l, i) => i === at ? `<span>${esc(l.name)}</span>` : `<a href="${l.href}">${esc(l.name)}</a>`)
       .concat(`<strong>${esc(pageName)}</strong>`).join('<span class="sep" aria-hidden="true">›</span>');
-    $("pageTitle").textContent = cur !== "overview" ? pageName : route.kind === "main" ? realmName : "";
+    // WoW Forever's realms are named after rulesets, so "PvE" alone wouldn't say which game this is.
+    const realmGame = String(state.realm || "").split("|")[0];
+    const realmTitle = /Forever/.test(realmGame) && !realmGame.includes(realmName) ? `${realmGame} ${realmName}` : realmName;
+    $("pageTitle").textContent = cur !== "overview" ? pageName : route.kind === "main" ? realmTitle : "";
     const pid = route.kind === "char" ? route.key : null;
     const i = people.findIndex(p => p.id === pid);
     const multi = pid && i >= 0 && people.length > 1;
@@ -3494,7 +3501,7 @@
   $("mapWho").addEventListener("change", e => { state.map.who = e.target.value; render(); });
   $("realmSel").addEventListener("change", e => {
     state.realm = e.target.value;
-    try { localStorage.setItem("ledger-realm-v2", state.realm); } catch (err) { /* remembering is optional */ }
+    try { localStorage.setItem("ledger-realm-v3", state.realm); } catch (err) { /* remembering is optional */ }
     // a guild or character belongs to its own realm, so another realm opens that realm's ledger
     if (parseRoute().kind !== "main") { location.hash = ""; return; }
     render();

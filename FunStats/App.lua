@@ -1,0 +1,3 @@
+-- Installed only by the Ledger app, not in the FunStats.zip download: tells the addon something will read its combat logs.
+local _, ns = ...
+ns.hasApp = true

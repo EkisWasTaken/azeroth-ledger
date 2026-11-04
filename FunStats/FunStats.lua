@@ -24,6 +24,8 @@ local GetSkillLineInfo = GetSkillLineInfo or (C_SkillInfo and function(i)
 end)
 -- Nil on Forever, where addons can't read the combat log: no combat stats there.
 local CombatLogInfo = CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatLog.GetCurrentEventInfo)
+-- The game's own damage meter stands in for the combat log there; other clients never touch it.
+local DM = not CombatLogInfo and C_DamageMeter
 
 local frame = CreateFrame("Frame")
 local C            -- this character's record
@@ -38,6 +40,37 @@ local lastX, lastY, lastInst
 
 local function Print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|cfff0b429FunStats|r: " .. msg)
+end
+
+-- WoW Forever names have two parts and no home realm: UnitName returns first name and surname, not name and realm.
+local function TwoPartNames()
+  return RegionalUniqueNamesEnabled and RegionalUniqueNamesEnabled()
+end
+
+-- A unit's whole name, and its realm if it has another one. Nil while the game keeps it secret (inside instances).
+local function FullName(unit)
+  local name, second = UnitName(unit)
+  if hasanysecretvalues and hasanysecretvalues(name, second) then return nil end
+  if TwoPartNames() then
+    if second and second ~= "" then return name .. " " .. second end
+    return name
+  end
+  return name, second
+end
+ns.FullName = FullName
+
+-- Is a name from a game message mine? Forever may show "First Surname", "First-Surname" or only the first name.
+local function IsMe(name)
+  if not name then return false end
+  if name == playerName then return true end
+  if not TwoPartNames() then return false end
+  return (name:gsub("-", " ")) == playerName or name == (UnitName("player"))
+end
+
+-- Chat events carry the sender's GUID, which can't be mistaken for someone with the same first name.
+local function FromMe(author, guid)
+  if guid and guid ~= "" then return guid == playerGUID end
+  return author ~= nil and Ambiguate(author, "none") == playerName
 end
 
 local function Today()
@@ -84,6 +117,9 @@ local QUALITY_BY_COLOR = {
 }
 
 local function ItemQuality(link)
+  -- The modern client colours links by quality number ("|cnIQ4:") instead of a colour code.
+  local iq = tonumber(link:match("|cnIQ(%d)"))
+  if iq then return iq end
   local color = link:match("|c(%x%x%x%x%x%x%x%x)")
   return color and QUALITY_BY_COLOR[color:lower()] or 1
 end
@@ -210,6 +246,7 @@ end
 
 local function UpdateProfile()
   C.game = GameInfo()
+  C.guid = playerGUID -- how the Ledger app knows this character in the combat log files
   C.name = playerName
   C.realm = GetRealmName()
   local _, classToken = UnitClass("player")
@@ -244,7 +281,7 @@ local function InitCharacter()
   end
 
   playerGUID = UnitGUID("player")
-  playerName = UnitName("player")
+  playerName = FullName("player")
   local key = playerName .. "-" .. GetRealmName()
   C = FunStatsDB.chars[key] or {}
   FunStatsDB.chars[key] = C
@@ -319,9 +356,17 @@ local friendByGUID = {}   -- guid -> "Name-Realm" or false
 local friendLastHit = {}  -- guid -> last damage taken
 
 local function SplitName(full)
+  if TwoPartNames() then
+    local here = GetRealmName()
+    for _, r in ipairs({ here, GetNormalizedRealmName and GetNormalizedRealmName() or here }) do
+      if full:sub(-#r - 1) == "-" .. r then full = full:sub(1, -#r - 2); break end
+    end
+    return (full:gsub("-", " ")), here
+  end
   local base, realm = strsplit("-", full)
   return base, (realm and realm ~= "") and realm or GetRealmName()
 end
+ns.SplitName = SplitName
 
 local function Observed(key)
   local O = FunStatsDB.observed[key]
@@ -447,7 +492,7 @@ local function GroupTick()
   if IsInRaid() then prefix, count = "raid", GetNumGroupMembers() end
   for i = 1, count do
     local unit = prefix .. i
-    local name, realm = UnitName(unit)
+    local name, realm = FullName(unit)
     if name and not UnitIsUnit(unit, "player") and (FunStatsDB.friends[name:lower()] or UnitIsInMyGuild(unit)
       or (C_FriendList and C_FriendList.IsFriend and C_FriendList.IsFriend(UnitGUID(unit)))) then
       local key = name .. "-" .. ((realm and realm ~= "") and realm or GetRealmName())
@@ -537,7 +582,8 @@ local function FightMeter(f)
       local guid = list[i]
       if not seen[guid] then
         seen[guid] = true
-        local _, classToken, _, _, _, name = GetPlayerInfoByGUID(guid)
+        local _, classToken, _, _, _, name, second = GetPlayerInfoByGUID(guid)
+        if name and second and second ~= "" and TwoPartNames() then name = name .. " " .. second end
         rows[#rows + 1] = { n = name or "?", c = classToken, d = math.floor(f.dmg[guid] or 0), h = math.floor(f.heal[guid] or 0) }
       end
     end
@@ -553,7 +599,7 @@ local function AddMates(r)
   if IsInRaid() or not IsInGroup() then return end
   r.with = r.with or {}
   for i = 1, GetNumSubgroupMembers() do
-    local name = UnitName("party" .. i)
+    local name = FullName("party" .. i)
     if name and name ~= UNKNOWNOBJECT and #r.with < 8 and not tContains(r.with, name) then r.with[#r.with + 1] = name end
   end
 end
@@ -598,6 +644,17 @@ local function RunTick()
   local r = C.run
   if not r then return end
   if not r.left then r.last = time() elseif time() - r.left > RUN_GRACE then EndRun() end
+end
+
+-- Boss fights waiting for their damage meter numbers, which stay secret until combat ends.
+local pendingFights = {}
+
+local function NewestSession()
+  local newest
+  for _, s in ipairs(DM.GetAvailableCombatSessions()) do
+    if not newest or s.sessionID > newest then newest = s.sessionID end
+  end
+  return newest
 end
 
 local function OnEncounterStart(id, name, diffID, size)
@@ -648,10 +705,17 @@ local function OnEncounterEnd(id, name, diffID, size, success)
     AddMates(r)
   end
   if f then
-    PushCapped(C.fights, {
+    local entry = {
       t = f.t, boss = name, inst = inst, d = diffID, dn = diffName, size = size, ok = won or nil, dur = secs,
       dmg = mine, heal = myHeal, deaths = f.deaths > 0 and f.deaths or nil, lvl = UnitLevel("player"), who = FightMeter(f),
-    }, MAX_FIGHTS)
+    }
+    PushCapped(C.fights, entry, MAX_FIGHTS)
+    if DM then
+      local ok, session = pcall(NewestSession)
+      if ok and session then
+        pendingFights[#pendingFights + 1] = { entry = entry, boss = b, won = won, secs = secs, session = session }
+      end
+    end
   end
 end
 
@@ -686,6 +750,17 @@ local function RecordHeal(amount, over, spell)
   end
 end
 
+local function RecordKill(name)
+  Add("kb")
+  if not name then return end
+  if C.kills[name] then
+    C.kills[name] = C.kills[name] + 1
+  elseif C.killNames < MAX_KILL_NAMES then
+    C.kills[name] = 1
+    C.killNames = C.killNames + 1
+  end
+end
+
 local function OnCombatLog()
   local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _,
     a12, a13, a14, a15, a16, a17, a18, a19, a20, a21 = CombatLogInfo()
@@ -705,15 +780,7 @@ local function OnCombatLog()
       local missType = sub == "SWING_MISSED" and a12 or a15
       if missType == "RESIST" then Add("resisted") end
     elseif sub == "PARTY_KILL" then
-      Add("kb")
-      if dstName then
-        if C.kills[dstName] then
-          C.kills[dstName] = C.kills[dstName] + 1
-        elseif C.killNames < MAX_KILL_NAMES then
-          C.kills[dstName] = 1
-          C.killNames = C.killNames + 1
-        end
-      end
+      RecordKill(dstName)
       if dstFlags and band(dstFlags, TYPE_PLAYER) ~= 0 then Add("hk") end
     end
   end
@@ -771,8 +838,147 @@ local function OnCombatLog()
 end
 
 ---------------------------------------------------------------------------
+-- Damage meter (clients where addons can't read the combat log)
+---------------------------------------------------------------------------
+
+-- Enum.DamageMeterType.
+local METER_DAMAGE, METER_HEALING, METER_TAKEN = 0, 2, 7
+local AUTO_ATTACK = 6603
+-- Every fight is a numbered session. This keeps what's already counted from each, so reading one twice adds nothing.
+local meterSeen = {}
+local meterReady = false -- the first read only notes what's there: a /reload can keep the sessions
+
+local function MeterNew(key, total)
+  if issecretvalue and issecretvalue(total) then return 0 end -- left uncounted, so the next read picks it up
+  local seen = meterSeen[key] or 0
+  meterSeen[key] = total
+  if total < seen then seen = 0 end -- the number was used again after a reset
+  return meterReady and math.floor(total - seen) or 0
+end
+
+local function MeterSources(session, kind)
+  local s = DM.GetCombatSessionFromID(session, kind)
+  return s and s.combatSources or {}
+end
+
+local function CountMeter(session, kind, field)
+  for _, src in ipairs(MeterSources(session, kind)) do
+    if src.isLocalPlayer then
+      local new = MeterNew(session .. ":" .. kind, src.totalAmount)
+      if new > 0 then Add(field, new) end
+    end
+  end
+end
+
+local function CountMeterSpells(session)
+  local me = DM.GetCombatSessionSourceFromID(session, METER_DAMAGE, playerGUID)
+  for _, s in ipairs(me and me.combatSpells or {}) do
+    local new = MeterNew(session .. ":s" .. s.spellID, s.totalAmount)
+    if new > 0 then
+      local name = s.spellID == AUTO_ATTACK and "Melee" or C_Spell.GetSpellName(s.spellID)
+      CountIn(C.spellDmg, name or "Unknown", new, 200)
+    end
+  end
+end
+
+local function MeterGroup(session, kind)
+  local map = {}
+  for _, src in ipairs(MeterSources(session, kind)) do
+    if src.sourceGUID and src.sourceGUID:find("^Player%-") then map[src.sourceGUID] = src.totalAmount end
+  end
+  return map
+end
+
+local function FillFight(p)
+  local f = { dmg = MeterGroup(p.session, METER_DAMAGE), heal = MeterGroup(p.session, METER_HEALING) }
+  local mine, myHeal = math.floor(f.dmg[playerGUID] or 0), math.floor(f.heal[playerGUID] or 0)
+  p.entry.dmg, p.entry.heal, p.entry.who = mine, myHeal, FightMeter(f)
+  local b = p.boss
+  b.dmg, b.heal = (b.dmg or 0) + mine, (b.heal or 0) + myHeal
+  if p.won and p.secs and p.secs > 0 then
+    b.dps = math.max(b.dps or 0, math.floor(mine / p.secs))
+    b.hps = math.max(b.hps or 0, math.floor(myHeal / p.secs))
+  end
+end
+
+local function ReadMeterNow()
+  if not DM.IsDamageMeterAvailable() then return end
+  for _, s in ipairs(DM.GetAvailableCombatSessions()) do
+    CountMeter(s.sessionID, METER_DAMAGE, "dmg")
+    CountMeter(s.sessionID, METER_HEALING, "heal")
+    CountMeter(s.sessionID, METER_TAKEN, "taken")
+    CountMeterSpells(s.sessionID)
+  end
+  meterReady = true
+  while #pendingFights > 0 do FillFight(table.remove(pendingFights)) end
+end
+
+-- My own casts stay readable even where the combat log is closed.
+local HEARTHSTONE = 8690
+
+local function OnSpellcast(unit, _, spellID)
+  if hasanysecretvalues and hasanysecretvalues(unit, spellID) then return end
+  local name = unit == "player" and C_Spell.GetSpellName(spellID)
+  if not name then return end
+  Add("casts")
+  CountIn(C.casts, name, 1, 200)
+  if spellID == HEARTHSTONE then Add("hearth") end
+end
+
+-- shortcut: "X dies, you gain Y experience" stands in for killing blows, so group kills count, and grey mobs, level cap and
+-- instances (chat is hidden there) don't; upgrade to the combat log file if the stat needs to be exact.
+local XP_PREFIX = (COMBATLOG_XPGAIN_FIRSTPERSON or ""):match("^(.-)%%d")
+local KILL_PATTERN = XP_PREFIX and XP_PREFIX:find("%%s") and FormatToPattern(XP_PREFIX):sub(1, -2)
+
+local function OnXPGain(msg)
+  local name = KILL_PATTERN and msg:match(KILL_PATTERN)
+  if name then RecordKill(name) end
+end
+
+-- The Ledger app reads the combat log file for what addons can't see on Forever, so the game has to write one.
+-- Only with the app (App.lua): nothing else would ever read the files. /funstats logging off stops it.
+local function StartLogging(retried)
+  if not (DM and ns.hasApp and LoggingCombat) or FunStatsDB.logging == false then return end
+  local ok, on = pcall(LoggingCombat, true)
+  if ok and on == nil and not retried then -- rate limited: the game shares the limit between addons
+    C_Timer.After(11, function() StartLogging(true) end)
+    return
+  end
+  if ok and on and not FunStatsDB.loggingNoticed then
+    FunStatsDB.loggingNoticed = true
+    Print("combat logging is on, so the Ledger app can add crits, biggest hits and more. Only your own totals are uploaded, never the log. /funstats logging off stops it.")
+  end
+end
+
+-- The amounts are secret during combat. pcall: a secret anywhere else shouldn't break recording; the save file keeps the reason.
+local function ReadMeter()
+  if not DM or not C or UnitAffectingCombat("player") then return end
+  local ok, err = pcall(ReadMeterNow)
+  if not ok then FunStatsDB.meterError = tostring(err) end
+end
+
+---------------------------------------------------------------------------
 -- Deaths
 ---------------------------------------------------------------------------
+
+-- What killed me, from the game's death recap: the damage meter doesn't say.
+local function RecapDeath(entry)
+  local last
+  for _, e in ipairs(C_DeathRecap.GetRecapEvents() or {}) do
+    if e.causedDeath then last = e; break end
+    if not last or (e.timestamp or 0) > (last.timestamp or 0) then last = e end
+  end
+  if not last or (hasanysecretvalues and hasanysecretvalues(last.sourceName, last.spellName, last.amount, last.environmentalType)) then return end
+  entry.amt = last.amount
+  if last.event == "ENVIRONMENTAL_DAMAGE" then
+    entry.cause = ENV_CAUSE[last.environmentalType] or "environment"
+    Add("deaths_" .. entry.cause)
+  else
+    entry.cause = last.sourceGUID and last.sourceGUID:find("^Player%-") and "player" or "mob"
+    entry.by = not last.hideCaster and last.sourceName or nil
+    entry.spell = last.event == "SWING_DAMAGE" and "Melee" or last.spellName
+  end
+end
 
 local function OnDeath()
   Add("deaths")
@@ -803,6 +1009,11 @@ local function OnDeath()
     cause = cause, by = by, spell = spell, amt = amt,
     grouped = IsInGroup() or nil,
   }, MAX_DEATHS)
+  if DM and C_DeathRecap then
+    local entry = C.deaths[#C.deaths]
+    -- pcall: the recap's fields aren't documented and may be secret inside instances; the death itself is already saved.
+    C_Timer.After(1, function() pcall(RecapDeath, entry) end)
+  end
   lastHit = nil
   if C.run and not C.run.left then C.run.deaths = C.run.deaths + 1 end
 
@@ -845,10 +1056,7 @@ local function OnLevelUp(level)
   if level > (C.level or 0) then C.level = level end
 end
 
-local function OnLoot(msg)
-  local link = msg:match(LOOT_SELF_MULTI) or msg:match(LOOT_SELF)
-    or (LOOT_PUSHED_MULTI and msg:match(LOOT_PUSHED_MULTI)) or (LOOT_PUSHED and msg:match(LOOT_PUSHED))
-  if not link or not link:find("|Hitem:") then return end
+local function RecordLoot(link)
   local q = ItemQuality(link)
   Add("q" .. q)
   if q >= 3 then
@@ -859,6 +1067,32 @@ local function OnLoot(msg)
       boe = bindType == 2 or nil, world = not inInstance or nil, inst = inInstance and (GetInstanceInfo()) or nil,
       zone = spot.zone, cont = spot.cont, cx = spot.cx, cy = spot.cy }, MAX_NOTABLE)
   end
+end
+
+local function OnLoot(msg)
+  if DM and IsInInstance() then return end -- counted from the loot window there, see below
+  local link = msg:match(LOOT_SELF_MULTI) or msg:match(LOOT_SELF)
+    or (LOOT_PUSHED_MULTI and msg:match(LOOT_PUSHED_MULTI)) or (LOOT_PUSHED and msg:match(LOOT_PUSHED))
+  if link and link:find("|Hitem:") then RecordLoot(link) end
+end
+
+-- Forever hides chat from addons inside instances, so what I take from the loot window is counted instead.
+-- shortcut: items won by group loot rolls never pass through my loot window and go uncounted; upgrade if the first dungeons show they matter.
+local lootWindow = {}
+
+local function OnLootReady()
+  wipe(lootWindow)
+  if not IsInInstance() then return end
+  for slot = 1, GetNumLootItems() do
+    local link = GetLootSlotLink(slot)
+    if link and not (issecretvalue and issecretvalue(link)) then lootWindow[slot] = link end
+  end
+end
+
+local function OnLootSlotCleared(slot)
+  local link = lootWindow[slot]
+  lootWindow[slot] = nil
+  if link and link:find("|Hitem:") then RecordLoot(link) end
 end
 
 -- Patterns for strings with numbered arguments, like "%1$s has defeated %2$s in a duel".
@@ -885,11 +1119,11 @@ local function OnDuel(msg)
       local args = {}
       for i, n in ipairs(dp[2]) do args[n] = caps[i] end
       local winner, loser = args[1], args[2]
-      if winner == playerName and loser then
+      if IsMe(winner) and loser then
         Add("duelsWon")
         C.duels[loser] = C.duels[loser] or { w = 0, l = 0 }
         C.duels[loser].w = C.duels[loser].w + 1
-      elseif loser == playerName and winner then
+      elseif IsMe(loser) and winner then
         Add("duelsLost")
         C.duels[winner] = C.duels[winner] or { w = 0, l = 0 }
         C.duels[winner].l = C.duels[winner].l + 1
@@ -908,7 +1142,7 @@ local function OnSystem(msg)
   if reset and C.run and C.run.left and C.run.inst == reset then EndRun() return end
   if not ROLL_PATTERN then return end
   local who, roll, lo, hi = msg:match(ROLL_PATTERN)
-  if who ~= playerName then return end
+  if not IsMe(who) then return end
   roll, lo, hi = tonumber(roll), tonumber(lo), tonumber(hi)
   if lo ~= 1 or hi ~= 100 then return end
   Add("rolls")
@@ -925,8 +1159,8 @@ local WORDS = {
   oops = { "oops", "whoops", "oh no" },
 }
 
-local function OnChat(msg, author)
-  if not author or Ambiguate(author, "none") ~= playerName then return end
+local function OnChat(msg, author, ...)
+  if not FromMe(author, (select(10, ...))) then return end
   Add("msgs")
   local text = " " .. msg:lower() .. " "
   for field, list in pairs(WORDS) do
@@ -1067,6 +1301,8 @@ function handlers.PLAYER_LOGIN()
   InitCharacter()
   C_Timer.NewTicker(1, Tick)
   C_Timer.After(5, SnapshotSheet)
+  C_Timer.After(5, ReadMeter)
+  C_Timer.After(3, StartLogging)
   -- Ask the server for the guild roster now and then; GUILD_ROSTER_UPDATE then records it.
   local function RequestRoster()
     if not IsInGuild() then return end
@@ -1090,12 +1326,20 @@ end
 
 function handlers.PLAYER_LOGOUT()
   if C then
+    ReadMeter()
     UpdateProfile()
     C.gold = GetMoney()
   end
 end
 
 if CombatLogInfo then handlers.COMBAT_LOG_EVENT_UNFILTERED = OnCombatLog end
+if DM then
+  function handlers.PLAYER_REGEN_ENABLED() C_Timer.After(1, ReadMeter) end
+  function handlers.DAMAGE_METER_RESET() wipe(meterSeen) end
+  handlers.LOOT_READY = OnLootReady
+  handlers.LOOT_SLOT_CLEARED = OnLootSlotCleared
+  handlers.CHAT_MSG_COMBAT_XP_GAIN = OnXPGain
+end
 handlers.PLAYER_DEAD = OnDeath
 handlers.PLAYER_MONEY = OnMoney
 handlers.PLAYER_XP_UPDATE = OnXP
@@ -1173,8 +1417,8 @@ function handlers.QUEST_TURNED_IN()
   Add("quests")
 end
 
-function handlers.CHAT_MSG_TEXT_EMOTE(_, author)
-  if author and Ambiguate(author, "none") == playerName then Add("emotes") end
+function handlers.CHAT_MSG_TEXT_EMOTE(_, author, ...)
+  if FromMe(author, (select(10, ...))) then Add("emotes") end
 end
 
 for _, ev in ipairs({
@@ -1192,6 +1436,11 @@ frame:SetScript("OnEvent", function(_, event, ...)
 end)
 -- pcall: not every event exists in every client (specializations arrived with Mists of Pandaria).
 for event in pairs(handlers) do pcall(frame.RegisterEvent, frame, event) end
+-- Only my own casts, not every unit's nearby.
+if DM then
+  handlers.UNIT_SPELLCAST_SUCCEEDED = OnSpellcast
+  frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+end
 
 ---------------------------------------------------------------------------
 -- Slash command
@@ -1217,7 +1466,7 @@ local function GroupNames()
   if IsInRaid() then prefix, count = "raid", GetNumGroupMembers() end
   for i = 1, count do
     local unit = prefix .. i
-    if not UnitIsUnit(unit, "player") then names[#names + 1] = UnitName(unit) end
+    if not UnitIsUnit(unit, "player") then names[#names + 1] = (FullName(unit)) end
   end
   return names
 end
@@ -1231,7 +1480,7 @@ local function FriendCommand(cmd, rest)
     elseif rest ~= "" then
       AddFriend(rest)
     elseif UnitIsPlayer("target") and not UnitIsUnit("target", "player") then
-      AddFriend((UnitName("target")))
+      AddFriend((FullName("target")))
     else
       Print("usage: /funstats add Name, /funstats add group, or target a player and type /funstats add")
     end
@@ -1278,6 +1527,14 @@ SlashCmdList.FUNSTATS = function(input)
     end
     local r = C.run
     if r then Print(("this run: %s, %d bosses, %d wipes, %d deaths"):format(r.inst, r.bosses, r.wipes, r.deaths)) end
+    return
+  end
+  if cmd == "logging" then
+    if rest == "off" or rest == "on" then
+      FunStatsDB.logging = rest == "on"
+      if LoggingCombat then pcall(LoggingCombat, rest == "on") end
+    end
+    Print("combat logging for the Ledger app is " .. (FunStatsDB.logging == false and "off" or "on") .. ". /funstats logging on or off changes it.")
     return
   end
   if cmd == "announce" then

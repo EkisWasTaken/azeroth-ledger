@@ -61,6 +61,8 @@ async function all(path: string): Promise<Json[]> {
 // Which profile namespace a character's game uses: 1.x Classic Era, 2.x TBC Anniversary.
 function namespaceFor(game: Json | undefined): string | null {
   const v = String(game?.version ?? "");
+  // WoW Forever is 1.60 and up, not Classic Era: it has its own namespace, once Blizzard publishes one.
+  if (/^1\.[6-9]\d/.test(v)) return FOREVER_NS || null;
   if (v.startsWith("1.")) return "profile-classic1x";
   if (v.startsWith("2.")) return "profile-classicann";
   if (FOREVER_NS) return FOREVER_NS;

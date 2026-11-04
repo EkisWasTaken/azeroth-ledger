@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- The Forever theme's card border: a thin gold line with a gem at each corner, used as a border-image. -->
+  <defs>
+    <radialGradient id="gem" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#a8f5ea"/><stop offset=".55" stop-color="#2fb3b0"/><stop offset="1" stop-color="#0d5a61"/></radialGradient>
+    <g id="stud"><path d="M8 1.5 14.5 8 8 14.5 1.5 8Z" fill="#b98f3f" stroke="#f4dc94" stroke-width=".9"/><circle cx="8" cy="8" r="2.7" fill="url(#gem)" stroke="#2a1d08" stroke-width=".5"/></g>
+  </defs>
+  <rect x="5.5" y="5.5" width="37" height="37" fill="none" stroke="#caa257" stroke-width="1.5"/>
+  <rect x="8.5" y="8.5" width="31" height="31" fill="none" stroke="#caa257" stroke-opacity=".28"/>
+  <use href="#stud"/>
+  <use href="#stud" transform="translate(32 0)"/>
+  <use href="#stud" transform="translate(0 32)"/>
+  <use href="#stud" transform="translate(32 32)"/>
+</svg>
