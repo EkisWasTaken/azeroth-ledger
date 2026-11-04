@@ -472,7 +472,8 @@ end
 
 frame:SetScript("OnEvent", function(_, event, ...)
   if event == "CHAT_MSG_ADDON" then
-    OnAddonMessage(...)
+    -- Forever hides chat from addons inside instances.
+    if not (hasanysecretvalues and hasanysecretvalues(...)) then OnAddonMessage(...) end
   elseif event == "PLAYER_LOGIN" then
     lastRefill = GetTime()
     C_Timer.NewTicker(0.25, Pump)

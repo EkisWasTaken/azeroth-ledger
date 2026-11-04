@@ -12,6 +12,19 @@ local band = bit.band
 local MINE = COMBATLOG_OBJECT_AFFILIATION_MINE or 0x00000001
 local TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER or 0x00000400
 
+-- WoW Forever (toc 16001) runs the modern client API: these globals moved into namespaces.
+local GetItemInfo = GetItemInfo or (C_Item and C_Item.GetItemInfo)
+local SendChat = SendChatMessage or (C_ChatInfo and C_ChatInfo.SendChatMessage)
+local GetSpecialization = GetSpecialization or (C_SpecializationInfo and C_SpecializationInfo.GetSpecialization)
+local GetSpecializationInfo = GetSpecializationInfo or (C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo)
+local GetNumSkillLines = GetNumSkillLines or (C_SkillInfo and C_SkillInfo.GetNumSkillLines)
+local GetSkillLineInfo = GetSkillLineInfo or (C_SkillInfo and function(i)
+  local s = C_SkillInfo.GetSkillLineInfo(i)
+  if s then return s.name, s.isHeader, nil, s.rank, nil, nil, s.maxRank end
+end)
+-- Nil on Forever, where addons can't read the combat log: no combat stats there.
+local CombatLogInfo = CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatLog.GetCurrentEventInfo)
+
 local frame = CreateFrame("Frame")
 local C            -- this character's record
 local playerGUID, playerName
@@ -95,8 +108,9 @@ end
 local CONTINENTS = { 1414, 1415, 1945 }
 local AZEROTH = 947
 local CONTINENT_TYPE = Enum and Enum.UIMapType and Enum.UIMapType.Continent or 2
--- Mists of Pandaria Classic (5.x) and later: specializations and the newer profession list.
-local MODERN = (select(4, GetBuildInfo()) or 0) >= 50000
+-- Mists of Pandaria Classic (5.x) and later, and WoW Forever (1.x, toc 16001): specializations and the newer profession list.
+local TOC = select(4, GetBuildInfo()) or 0
+local MODERN = TOC >= 50000 or (TOC > 16000 and TOC < 20000)
 
 -- The continent a map (zone, subzone, city) belongs to.
 local function ContinentOf(mapID)
@@ -674,7 +688,7 @@ end
 
 local function OnCombatLog()
   local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _,
-    a12, a13, a14, a15, a16, a17, a18, a19, a20, a21 = CombatLogGetCurrentEventInfo()
+    a12, a13, a14, a15, a16, a17, a18, a19, a20, a21 = CombatLogInfo()
 
   local fromMe = srcFlags and band(srcFlags, MINE) ~= 0
   local toMe = dstGUID == playerGUID
@@ -795,7 +809,8 @@ local function OnDeath()
   if C.settings.announce and IsInGroup() then
     local total = #C.deaths
     local why = by and ("to " .. by) or (cause == "fall" and "to gravity") or (cause == "drown" and "by drowning") or ""
-    SendChatMessage(("[FunStats] %s died %s. Death #%d."):format(playerName, why, total), IsInRaid() and "RAID" or "PARTY")
+    -- pcall: Forever may refuse addon chat inside instances.
+    pcall(SendChat, ("[FunStats] %s died %s. Death #%d."):format(playerName, why, total), IsInRaid() and "RAID" or "PARTY")
   end
 end
 
@@ -987,8 +1002,7 @@ local function SnapshotProfessions()
       local name, _, rank, maxRank = GetProfessionInfo(index)
       if name then out[#out + 1] = { n = name, r = rank, m = maxRank } end
     end
-    if #out > 0 then C.professions = out end
-    return
+    if #out > 0 then C.professions = out; return end
   end
   if not GetNumSkillLines then return end
   local out, section = {}, nil
@@ -1081,7 +1095,7 @@ function handlers.PLAYER_LOGOUT()
   end
 end
 
-handlers.COMBAT_LOG_EVENT_UNFILTERED = OnCombatLog
+if CombatLogInfo then handlers.COMBAT_LOG_EVENT_UNFILTERED = OnCombatLog end
 handlers.PLAYER_DEAD = OnDeath
 handlers.PLAYER_MONEY = OnMoney
 handlers.PLAYER_XP_UPDATE = OnXP
@@ -1172,6 +1186,8 @@ end
 
 frame:SetScript("OnEvent", function(_, event, ...)
   if event ~= "PLAYER_LOGIN" and not C then return end
+  -- shortcut: Forever hides chat from addons inside instances, so loot and chat there go uncounted; upgrade if a loot API can replace it.
+  if event:find("^CHAT_MSG_") and hasanysecretvalues and hasanysecretvalues(...) then return end
   handlers[event](...)
 end)
 -- pcall: not every event exists in every client (specializations arrived with Mists of Pandaria).

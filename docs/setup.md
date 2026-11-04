@@ -122,7 +122,7 @@ Which game a realm belongs to is set in `site/config.js` under `games` and `defa
 
 The Anniversary realms run TBC Classic (client 2.5.6) since January 2026. On those realms the site links items to Wowhead's TBC database and plots levels up to 70.
 
-Once WoW Forever is out, check its version with `/run print(GetBuildInfo())`. Add a rule if its realms show up under the wrong game, and add its interface number to `## Interface:` in `FunStats/FunStats.toc`.
+WoW Forever is version 1.60.1, interface 16001, and is already listed in `FunStats/FunStats.toc`. Add a rule if its realms show up under the wrong game. Forever runs modern WoW's addon API and rules: addons can't read the combat log there, so FunStats records no damage, healing or death causes on Forever, and loot and chat inside instances go uncounted.
 
 ## Good to know
 
