@@ -216,6 +216,13 @@ class Addon(unittest.TestCase):
     def fire(self, event, *args):
         self.lua.globals().fire(event, *args)
 
+    def test_a_failing_event_is_noted_and_recording_goes_on(self):
+        self.start(FOREVER)
+        self.lua.execute('fire("CHAT_MSG_SYSTEM", {})')  # the handler can't read this message
+        self.assertIsNotNone(self.run_lua("FunStatsDB.errors.CHAT_MSG_SYSTEM"))
+        self.fire("CHAT_MSG_SYSTEM", "John Smith rolls 50 (1-100)")  # the next one still counts
+        self.assertEqual(self.today("rolls"), 1)
+
     def run_lua(self, code):
         return self.lua.eval(code)
 

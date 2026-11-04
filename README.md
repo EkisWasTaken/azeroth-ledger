@@ -53,7 +53,7 @@ flowchart LR
 2. **Addons share with each other.** While FunStats players group up or share a guild, their addons swap stats automatically.
 3. **The Ledger app uploads** your stats a few seconds after every logout. WoW doesn't let addons reach the internet, so a small app outside the game does it.
 4. **The Blizzard API** fills in level, guild and gear for guild members who don't run the addon.
-5. **Everything stays up to date.** The app checks the website for a new version every 6 hours and updates itself and the addon. Nobody downloads anything twice.
+5. **Everything stays up to date.** The app checks the website for a new version every hour and updates itself and the addon. Nobody downloads anything twice.
 6. **Your characters are yours.** Each install has a private upload code. The first upload claims a character, and nobody else can overwrite it.
 
 <br>
@@ -75,7 +75,7 @@ You can delete the downloaded file afterwards; the installed copy is the one tha
 
 ### Updates are automatic
 
-You never need to download the app again. When it starts, and every 6 hours after that, it checks the website for a newer version. If there is one, it downloads it, checks that the file matches the published SHA-256 hash, and replaces itself in the background. Each new app carries the newest addon, which it copies into your AddOns folders right away. **Restart WoW** to load a new addon version.
+You never need to download the app again. When it starts, and every hour after that, it checks the website for a newer version. If there is one, it downloads it, checks that the file matches the published SHA-256 hash, and replaces itself in the background. Each new app carries the newest addon, which it copies into your AddOns folders right away. **Restart WoW** to load a new addon version.
 
 The tray menu's **Show log** lists every update ("Updated to version …"). The website's *Add stats* page shows the current version next to the download button.
 
@@ -85,7 +85,7 @@ To stop it, right-click the shield and untick **Start with Windows**, or choose 
 
 ### Mac, or without the app
 
-Download `FunStats.zip`, put the `FunStats` folder in `World of Warcraft\_anniversary_\Interface\AddOns` (or your WoW Forever folder), play, then drop `WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua` on the *Add stats* page. Without the app nothing updates by itself: download the zip again now and then, and upload after you play.
+Download `FunStats.zip`, put the `FunStats` folder in `World of Warcraft\_forever_\Interface\AddOns` (or the folder of your other WoW version), play, then drop `WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua` on the *Add stats* page. Without the app nothing updates by itself: download the zip again now and then, and upload after you play.
 
 Nothing needs typing in game: the addon records, shares with your group and guild, and tracks guild mates and WoW friends without it on its own. `/funstats` shows today's numbers and the optional commands.
 
@@ -95,7 +95,7 @@ Nothing needs typing in game: the addon records, shares with your group and guil
 
 The website is a static page, live at **[azeroth-ledger.pages.dev](https://azeroth-ledger.pages.dev)** on Cloudflare Pages, backed by a free Supabase project. Every push to `main` publishes it.
 
-**Shipping an update to every player:** raise `AssemblyVersion` in [`app/LedgerApp.cs`](app/LedgerApp.cs), run `app\build.cmd` (it writes `AzerothLedger.exe`, `FunStats.zip` and `app-version.txt` to `site/`), and push. Installed apps pick it up within 6 hours, or at their next start. Without a higher version number, nobody gets the new build.
+**Shipping an update to every player:** raise `AssemblyVersion` in [`app/LedgerApp.cs`](app/LedgerApp.cs), run `app\build.cmd` (it writes `AzerothLedger.exe`, `FunStats.zip` and `app-version.txt` to `site/`), and push. Installed apps pick it up within an hour, or at their next start. Without a higher version number, nobody gets the new build.
 
 The **[setup guide](docs/setup.md)** walks through the database, hosting, the Blizzard API and building the app. The **[testing checklist](TESTING.md)** covers a full test run on an Anniversary realm.
 

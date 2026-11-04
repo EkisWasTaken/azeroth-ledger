@@ -163,7 +163,7 @@ local function Pump()
     local m = queue[qHead]
     queue[qHead] = nil
     qHead = qHead + 1
-    C_ChatInfo.SendAddonMessage(PREFIX, m[1], m[2], m[3])
+    pcall(C_ChatInfo.SendAddonMessage, PREFIX, m[1], m[2], m[3]) -- Forever may refuse addon chat inside instances
     tokens = tokens - 1
   end
 end

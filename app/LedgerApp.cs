@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.7.0.0")]
+[assembly: AssemblyVersion("1.7.1.0")]
 
 namespace AzerothLedger
 {
@@ -1073,6 +1073,8 @@ namespace AzerothLedger
         List<string> roots = new List<string>();
         DateTime lastScan = DateTime.MinValue;
         DateTime lastUpdateCheck = DateTime.MinValue;
+        DateTime retryAt = DateTime.MinValue;
+        int failures;
         int busy;
 
         [STAThread]
@@ -1173,6 +1175,9 @@ namespace AzerothLedger
 
             tray = new NotifyIcon { Icon = MakeIcon(), Text = Config.AppName, ContextMenuStrip = menu, Visible = true };
             tray.DoubleClick += (s, e) => { if (File.Exists(LogPath)) Open(LogPath); };
+            if (Config.SiteUrl != "") tray.BalloonTipClicked += (s, e) => Open(Config.SiteUrl);
+            // Status and notices reach the menu through BeginInvoke, which needs a handle even before the menu is first opened.
+            var unused = menu.Handle;
 
             timer = new System.Windows.Forms.Timer { Interval = 15000 };
             timer.Tick += (s, e) => Tick(false);
@@ -1181,9 +1186,9 @@ namespace AzerothLedger
 
             if (welcome)
             {
-                int n = roots.Count;
+                int n = Wow.Roots().Count; // the first scan is still running in the background
                 tray.ShowBalloonTip(8000, "Azeroth Ledger is running",
-                    n > 0 ? "The FunStats addon is installed. Just play: your stats upload by themselves after you log out. If WoW calls it out of date, tick Load out of date AddOns."
+                    n > 0 ? "The FunStats addon is installed. If WoW is open, restart it. Then just play: your stats upload by themselves after you log out. If WoW calls it out of date, tick Load out of date AddOns."
                           : "Couldn't find World of Warcraft yet. It will keep looking; your stats upload by themselves once it's installed.",
                     ToolTipIcon.Info);
             }
@@ -1210,6 +1215,7 @@ namespace AzerothLedger
                         DateTime prev;
                         if (seen.TryGetValue(f, out prev) && prev == w) continue;
                         if ((DateTime.UtcNow - w).TotalSeconds < 4) continue; // WoW may still be writing
+                        if (!manual && DateTime.UtcNow < retryAt) continue; // the last upload failed: wait, so an outage isn't hammered
                         if (Upload(f)) seen[f] = w;
                     }
                     if (roots.Count == 0) SetStatus("Looking for World of Warcraft…");
@@ -1221,13 +1227,13 @@ namespace AzerothLedger
             });
         }
 
-        // Every 6 hours (and at start), asks the website for sitepp-version.txt ("<version> <sha256>", written by
+        // Every hour (and at start), asks the website for sitepp-version.txt ("<version> <sha256>", written by
         // build.cmd). When it names a newer version, downloads the new app, checks it against the hash and starts it;
         // like a fresh download, it closes this copy and installs itself in its place. The addon comes with it.
-        // From the tray menu (manual), it skips the 6-hour wait and says what it found.
+        // From the tray menu (manual), it skips the wait and says what it found.
         void CheckForUpdate(bool manual = false)
         {
-            if (Config.SiteUrl == "" || (!manual && (DateTime.UtcNow - lastUpdateCheck).TotalHours < 6)) return;
+            if (Config.SiteUrl == "" || (!manual && (DateTime.UtcNow - lastUpdateCheck).TotalHours < 1)) return;
             lastUpdateCheck = DateTime.UtcNow;
             try
             {
@@ -1333,6 +1339,7 @@ namespace AzerothLedger
             var changed = rows.Where(r => { string d; return !sent.TryGetValue(Id(r, tag), out d) || d != Digest(r.Json); }).ToList();
             if (changed.Count == 0) { SetStatus("Up to date · " + DateTime.Now.ToString("t")); return true; }
 
+            bool firstUpload = !sent.Keys.Any(k => k.StartsWith("char:"));
             int saved = 0, skipped = 0;
             var batch = new List<Row>();
             int size = 0;
@@ -1352,17 +1359,31 @@ namespace AzerothLedger
             foreach (var r in changed)
             {
                 if (batch.Count > 0 && (batch.Count >= Config.MaxRowsPerBatch || size + r.Json.Length > Config.MaxBatchChars))
-                    if (!flush()) { SetStatus("Upload failed, retrying soon"); return false; }
+                    if (!flush()) return UploadFailed();
                 batch.Add(r);
                 size += r.Json.Length;
             }
-            if (!flush()) { SetStatus("Upload failed, retrying soon"); return false; }
+            if (!flush()) return UploadFailed();
+            failures = 0;
             SaveState();
             var mine = changed.Where(r => r.Kind == "char").Select(r => r.Name).Distinct().ToList();
             Log("Uploaded " + saved + " row(s)" + (mine.Count > 0 ? " for " + string.Join(", ", mine) : "") + (skipped > 0 ? ", " + skipped + " skipped (claimed by another upload code)" : ""));
             SetStatus("Uploaded " + DateTime.Now.ToString("t"));
+            if (firstUpload && mine.Count > 0) Notify("Your stats are on the Ledger", string.Join(", ", mine) + " uploaded. Click to open the site.");
             return true;
         }
+
+        bool UploadFailed()
+        {
+            failures++;
+            int seconds = RetryDelay(failures);
+            retryAt = DateTime.UtcNow.AddSeconds(seconds);
+            SetStatus("Upload failed, retrying soon");
+            return false;
+        }
+
+        // 30 seconds after the first failure, doubling up to 15 minutes.
+        internal static int RetryDelay(int failures) { return Math.Min(900, 15 << Math.Min(failures, 6)); }
 
         static string Post(string path, string body)
         {

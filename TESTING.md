@@ -104,7 +104,7 @@ The addon was checked against Forever's published API and run in a stand-in for 
 4. Loot something blue or better, in the open world and in a dungeon.
 5. Log out. **Check on the site:** the Realm menu shows your ruleset under WoW Forever, and your character page has your full name, gear, spec, professions, damage, and what killed you.
 6. Log file stats: `_forever_\Logs` has a `WoWCombatLog-*.txt`, and your character page shows crits and a biggest hit. **Show log** says if the format was skipped. `/funstats logging off` stops new logs.
-7. If numbers are missing, send `WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua` from the `_forever_` folder. `meterError` in that file says why the meter couldn't be read.
+7. If numbers are missing, send `WTF\Account\<ACCOUNT>\SavedVariables\FunStats.lua` from the `_forever_` folder. `meterError` in that file says why the meter couldn't be read, and `errors` lists any game event the addon failed on.
 
 ## What to report back
 

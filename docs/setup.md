@@ -37,7 +37,7 @@ Each page is split into a few views: Overview, Meters & Combat, Deaths, Atlas, L
 
 Tray menu: status, **Open the Ledger**, **Upload now**, **Show log**, **Start with Windows** and **Quit**. `AzerothLedger.exe --uninstall` turns off autostart. For an unusual install location, add the WoW folder on its own line in `%LOCALAPPDATA%\AzerothLedger\wow-folders.txt`.
 
-**Updates:** at start and every 6 hours, the app reads `app-version.txt` from the website. When it names a newer version, the app downloads `AzerothLedger.exe`, checks it against the SHA-256 hash in that file, and replaces itself. The new app brings the new addon with it. Apps older than 1.1 can't update themselves, so those players download the app once more.
+**Updates:** at start and every hour, the app reads `app-version.txt` from the website. When it names a newer version, the app downloads `AzerothLedger.exe`, checks it against the SHA-256 hash in that file, and replaces itself. The new app brings the new addon with it. Apps older than 1.1 can't update themselves, so those players download the app once more.
 
 Windows SmartScreen warns about apps from unknown publishers. Players click **More info → Run anyway** once. Only a paid code-signing certificate removes that warning.
 
@@ -84,7 +84,7 @@ To test one character without saving anything, open `https://nznnybzrqplsqyhotln
 **Windows:** download the app from the site's **Add stats** page and run it. Then just play. It updates itself and the addon (see [Updates](#the-ledger-app-windows)); restart WoW to load a new addon.
 
 **Mac or without the app:**
-1. Unzip `FunStats.zip` into the game's AddOns folder, for example `World of Warcraft\_anniversary_\Interface\AddOns`.
+1. Unzip `FunStats.zip` into the game's AddOns folder, for example `World of Warcraft\_forever_\Interface\AddOns`.
 2. Play, then log out so WoW saves the file.
 3. Upload `WTF\Account\YOUR_ACCOUNT\SavedVariables\FunStats.lua` on the site's **Add stats** page.
 

@@ -213,7 +213,7 @@
     "If WoW lists FunStats as <b>out of date</b>, tick <b>Load out of date AddOns</b> on the character screen. It works fine; that just means a WoW patch came out before our next update.": "Om WoW visar FunStats som <b>out of date</b>, bocka i <b>Load out of date AddOns</b> på karaktärsskärmen. Den fungerar ändå; det betyder bara att en WoW-patch kom ut före vår nästa uppdatering.",
     "To stop it: right-click the shield icon in the tray and untick <b>Start with Windows</b>, or choose <b>Quit</b>.": "Stäng av den: högerklicka på sköldikonen i aktivitetsfältet och bocka ur <b>Start with Windows</b>, eller välj <b>Quit</b>.",
     "Mac, or without the app": "Mac, eller utan appen",
-    "Download <a href=\"FunStats.zip\">FunStats.zip</a> and put the <code>FunStats</code> folder in <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.": "Ladda ner <a href=\"FunStats.zip\">FunStats.zip</a> och lägg mappen <code>FunStats</code> i <code>World of Warcraft\\_anniversary_\\Interface\\AddOns</code>.",
+    "Download <a href=\"FunStats.zip\">FunStats.zip</a> and put the <code>FunStats</code> folder in <code>World of Warcraft\\_forever_\\Interface\\AddOns</code>.": "Ladda ner <a href=\"FunStats.zip\">FunStats.zip</a> och lägg mappen <code>FunStats</code> i <code>World of Warcraft\\_forever_\\Interface\\AddOns</code>.",
     "Play, then log out so WoW saves your stats.": "Spela och logga sedan ut så att WoW sparar din statistik.",
     "Drop <code>WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\FunStats.lua</code> here:": "Släpp <code>WTF\\Account\\DITT_KONTO\\SavedVariables\\FunStats.lua</code> här:",
     "Guild mates without the addon show as greyed names on their guild's roster, and get their own page once they install FunStats.": "Guildmedlemmar utan addonen syns som gråa namn på guildens roster och får en egen sida när de installerar FunStats.",
@@ -3006,17 +3006,18 @@
 
   // ---------- loading from Supabase ----------
   const CONFIG = window.LEDGER_CONFIG || {};
-  async function loadLedger() {
+  const knownRows = new Map(); // id -> row, so a refresh only downloads what changed
+  async function loadLedger(changesOnly) {
     state.lastLoad = Date.now();
     const url = String(CONFIG.supabaseUrl || "").replace(/\/$/, "");
     const key = String(CONFIG.publishableKey || "");
     if (!url || !key || url.includes("YOUR") || key.includes("YOUR")) { state.status = "unconfigured"; render(); return; }
     const headers = { apikey: key };
     if (!key.startsWith("sb_")) headers.Authorization = "Bearer " + key;
-    const readAll = async table => {
+    const readAll = async (table, filter = "") => {
       const rows = [];
       for (let from = 0; ; from += 1000) {
-        const res = await fetch(`${url}/rest/v1/${table}?select=id,kind,char_key,data,updated_at&order=id&limit=1000&offset=${from}`, { headers });
+        const res = await fetch(`${url}/rest/v1/${table}?select=id,kind,char_key,data,updated_at&order=id&limit=1000&offset=${from}${filter}`, { headers });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const page = await res.json();
         rows.push(...page);
@@ -3025,21 +3026,39 @@
       return rows;
     };
     try {
-      // entries_lite and realm_atlas come from supabase/hardening.sql; until it has run, read the whole table.
-      let rows;
-      try {
-        rows = await readAll("entries_lite");
-        const res = await fetch(`${url}/rest/v1/realm_atlas?select=realm,atlas`, { headers });
-        const atlases = {};
-        if (res.ok) for (const a of await res.json()) if (a.realm && a.atlas && typeof a.atlas === "object") atlases[a.realm] = a.atlas;
-        state.atlases = atlases;
-      } catch (e) {
-        rows = await readAll("entries");
+      let incremental = false;
+      if (changesOnly && state.status === "ok" && knownRows.size && state.updated) {
+        // A minute of overlap, so an upload that was still saving during the last refresh isn't missed.
+        const since = new Date(state.updated - 60000).toISOString();
+        const changed = await readAll("entries_lite", `&updated_at=gte.${encodeURIComponent(since)}`);
+        const fresh = changed.filter(r => knownRows.get(r.id)?.updated_at !== r.updated_at);
+        for (const r of fresh) knownRows.set(r.id, r);
+        // A row count that doesn't match means something was deleted: read everything again.
+        const res = await fetch(`${url}/rest/v1/entries_lite?select=id&limit=1`, { headers: { ...headers, Prefer: "count=exact" } });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const total = Number((res.headers.get("content-range") || "").split("/")[1]);
+        incremental = total === knownRows.size;
+        if (incremental && !fresh.length) return;
+      }
+      if (!incremental) {
+        // entries_lite and realm_atlas come from supabase/hardening.sql; until it has run, read the whole table.
+        let rows;
+        try {
+          rows = await readAll("entries_lite");
+          const res = await fetch(`${url}/rest/v1/realm_atlas?select=realm,atlas`, { headers });
+          const atlases = {};
+          if (res.ok) for (const a of await res.json()) if (a.realm && a.atlas && typeof a.atlas === "object") atlases[a.realm] = a.atlas;
+          state.atlases = atlases;
+        } catch (e) {
+          rows = await readAll("entries");
+        }
+        knownRows.clear();
+        for (const r of rows) knownRows.set(r.id, r);
       }
       const src = { chars: {}, days: {}, obs: {}, players: {}, api: {}, crests: {}, journal: null };
       const relays = {};
       let updated = 0;
-      for (const r of rows) {
+      for (const r of knownRows.values()) {
         const data = r.data && typeof r.data === "object" ? r.data : {};
         const id = "c-" + r.char_key;
         if (r.kind === "char") {
@@ -3608,8 +3627,8 @@
 
   render();
   loadLedger();
-  setInterval(() => { if (!document.hidden) loadLedger(); }, 5 * 60 * 1000);
+  setInterval(() => { if (!document.hidden) loadLedger(true); }, 5 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && Date.now() - (state.lastLoad || 0) > 60000) loadLedger();
+    if (!document.hidden && Date.now() - (state.lastLoad || 0) > 60000) loadLedger(true);
   });
 })();

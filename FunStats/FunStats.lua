@@ -1432,7 +1432,13 @@ frame:SetScript("OnEvent", function(_, event, ...)
   if event ~= "PLAYER_LOGIN" and not C then return end
   -- shortcut: Forever hides chat from addons inside instances, so loot and chat there go uncounted; upgrade if a loot API can replace it.
   if event:find("^CHAT_MSG_") and hasanysecretvalues and hasanysecretvalues(...) then return end
-  handlers[event](...)
+  -- pcall: one event failing on the live client shouldn't stop the rest. The save file keeps the reason for bug reports.
+  local ok, err = pcall(handlers[event], ...)
+  if not ok then
+    FunStatsDB = FunStatsDB or {}
+    FunStatsDB.errors = FunStatsDB.errors or {}
+    FunStatsDB.errors[event] = tostring(err):sub(1, 300)
+  end
 end)
 -- pcall: not every event exists in every client (specializations arrived with Mists of Pandaria).
 for event in pairs(handlers) do pcall(frame.RegisterEvent, frame, event) end
