@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.7.1.0")]
+[assembly: AssemblyVersion("1.7.2.0")]
 
 namespace AzerothLedger
 {
@@ -461,6 +461,7 @@ namespace AzerothLedger
     {
         const int BlockLength = 19; // the unit details WoW Forever writes before amounts
         const string SupportedVersion = "22";
+        const int KeepLogDays = 14;
         static readonly HashSet<string> Events = new HashSet<string> {
             "COMBAT_LOG_VERSION", "SWING_DAMAGE", "SPELL_DAMAGE", "SPELL_PERIODIC_DAMAGE", "RANGE_DAMAGE", "DAMAGE_SHIELD", "ENVIRONMENTAL_DAMAGE",
             "SWING_MISSED", "SPELL_MISSED", "RANGE_MISSED", "SPELL_HEAL", "SPELL_PERIODIC_HEAL", "SPELL_CAST_SUCCESS", "PARTY_KILL" };
@@ -877,11 +878,12 @@ namespace AzerothLedger
 
         // Brings the saved totals up to date with the log files, then adds them to the characters that made them.
         // A batch whose damage and heal lines don't fit the expected layout is refused whole: no stats beat wrong stats.
-        public static void Apply(Dictionary<string, object> db, string logsDir, string statePath, Action<string> log)
+        public static void Apply(Dictionary<string, object> db, string logsDir, string statePath, Action<string> log, bool deleteOld = true)
         {
             var state = Load(statePath);
             var players = Dict(state, "players");
             var files = Dict(state, "files");
+            var finished = new List<string>();
             bool changed = false;
             if (Directory.Exists(logsDir))
             {
@@ -892,7 +894,7 @@ namespace AzerothLedger
                     long offset = (long)Num(entry, "o");
                     long length;
                     try { length = new FileInfo(path).Length; } catch (IOException) { continue; }
-                    if (length == offset) continue;
+                    if (length == offset) { finished.Add(path); continue; }
                     if (length < offset) { entry["o"] = (double)length; changed = true; continue; } // cut short: never count it again
                     object meObj;
                     entry.TryGetValue("me", out meObj);
@@ -902,7 +904,11 @@ namespace AzerothLedger
                     long pos;
                     try { pos = ReadFrom(path, offset, reader); }
                     catch (IOException e) { log("Couldn't read " + name + ": " + e.Message); continue; }
-                    if (reader.Refused != null) log("Skipped " + name + ": unknown combat log format (" + reader.Refused + ").");
+                    if (reader.Refused != null)
+                    {
+                        log("Skipped " + name + ": unknown combat log format (" + reader.Refused + ").");
+                        entry["refused"] = true;
+                    }
                     if (reader.Bad * 20 > reader.Checked)
                     {
                         log("Skipped new lines in " + name + ": " + reader.Bad + " of " + reader.Checked + " didn't fit the expected format.");
@@ -913,9 +919,11 @@ namespace AzerothLedger
                     entry["ok"] = reader.Supported;
                     if (reader.Me != null) entry["me"] = reader.Me;
                     changed = true;
+                    finished.Add(path); // a half-written last line is all that can remain
                 }
             }
             if (changed) Save(statePath, state);
+            RemoveOldLogs(db, finished, files, log, deleteOld);
 
             object charsObj;
             if (!db.TryGetValue("chars", out charsObj) || !(charsObj is Dictionary<string, object>)) return;
@@ -926,6 +934,31 @@ namespace AzerothLedger
                 if (c == null || !c.TryGetValue("guid", out guid) || !(guid is string) || !players.TryGetValue((string)guid, out stats)) continue;
                 var s = stats as Dictionary<string, object>;
                 if (s != null) MergeInto(c, s);
+            }
+        }
+
+        // A log grows about 25 MB per hour played. Removes those counted in full, once they're old enough that other log
+        // tools have had their chance. The file's entry stays in the totals, so a restored copy is never counted twice.
+        // shortcut: logging off is per account, but accounts share the Logs folder; upgrade if a shared PC needs its own rule.
+        static void RemoveOldLogs(Dictionary<string, object> db, List<string> finished, Dictionary<string, object> files, Action<string> log, bool delete)
+        {
+            object logging;
+            if (db.TryGetValue("logging", out logging) && logging is bool && !(bool)logging) return; // this player manages their own logs
+            foreach (var path in finished)
+            {
+                string name = Path.GetFileName(path);
+                if (!name.StartsWith("WoWCombatLog-", StringComparison.OrdinalIgnoreCase)) continue;
+                var entry = Dict(files, name);
+                object ok;
+                if (!entry.TryGetValue("ok", out ok) || !(ok is bool) || !(bool)ok || entry.ContainsKey("refused")) continue; // never counted
+                try
+                {
+                    if ((DateTime.UtcNow - File.GetLastWriteTimeUtc(path)).TotalDays < KeepLogDays) continue;
+                    if (delete) File.Delete(path);
+                    log((delete ? "Deleted" : "Would delete") + " old combat log " + name);
+                }
+                catch (IOException e) { log("Couldn't delete " + name + ": " + e.Message); }
+                catch (UnauthorizedAccessException e) { log("Couldn't delete " + name + ": " + e.Message); }
             }
         }
 
@@ -1102,7 +1135,7 @@ namespace AzerothLedger
                 var save = (Dictionary<string, object>)fs;
                 using (var stdout = Console.OpenStandardOutput())
                 {
-                    if (CombatLogs.Wanted(save)) CombatLogs.Apply(save, args[2], args[3], m => { var b = Encoding.UTF8.GetBytes("# " + m + "\n"); stdout.Write(b, 0, b.Length); });
+                    if (CombatLogs.Wanted(save)) CombatLogs.Apply(save, args[2], args[3], m => { var b = Encoding.UTF8.GetBytes("# " + m + "\n"); stdout.Write(b, 0, b.Length); }, args.Length >= 5 && args[4] == "--delete-old-logs");
                     foreach (var r in Rows.Build(save)) { var b = Encoding.UTF8.GetBytes(r.Json + "\n"); stdout.Write(b, 0, b.Length); }
                 }
                 return;

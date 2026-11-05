@@ -77,6 +77,8 @@ You can delete the downloaded file afterwards; the installed copy is the one tha
 
 You never need to download the app again. When it starts, and every hour after that, it checks the website for a newer version. If there is one, it downloads it, checks that the file matches the published SHA-256 hash, and replaces itself in the background. Each new app carries the newest addon, which it copies into your AddOns folders right away. **Restart WoW** to load a new addon version.
 
+On WoW Forever the addon turns combat logging on and the app adds your own totals from those files. A log grows about 25 MB per hour played, so the app deletes `WoWCombatLog-*.txt` files it has counted in full once they're 14 days old. Use `/funstats logging off` to stop both the logging and the deleting, for example if you keep logs for other tools.
+
 The tray menu's **Show log** lists every update ("Updated to version …"). The website's *Add stats* page shows the current version next to the download button.
 
 > Apps older than 1.1 can't update themselves: download the app once more and it takes over from there.

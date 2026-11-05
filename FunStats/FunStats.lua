@@ -27,6 +27,13 @@ local CombatLogInfo = CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatL
 -- The game's own damage meter stands in for the combat log there; other clients never touch it.
 local DM = not CombatLogInfo and C_DamageMeter
 
+-- Forever reports the server behind the realm ("CAMWOW EU4 Realm 8 PvP"), but one ruleset and region is one realm ("PvP-EU").
+local function RealmFromServer(server)
+  local region, ruleset = server:match("^.- (%u%u+)%d* Realm %d+ (.+)$")
+  return region and (ruleset .. "-" .. region) or server
+end
+local function GetRealmName() return RealmFromServer(_G.GetRealmName()) end
+
 local frame = CreateFrame("Frame")
 local C            -- this character's record
 local playerGUID, playerName
@@ -64,7 +71,7 @@ local function IsMe(name)
   if not name then return false end
   if name == playerName then return true end
   if not TwoPartNames() then return false end
-  return (name:gsub("-", " ")) == playerName or name == (UnitName("player"))
+  return (ns.SplitName(name)) == playerName or name == (UnitName("player"))
 end
 
 -- Chat events carry the sender's GUID, which can't be mistaken for someone with the same first name.
@@ -263,6 +270,21 @@ local function UpdateProfile()
   C.owner = FunStatsDB.id
 end
 
+-- Saves from before 1.7.2 are keyed by server name: move them to the realm name, keeping the newest if there are several.
+local function MoveServerKeys(list)
+  local moved = {}
+  for key in pairs(list) do
+    local name, server = key:match("^([^%-]+)%-(.+)$")
+    if server and RealmFromServer(server) ~= server then moved[key] = name .. "-" .. RealmFromServer(server) end
+  end
+  for old, new in pairs(moved) do
+    local entry = list[old]
+    list[old] = nil
+    if type(entry) == "table" and entry.realm then entry.realm = RealmFromServer(entry.realm) end
+    if not list[new] or (entry.lastSeen or 0) > (list[new].lastSeen or 0) then list[new] = entry end
+  end
+end
+
 local function InitCharacter()
   FunStatsDB = FunStatsDB or {}
   FunStatsDB.v = DB_VERSION
@@ -270,6 +292,9 @@ local function InitCharacter()
   FunStatsDB.friends = FunStatsDB.friends or {}
   FunStatsDB.observed = FunStatsDB.observed or {}
   FunStatsDB.synced = FunStatsDB.synced or {}   -- other players' stats, received by Sync.lua
+  MoveServerKeys(FunStatsDB.chars)
+  MoveServerKeys(FunStatsDB.observed)
+  MoveServerKeys(FunStatsDB.synced)
   -- Random id for this WoW account, so the website can tell observers apart.
   FunStatsDB.id = FunStatsDB.id or ("a" .. time() .. math.random(100000, 999999))
   -- Private upload code: proves on the website that this install's characters are yours.
@@ -319,6 +344,7 @@ local function InitCharacter()
   UpdateProfile()
 
   lastMoney = GetMoney()
+  C.gold = lastMoney
   lastXP, lastXPMax = UnitXP("player"), UnitXPMax("player")
   C.peakGold = math.max(C.peakGold or 0, lastMoney)
   C.days[date("%Y-%m-%d")] = C.days[date("%Y-%m-%d")] or {}
@@ -357,11 +383,9 @@ local friendLastHit = {}  -- guid -> last damage taken
 
 local function SplitName(full)
   if TwoPartNames() then
-    local here = GetRealmName()
-    for _, r in ipairs({ here, GetNormalizedRealmName and GetNormalizedRealmName() or here }) do
-      if full:sub(-#r - 1) == "-" .. r then full = full:sub(1, -#r - 2); break end
-    end
-    return (full:gsub("-", " ")), here
+    -- A name is always two words here, whatever follows it: the game also writes "First-Surname-PvP-EU".
+    local first, last = full:match("^([^%- ]+)[%- ]([^%- ]+)")
+    return first and (first .. " " .. last) or full, GetRealmName()
   end
   local base, realm = strsplit("-", full)
   return base, (realm and realm ~= "") and realm or GetRealmName()
@@ -946,7 +970,7 @@ local function StartLogging(retried)
   end
   if ok and on and not FunStatsDB.loggingNoticed then
     FunStatsDB.loggingNoticed = true
-    Print("combat logging is on, so the Ledger app can add crits, biggest hits and more. Only your own totals are uploaded, never the log. /funstats logging off stops it.")
+    Print("combat logging is on, so the Ledger app can add crits, biggest hits and more. Only your own totals are uploaded, never the log, and the app deletes logs after 14 days. /funstats logging off stops both.")
   end
 end
 
@@ -1206,7 +1230,8 @@ local function SnapshotTalents()
   if MODERN and GetSpecialization and GetSpecializationInfo then
     local index = GetSpecialization()
     local _, name = GetSpecializationInfo(index or 0)
-    C.spec = index and name or nil
+    -- Before choosing a specialization the game names it after the class: "Hunter Hunter".
+    C.spec = index and name ~= UnitClass("player") and name or nil
     C.talents = nil
     return
   end
@@ -1327,8 +1352,7 @@ end
 function handlers.PLAYER_LOGOUT()
   if C then
     ReadMeter()
-    UpdateProfile()
-    C.gold = GetMoney()
+    UpdateProfile() -- gold stays as PLAYER_MONEY left it: the game reports 0 while logging out
   end
 end
 

@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -103,8 +104,12 @@ class CombatLog(unittest.TestCase):
         with open(self.logs / name, mode, encoding="utf-8", newline="\r\n") as f:
             f.write("\n".join(lines) + "\n")
 
-    def run_app(self):
-        out = subprocess.run([str(EXE), "--logs-dry-run", str(self.save), str(self.logs), str(self.totals)],
+    def age(self, days, name="WoWCombatLog-110526_200000.txt"):
+        then = time.time() - days * 86400
+        os.utime(self.logs / name, (then, then))
+
+    def run_app(self, *flags):
+        out = subprocess.run([str(EXE), "--logs-dry-run", str(self.save), str(self.logs), str(self.totals), *flags],
                              capture_output=True, check=True, timeout=60).stdout.decode("utf-8")
         self.notes = [l for l in out.splitlines() if l.startswith("# ")]
         rows = [json.loads(l) for l in out.splitlines() if l.strip() and not l.startswith("# ")]
@@ -199,6 +204,60 @@ class CombatLog(unittest.TestCase):
         d = self.run_app()
         self.assertNotIn("hits", d["days"][DAY])
         self.assertTrue(any("didn't fit" in n for n in self.notes), self.notes)
+
+    # ---- old logs
+
+    def test_old_log_is_deleted_after_counting_and_its_stats_stay(self):
+        self.write(STANDARD)
+        self.age(15)
+        d = self.run_app("--delete-old-logs")
+        self.assertEqual(d["days"][DAY]["hits"], 2)
+        self.assertEqual(list(self.logs.iterdir()), [])
+        self.assertTrue(any("Deleted old combat log" in n for n in self.notes), self.notes)
+        self.assertEqual(self.run_app()["days"][DAY]["hits"], 2)
+
+    def test_restored_log_is_not_counted_twice(self):
+        self.write(STANDARD)
+        self.age(15)
+        self.run_app("--delete-old-logs")
+        self.write(STANDARD)
+        self.assertEqual(self.run_app()["days"][DAY]["hits"], 2)
+
+    def test_dry_run_only_says_what_it_would_delete(self):
+        self.write(STANDARD)
+        self.age(15)
+        self.run_app()
+        self.assertEqual(len(list(self.logs.iterdir())), 1)
+        self.assertTrue(any("Would delete old combat log" in n for n in self.notes), self.notes)
+
+    def test_recent_log_stays(self):
+        self.write(STANDARD)
+        self.age(13)
+        self.run_app("--delete-old-logs")
+        self.assertEqual(len(list(self.logs.iterdir())), 1)
+
+    def test_logs_that_were_never_counted_stay(self):
+        self.write(["11/5/2026 20:00:00.000+1  COMBAT_LOG_VERSION,23,ADVANCED_LOG_ENABLED,0,BUILD_VERSION,1.60.1,PROJECT_ID,18"] + STANDARD[1:], name="WoWCombatLog-1.txt")
+        self.write([line(HEADER)] + [line(f"SWING_DAMAGE,{me()},{wolf()},{block()},7,67,70,-1,1,0,0,0,nil,nil,nil", s) for s in range(20)], name="WoWCombatLog-2.txt")
+        self.age(30, "WoWCombatLog-1.txt")
+        self.age(30, "WoWCombatLog-2.txt")
+        self.run_app("--delete-old-logs")
+        self.assertEqual(len(list(self.logs.iterdir())), 2)
+
+    def test_players_with_logging_off_keep_their_logs(self):
+        self.save.write_text(SAVE.replace('["id"] = "acct",', '["id"] = "acct",\n\t["logging"] = false,'), encoding="utf-8")
+        self.write(STANDARD)
+        self.age(30)
+        self.run_app("--delete-old-logs")
+        self.assertEqual(len(list(self.logs.iterdir())), 1)
+
+    def test_other_files_in_the_folder_stay(self):
+        self.write(STANDARD, name="WoWCombatLog.txt")
+        (self.logs / "Client.log").write_text("x")
+        self.age(30, "WoWCombatLog.txt")
+        self.age(30, "Client.log")
+        self.run_app("--delete-old-logs")
+        self.assertEqual(len(list(self.logs.iterdir())), 2)
 
     def test_no_logs_and_no_guid_change_nothing(self):
         d = self.run_app()

@@ -213,6 +213,7 @@
     "If WoW lists FunStats as <b>out of date</b>, tick <b>Load out of date AddOns</b> on the character screen. It works fine; that just means a WoW patch came out before our next update.": "Om WoW visar FunStats som <b>out of date</b>, bocka i <b>Load out of date AddOns</b> på karaktärsskärmen. Den fungerar ändå; det betyder bara att en WoW-patch kom ut före vår nästa uppdatering.",
     "To stop it: right-click the shield icon in the tray and untick <b>Start with Windows</b>, or choose <b>Quit</b>.": "Stäng av den: högerklicka på sköldikonen i aktivitetsfältet och bocka ur <b>Start with Windows</b>, eller välj <b>Quit</b>.",
     "Mac, or without the app": "Mac, eller utan appen",
+    "On WoW Forever the addon turns combat logging on, and the app adds your own totals from those files. It deletes them after 14 days. Type <code>/funstats logging off</code> to stop both.": "På WoW Forever slår addonen på combat logging, och appen lägger till dina egna siffror från de filerna. Den raderar dem efter 14 dagar. Skriv <code>/funstats logging off</code> för att stoppa båda.",
     "Download <a href=\"FunStats.zip\">FunStats.zip</a> and put the <code>FunStats</code> folder in <code>World of Warcraft\\_forever_\\Interface\\AddOns</code>.": "Ladda ner <a href=\"FunStats.zip\">FunStats.zip</a> och lägg mappen <code>FunStats</code> i <code>World of Warcraft\\_forever_\\Interface\\AddOns</code>.",
     "Play, then log out so WoW saves your stats.": "Spela och logga sedan ut så att WoW sparar din statistik.",
     "Drop <code>WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\FunStats.lua</code> here:": "Släpp <code>WTF\\Account\\DITT_KONTO\\SavedVariables\\FunStats.lua</code> här:",
@@ -2502,7 +2503,7 @@
     const head = `<div class="sheet-head">
         <span>${classIcon(ch)} <b>${esc(ch.name)}</b> <span class="muted">${tr("Level {0} {1} {2}", esc(ch.level || "?"), esc(RACE[ch.race] || ch.race || ""), cname)}${ch.realm ? " · " + esc(ch.realm) : ""}${ch.guild ? " · &lt;" + esc(ch.guild) + "&gt;" : ""}</span></span>
         ${talents.length ? `<span class="talents">${spec && spec.p ? `<span class="spec">${esc(spec.n)} ${esc(cname)}</span>` : ""}${talents.map(t => `<span class="talent">${esc(t.n)} <b>${num(t.p)}</b></span>`).join("")}</span>`
-          : ch.spec ? `<span class="talents"><span class="spec">${esc(ch.spec)} ${esc(cname)}</span></span>` : ""}
+          : ch.spec && ch.spec.toUpperCase() !== ch.class ? `<span class="talents"><span class="spec">${esc(ch.spec)} ${esc(cname)}</span></span>` : ""}
       </div>`;
     if (!Object.keys(gear).length) {
       return head + `<div class="mid solo" style="--c:${color}">${portraitHTML(ch)}</div><p class="empty">${ch.self ? tr("Gear appears after this character logs in with the latest FunStats.") : tr("Gear appears once this character has the Ledger app, or after the next armory update.")}</p>`;

@@ -216,6 +216,19 @@ class Addon(unittest.TestCase):
     def fire(self, event, *args):
         self.lua.globals().fire(event, *args)
 
+    def test_forever_server_name_becomes_the_realm_and_old_saves_move(self):
+        # Seen on the live client: GetRealmName is the server, the combat log says "Legolars-Grönblad-PvP-EU".
+        realm = 'function GetRealmName() return "CAMWOW EU4 Realm 8 PvP" end; '
+        save = ('FunStatsDB = { chars = { ["John Smith-CAMWOW EU4 Realm 8 PvP"] = '
+                '{ realm = "CAMWOW EU4 Realm 8 PvP", lastSeen = 5, days = { ["2026-11-05"] = { dmg = 77 } } } } }; ')
+        self.start(FOREVER + "\n" + realm + save)
+        key, c = self.char()
+        self.assertEqual(key, "John Smith-PvP-EU")
+        self.assertEqual(c.realm, "PvP-EU")
+        self.assertEqual(self.today("dmg"), 77)
+        self.assertEqual(self.run_lua('select("#", ADDON_TABLE.SplitName("Eve-Lind-PvP-EU"))'), 2)
+        self.assertEqual(self.run_lua('(ADDON_TABLE.SplitName("Eve-Lind-PvP-EU"))'), "Eve Lind")
+
     def test_a_failing_event_is_noted_and_recording_goes_on(self):
         self.start(FOREVER)
         self.lua.execute('fire("CHAT_MSG_SYSTEM", {})')  # the handler can't read this message
@@ -308,7 +321,6 @@ class Addon(unittest.TestCase):
         self.assertEqual(c.spellDmg["Melee"], 110)
 
     def test_meter_ignores_sessions_kept_over_a_reload(self):
-        self.lua = None
         self.start(FOREVER)
         self.session(1, damage=100)
         self.lua.execute("meterOn = true")
