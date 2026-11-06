@@ -833,10 +833,11 @@
   const mapKey = () => state.map.zone || state.map.cont;
   const mapView = () => { const m = state.map; return ((m.views ||= {})[mapKey()] ||= { z: 1, x: 0, y: 0 }); };
   // free: no limits, for the zoom into and out of a zone (which goes far past the usual 4x)
+  const MAX_ZOOM = 4;
   function applyMapView(free) {
     const v = mapView(), box = $("map"), W = box.clientWidth, H = box.clientHeight;
     if (!free) {
-      v.z = Math.min(4, Math.max(1, v.z));
+      v.z = Math.min(MAX_ZOOM, Math.max(1, v.z));
       v.x = Math.min(0, Math.max(W - W * v.z, v.x));
       v.y = Math.min(0, Math.max(H - H * v.z, v.y));
     }
@@ -850,7 +851,10 @@
   function zoomMap(f, cx, cy) {
     const v = mapView(), box = $("map");
     if (cx == null) { cx = box.clientWidth / 2; cy = box.clientHeight / 2; }
-    const nz = Math.min(6, Math.max(1, v.z * f));
+    // The same limit as applyMapView: zooming past it here (it was 6) moved the map for a zoom it then cut back,
+    // which threw the view to the bottom-right edge.
+    const nz = Math.min(MAX_ZOOM, Math.max(1, v.z * f));
+    if (nz === v.z) return;
     v.x = cx - (cx - v.x) * nz / v.z; v.y = cy - (cy - v.y) * nz / v.z; v.z = nz;
     $("mapTip").hidden = true;
     applyMapView();
@@ -995,6 +999,7 @@
       if (pts.size === 1) { last = [e.clientX, e.clientY]; moved = false; }
     });
     box.addEventListener("pointermove", e => {
+      if (e.pointerType === "mouse" && !e.buttons && pts.size) release(); // no button held: not a drag, whatever was missed
       if (!pts.has(e.pointerId)) return;
       pts.set(e.pointerId, [e.clientX, e.clientY]);
       if (pts.size === 2) {
@@ -1005,7 +1010,8 @@
       }
       if (!last) return;
       const dx = e.clientX - last[0], dy = e.clientY - last[1];
-      if (!moved && Math.hypot(dx, dy) < 4) return;
+      // a click that wobbles a little is still a click (a mouse 6 px, a finger 10)
+      if (!moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 10)) return;
       if (!moved) { moved = true; box.setPointerCapture(e.pointerId); box.classList.add("dragging"); $("mapTip").hidden = true; }
       const v = mapView();
       v.x += dx; v.y += dy; last = [e.clientX, e.clientY];
@@ -1213,7 +1219,7 @@
     if (!g) return;
     const list = g.list.map(i => shown[i]).sort((a, b) => b.t - a.t);
     tip.innerHTML = list.slice(0, 5).map(mapTip).join("<hr>")
-      + (list.length > 5 ? `<hr><span class="muted">${tr("and {0} more", list.length - 5)}${mapView().z < 4 ? " · " + tr("click to zoom in") : ""}</span>` : "");
+      + (list.length > 5 ? `<hr><span class="muted">${tr("and {0} more", list.length - 5)}${mapView().z < MAX_ZOOM ? " · " + tr("click to zoom in") : ""}</span>` : "");
     tip.hidden = false;
     const box = $("map").getBoundingClientRect(), r = btn.getBoundingClientRect();
     const x = r.left - box.left + r.width / 2, y = r.top - box.top;
@@ -1228,8 +1234,8 @@
     if (mk) {
       // a group zooms in on itself (up to the closest zoom); a single marker, or a group fully zoomed in, shows its details
       const g = (state.mapGroups || [])[+mk.dataset.g], v = mapView(), box = $("map");
-      if (g && g.list.length > 1 && v.z < 4) {
-        const nz = Math.min(4, v.z * 2);
+      if (g && g.list.length > 1 && v.z < MAX_ZOOM) {
+        const nz = Math.min(MAX_ZOOM, v.z * 2);
         Object.assign(v, { z: nz, x: box.clientWidth / 2 - box.clientWidth * nz * g.x / 100, y: box.clientHeight / 2 - box.clientHeight * nz * g.y / 100 });
         $("mapTip").hidden = true;
         glide(() => applyMapView());
