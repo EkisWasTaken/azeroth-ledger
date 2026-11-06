@@ -103,7 +103,7 @@
     "dissolved in slime": "löstes upp i slem", "succumbed to fatigue": "dukade under av utmattning", "was killed by the world itself": "dödades av världen själv",
     "died under mysterious circumstances": "dog under mystiska omständigheter", "died": "dog",
     "was slain by {0}'s {1}": "dödades av {0}s {1}", "was slain by {0}": "dödades av {0}", " in {0}": " i {0}",
-    "{0} damage": "{0} skada", "Talents": "Talanger", "points": "poäng", "{0} of other {1}s take it": "{0} av andra {1}s tar den",
+    "{0} damage": "{0} skada", "{0} events here": "{0} händelser här", "and {0} more": "och {0} till", "click to zoom in": "klicka för att zooma in", "Talents": "Talanger", "points": "poäng", "{0} of other {1}s take it": "{0} av andra {1}s tar den",
     "Gold rings: talents most other {0}s on the Ledger take ({1} characters). Their average split: {2}.": "Guldringar: talanger som de flesta andra {0}s på Ledger tar ({1} karaktärer). Deras snittfördelning: {2}.",
     "Popular picks show once {0} other {1}s with 10+ points have uploaded their talents.": "Populära val visas när {0} andra {1}s med 10+ poäng har laddat upp sina talanger.", "PvP": "PvP", "Mob": "Mob", "another player": "en annan spelare", "killed in PvP by {0}": "dödad i PvP av {0}",
     "Pick Deaths, Level-ups or Rare loot above to show them on the map.": "Välj Dödsfall, Level-ups eller Rare loot ovan för att visa dem på kartan.",
@@ -844,6 +844,8 @@
     w.width = v.z * 100 + "%"; w.height = v.z * 100 + "%"; w.left = v.x + "px"; w.top = v.y + "px";
     box.classList.toggle("z2", v.z >= 1.8);
     box.classList.toggle("zoomed", v.z > 1.01);
+    const bucket = mapKey() + ":" + Math.round(Math.log2(v.z) * 3);
+    if (bucket !== markBucket && state.mapShown) renderMarks();
   }
   function zoomMap(f, cx, cy) {
     const v = mapView(), box = $("map");
@@ -862,7 +864,39 @@
     const sx = 100 / (p.x1 - p.x0), sy = 100 / (p.y1 - p.y0);
     return { x0: (z.x0 - p.x0) * sx, x1: (z.x1 - p.x0) * sx, y0: (z.y0 - p.y0) * sy, y1: (z.y1 - p.y0) * sy };
   }
-  // What a click at x, y (0-100 on the open map) opens: on a continent the smallest zone there (capitals are
+  // Each continent's zone shapes, traced from the glow the game draws over a zone on hover (site/maps/<game>-shapes.json,
+  // from make_maps.py): which zone each spot of the map is in, at a quarter of the map's size.
+  const shapesCache = {};
+  function mapShapes() {
+    const g = mapGame();
+    if (!(g in shapesCache)) {
+      shapesCache[g] = null;
+      fetch(`maps/${g}-shapes.json`).then(r => (r.ok ? r.json() : {})).catch(() => ({})).then(d => {
+        const out = {};
+        for (const [cont, sh] of Object.entries(d || {})) {
+          const grid = new Uint16Array(sh.w * sh.h);
+          sh.rows.forEach((row, y) => { let x = 0; row.split(";").forEach(run => { const [i, n] = run.split(",").map(Number); grid.fill(i, y * sh.w + x, y * sh.w + x + n); x += n; }); });
+          out[cont] = { w: sh.w, h: sh.h, ids: sh.ids, grid };
+        }
+        shapesCache[g] = out;
+      });
+    }
+    return shapesCache[g] || {};
+  }
+  // The zone at x, y (0-100) on a continent by its shape; the spots next to it count too, for the thin seams between zones.
+  // null: this map has no shapes; 0: no zone there (the sea).
+  function shapeAt(cont, x, y) {
+    const sh = mapShapes()[cont];
+    if (!sh) return null;
+    const gx = Math.floor(x / 100 * sh.w), gy = Math.floor(y / 100 * sh.h);
+    for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+      const qx = gx + dx, qy = gy + dy;
+      if (qx >= 0 && qy >= 0 && qx < sh.w && qy < sh.h && sh.grid[qy * sh.w + qx]) return sh.ids[sh.grid[qy * sh.w + qx]];
+    }
+    return 0;
+  }
+  const hasGlow = (cont, id) => (mapShapes()[cont] || { ids: [] }).ids.includes(id);
+  // What a click at x, y (0-100 on the open map) opens: on a continent the zone whose shape is there (capitals are
   // opened from their zone, as in the game); in a zone, a capital inside it; in a capital, nothing.
   function mapHit(x, y) {
     const m = state.map, zones = ((pickAtlas()[m.cont] || {}).zones) || [], open = m.zone && zoneById(m.zone);
@@ -870,6 +904,12 @@
     const cx = open ? open.x0 + (open.x1 - open.x0) * x / 100 : x, cy = open ? open.y0 + (open.y1 - open.y0) * y / 100 : y;
     const built = ((state.mapIndex || {})[mapGame()] || []).concat(MAP_ART[mapGame()].map(Number));
     const hits = zones.filter(z => z !== open && built.includes(z.id) && CITY.test(z.n) === !!open && cx >= z.x0 && cx <= z.x1 && cy >= z.y0 && cy <= z.y1);
+    if (!open) {
+      const id = shapeAt(m.cont, cx, cy);
+      if (id === 0) return null;
+      const z = id && hits.find(q => q.id === id);
+      if (z) return z;
+    }
     // Rectangles overlap (zones are not rectangles): on Azeroth the nearest continent wins; elsewhere the zone whose
     // middle the click is closest to, measured in that zone's own size, so a small zone doesn't swallow its neighbour's edge.
     const size = z => m.cont === "947" && !open ? Math.hypot((z.x0 + z.x1) / 2 - cx, (z.y0 + z.y1) / 2 - cy)
@@ -928,6 +968,16 @@
     mapBusy = false;
   }
 
+  // The game's glow over a zone on a continent: its texture stretched to the zone's width from its top-left corner, added on top.
+  function showGlow(z) {
+    const g = $("mapGlow"), m = state.map;
+    if (!z || m.zone || !hasGlow(m.cont, z.id)) { g.hidden = true; return; }
+    const src = `maps/${mapGame()}-hl-${z.id}.webp`;
+    if (g.getAttribute("src") !== src) g.src = src;
+    Object.assign(g.style, { left: z.x0 + "%", top: z.y0 + "%", width: (z.x1 - z.x0) + "%" });
+    g.hidden = false;
+  }
+
   // Drag, pinch, Ctrl + scroll and the zoom buttons (wired up once the page helpers exist).
   function initMapZoom() {
     const box = $("map"), pts = new Map();
@@ -984,8 +1034,9 @@
       hovered = z;
       $("mapHover").hidden = !z;
       if (z) { $("mapHover").textContent = z.n; loadArt(mapSrc(z.id)); }
+      showGlow(z);
     });
-    box.addEventListener("mouseleave", () => { hovered = null; $("mapHover").hidden = true; box.classList.remove("can-open"); });
+    box.addEventListener("mouseleave", () => { hovered = null; $("mapHover").hidden = true; box.classList.remove("can-open"); showGlow(null); });
     box.addEventListener("click", e => {
       if (e.target.closest(".mapzoom, .mk")) return;
       const z = mapHit(...at(e));
@@ -1002,13 +1053,34 @@
     if (window.ResizeObserver) new ResizeObserver(() => { if (state.map) applyMapView(); }).observe(box);
   }
 
-  // Game icons (Wowhead's 18 px set): the same few files for every marker, so the browser fetches each once.
+  // Deaths get the game's own corpse skull from its world map (red for PvP, site/maps/icons/); level-ups and loot a
+  // round pin with a game icon (Wowhead). The same few files for every marker, so the browser fetches each once.
   const MAP_ICON = {
-    deaths: e => (e.d.cause === "player" ? "ability_dualwield" : "inv_misc_bone_humanskull_01"),
     dings: () => "spell_holy_innerfire",
     loot: e => (e.d.q >= 4 ? "inv_misc_gem_amethyst_02" : "inv_misc_bag_10"),
   };
-  const mapIcon = e => `<img class="wicon" src="https://wow.zamimg.com/images/wow/icons/small/${MAP_ICON[e.kind](e)}.jpg" width="16" height="16" alt="">`;
+  const mapIcon = e => e.kind === "deaths"
+    ? `<img class="skull" src="maps/icons/${e.d.cause === "player" ? "skull-red" : "skull"}.png" width="22" height="22" alt="">`
+    : `<span class="pin ${e.kind}"><img src="https://wow.zamimg.com/images/wow/icons/medium/${MAP_ICON[e.kind](e)}.jpg" width="18" height="18" alt=""></span>`;
+  // Markers closer than about one marker's width at the current zoom are one marker with a count; clicking it zooms in.
+  let markBucket = "";
+  function renderMarks() {
+    const shown = state.mapShown || [], v = mapView(), r = 3.2 / v.z, groups = [];
+    markBucket = mapKey() + ":" + Math.round(Math.log2(v.z) * 3);
+    shown.forEach((e, i) => {
+      // map space is 3:2, so a step down counts two thirds of a step across
+      const g = groups.find(q => Math.hypot(q.x - e.x, (q.y - e.y) * 2 / 3) < r);
+      if (g) { g.list.push(i); g.x = (g.x * (g.list.length - 1) + e.x) / g.list.length; g.y = (g.y * (g.list.length - 1) + e.y) / g.list.length; }
+      else groups.push({ x: e.x, y: e.y, list: [i] });
+    });
+    state.mapGroups = groups;
+    const kindOf = list => { const n = {}; list.forEach(i => { const k = shown[i].kind; n[k] = (n[k] || 0) + 1; }); return Object.keys(n).sort((a, b) => n[b] - n[a])[0]; };
+    $("mapMarks").innerHTML = groups.map((g, gi) => {
+      const lead = shown[g.list.find(i => shown[i].kind === kindOf(g.list))];
+      const label = g.list.length > 1 ? tr("{0} events here", g.list.length) : (lead.d._char || lead.p.name);
+      return `<button type="button" class="mk${g.list.length > 1 ? " group" : ""}" data-g="${gi}" style="left:${g.x}%;top:${g.y}%;--d:${(gi / Math.max(1, groups.length) * 6).toFixed(2)}s" aria-label="${esc(label)}">${mapIcon(lead)}${g.list.length > 1 ? `<b>${g.list.length}</b>` : ""}</button>`;
+    }).join("");
+  }
   // Where on its continent something happened: the addon's own continent position, or, for records uploaded
   // without one, the zone position placed through the zone's rectangle (what C_Map.GetMapRectOnMap does in game).
   function contSpot(d, atlas) {
@@ -1102,9 +1174,9 @@
     const shown = all.filter(e => m.layers[e.kind]).map(place).filter(Boolean);
     state.mapShown = shown;
     $("mapMarks").classList.remove("replaying");
-    $("mapMarks").innerHTML = shown.map((e, i) =>
-      `<button type="button" class="mk" data-i="${i}" style="left:${e.x}%;top:${e.y}%;--d:${(i / Math.max(1, shown.length) * 6).toFixed(2)}s" aria-label="${esc(e.d._char || e.p.name)}">${mapIcon(e)}</button>`).join("");
+    renderMarks();
     $("mapTip").hidden = true;
+    showGlow(null);
     $("mapReplay").hidden = shown.length < 2;
     applyMapView();
 
@@ -1125,9 +1197,11 @@
     ].filter(Boolean).join(" ");
   }
   function showMapTip(btn) {
-    const e = (state.mapShown || [])[+btn.dataset.i], tip = $("mapTip");
-    if (!e) return;
-    tip.innerHTML = mapTip(e);
+    const g = (state.mapGroups || [])[+btn.dataset.g], tip = $("mapTip"), shown = state.mapShown || [];
+    if (!g) return;
+    const list = g.list.map(i => shown[i]).sort((a, b) => b.t - a.t);
+    tip.innerHTML = list.slice(0, 5).map(mapTip).join("<hr>")
+      + (list.length > 5 ? `<hr><span class="muted">${tr("and {0} more", list.length - 5)}${mapView().z < 4 ? " · " + tr("click to zoom in") : ""}</span>` : "");
     tip.hidden = false;
     const box = $("map").getBoundingClientRect(), r = btn.getBoundingClientRect();
     const x = r.left - box.left + r.width / 2, y = r.top - box.top;
@@ -1139,8 +1213,16 @@
     if (c) { state.map.cont = c.dataset.cont; state.map.zone = ""; state.map.trail = []; render(); }
     if (e.target.closest("[data-mapup]")) closeZone();
     if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; render(); }
-    if (mk) showMapTip(mk);
-    else if (!e.target.closest("#mapTip")) { const t = document.getElementById("mapTip"); if (t) t.hidden = true; }
+    if (mk) {
+      // a group zooms in on itself (up to the closest zoom); a single marker, or a group fully zoomed in, shows its details
+      const g = (state.mapGroups || [])[+mk.dataset.g], v = mapView(), box = $("map");
+      if (g && g.list.length > 1 && v.z < 4) {
+        const nz = Math.min(4, v.z * 2);
+        Object.assign(v, { z: nz, x: box.clientWidth / 2 - box.clientWidth * nz * g.x / 100, y: box.clientHeight / 2 - box.clientHeight * nz * g.y / 100 });
+        $("mapTip").hidden = true;
+        glide(() => applyMapView());
+      } else showMapTip(mk);
+    } else if (!e.target.closest("#mapTip")) { const t = document.getElementById("mapTip"); if (t) t.hidden = true; }
     if (e.target.closest("#mapReplay")) { const box = $("mapMarks"); box.classList.remove("replaying"); void box.offsetWidth; box.classList.add("replaying"); }
   });
   document.addEventListener("mouseover", e => { const mk = e.target.closest(".mk"); if (mk) showMapTip(mk); });

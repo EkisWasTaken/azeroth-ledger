@@ -23,7 +23,8 @@ A zone's map is its own 0-1 map space, the one zone positions (the addon's x, y)
 It also writes design/maps-check/<build>-<continent>.png: the same art with every zone's rectangle from
 UiMapAssignment drawn on top, to check by eye that zones and art agree (git-ignored).
 
-Usage: python design/src/make_maps.py [era] [tbc] [mop] [map id ...]   (all builds and top maps when none is named; needs Pillow: pip install pillow; downloads are cached in design/.map-cache)
+Usage: python design/src/make_maps.py [era] [tbc] [mop] [forever] [map id ...]   (or: make_maps.py hl [builds] for only the zone glows and shapes)
+         (all builds and top maps when none is named; needs Pillow: pip install pillow; downloads are cached in design/.map-cache)
 The map art is Blizzard Entertainment's; the site credits it under the map.
 """
 import csv
@@ -151,12 +152,68 @@ def write_index():
     json.dump(index, open(os.path.join(OUT, "index.json"), "w"), separators=(",", ":"))
 
 
+SHAPE_SCALE = 4  # the zone shapes grid is the map frame at a quarter of its size
+
+
+def highlights(build):
+    """The glow the game draws over a zone when the pointer is on it (UiMapArt.HighlightFileDataID), and the zone
+    shapes it outlines. A glow is a square texture, added to the map stretched to its zone's width from the zone's
+    top-left corner (the part below the zone is black, so adds nothing).
+      site/maps/<build>-hl-<zone>.webp   the glow, to draw with an additive blend on hover
+      site/maps/<build>-shapes.json      per top map, which zone each spot is in: {"1414": {"w", "h", "ids", "rows"}},
+                                         rows run-length coded as "zone index,count;..." (index 0: no zone)"""
+    hl_art = {int(r["ID"]): int(r["HighlightFileDataID"]) for r in table(build, "UiMapArt")}
+    xart = {int(r["UiMapID"]): int(r["UiMapArtID"]) for r in table(build, "UiMapXMapArt")}
+    W, H = FRAME[0] // SHAPE_SCALE, FRAME[1] // SHAPE_SCALE
+    shapes = {}
+    for cont, (name, kind) in TOP[build].items():
+        ids, best = [0], [[(0, 0)] * W for _ in range(H)]  # per spot: (glow strength, zone index)
+        for mid, n, x0, y0, x1, y1 in zone_rects(build, cont, kind, ids=True):
+            fid = hl_art.get(xart.get(mid), 0)
+            if not fid:
+                continue
+            w = max(1, round((x1 - x0) * FRAME[0]))
+            glow = blp(build, fid).convert("RGB").resize((w, w), Image.LANCZOS)
+            glow.save(os.path.join(OUT, f"{build}-hl-{mid}.webp"), "WEBP", quality=80, method=6)
+            ids.append(mid)
+            small = glow.convert("L").resize((max(1, w // SHAPE_SCALE),) * 2)
+            px, py = round(x0 * W), round(y0 * H)
+            for y in range(small.height):
+                for x in range(small.width):
+                    v = small.getpixel((x, y))
+                    gx, gy = px + x, py + y
+                    if v > 8 and 0 <= gx < W and 0 <= gy < H and v > best[gy][gx][0]:
+                        best[gy][gx] = (v, len(ids) - 1)
+        if len(ids) == 1:
+            continue
+        rows = []
+        for line in best:
+            runs, last, count = [], None, 0
+            for _, i in line:
+                if i == last:
+                    count += 1
+                else:
+                    if last is not None:
+                        runs.append(f"{last},{count}")
+                    last, count = i, 1
+            runs.append(f"{last},{count}")
+            rows.append(";".join(runs))
+        shapes[str(cont)] = {"w": W, "h": H, "ids": ids, "rows": rows}
+        print(f"{build} {name}: {len(ids) - 1} zone glows")
+    json.dump(shapes, open(os.path.join(OUT, f"{build}-shapes.json"), "w"), separators=(",", ":"))
+
+
 def main():
     for d in (CACHE, CHECK, OUT):
         os.makedirs(d, exist_ok=True)
     font = ImageFont.load_default(size=12)
     only = [int(a) for a in sys.argv[1:] if a.isdigit()]
-    for build in [b for b in BUILDS if b in sys.argv[1:]] or BUILDS:
+    builds = [b for b in BUILDS if b in sys.argv[1:]] or BUILDS
+    if "hl" in sys.argv[1:]:  # only the zone glows and shapes: python make_maps.py hl [builds]
+        for build in builds:
+            highlights(build)
+        return
+    for build in builds:
         tops = TOP[build]
         for cont, (name, kind) in tops.items():
             if only and cont not in only:
