@@ -103,7 +103,10 @@
     "dissolved in slime": "löstes upp i slem", "succumbed to fatigue": "dukade under av utmattning", "was killed by the world itself": "dödades av världen själv",
     "died under mysterious circumstances": "dog under mystiska omständigheter", "died": "dog",
     "was slain by {0}'s {1}": "dödades av {0}s {1}", "was slain by {0}": "dödades av {0}", " in {0}": " i {0}",
-    "{0} damage": "{0} skada", "{0} events here": "{0} händelser här", "and {0} more": "och {0} till", "click to zoom in": "klicka för att zooma in", "Talents": "Talanger", "points": "poäng", "{0} of other {1}s take it": "{0} av andra {1}s tar den",
+    "{0} damage": "{0} skada", "Quest reward": "Questbelöning", "was rewarded {0}": "belönades med {0}", "Loot": "Loot", "{0} drop": "{0} drop", "{0} drops": "{0} drops", "Runs": "Runs", "Records": "Rekord", "Raids": "Raids", "Raid": "Raid", "Dungeon": "Dungeon",
+    "Boss damage this run": "Bossdamage den här runnen", "No boss meters for this run.": "Inga bossmätare för den här runnen.",
+    "No dungeon runs in this range.": "Inga dungeon runs i perioden.", "Other boss fights": "Andra bossfighter", "outside a recorded run": "utanför en sparad run",
+    "open one for its bosses and meters": "öppna en för dess bossar och mätare", "{0} events here": "{0} händelser här", "and {0} more": "och {0} till", "click to zoom in": "klicka för att zooma in", "Talents": "Talanger", "points": "poäng", "{0} of other {1}s take it": "{0} av andra {1}s tar den",
     "Gold rings: talents most other {0}s on the Ledger take ({1} characters). Their average split: {2}.": "Guldringar: talanger som de flesta andra {0}s på Ledger tar ({1} karaktärer). Deras snittfördelning: {2}.",
     "Popular picks show once {0} other {1}s with 10+ points have uploaded their talents.": "Populära val visas när {0} andra {1}s med 10+ poäng har laddat upp sina talanger.", "PvP": "PvP", "Mob": "Mob", "another player": "en annan spelare", "killed in PvP by {0}": "dödad i PvP av {0}",
     "Pick Deaths, Level-ups or Rare loot above to show them on the map.": "Välj Dödsfall, Level-ups eller Rare loot ovan för att visa dem på kartan.",
@@ -1541,7 +1544,8 @@
   const fr = p => p.fallen ? " fallen-row" : "";
   // Where only text fits (chart labels, dropdowns, tooltips).
   const nameTxt = p => (p.fallen ? "☠ " : "") + p.name;
-  const nameMark = p => p.fallen ? skullIcon() : `<span class="dot" style="background:${p.color || classOf(p)[1]}"></span>`;
+  // The class icon before every name (a skull for the fallen); the name keeps the person's colour, the one charts use.
+  const nameMark = p => classIcon(p);
   const nameHTML = p => p.id
     ? `<a class="plink" href="${profileHref(p)}">${nameMark(p)}<span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span></a>`
     : `${nameMark(p)}<span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span>`;
@@ -1606,7 +1610,7 @@
       if (p.fallen && inRange(localKey(p.fallen.t))) cands.push({ s: 100, icon: "tomb", label: tr("Fallen"), p, tone: "dead", line: deathWhat(p.fallen),
         chips: [tr("Level {0}", esc(p.fallen.lvl || "?")), fullDate(p.fallen.t)] });
       p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push({ s: 70 + dropRank(n) / 5 + n.t / 1e10, icon: "lotus", label: tr("Best drop"), p,
-        tone: n.q === 5 ? "legendary" : "epic", line: tr(n.world ? "looted {0} out in the world" : "looted {0}", itemHTML(n)),
+        tone: n.q === 5 ? "legendary" : "epic", line: tr(worldDrop(n) ? "looted {0} out in the world" : n.quest ? "was rewarded {0}" : "looted {0}", itemHTML(n)),
         tags: dropTags(n), chips: [n.zone && esc(n.zone), fullDate(n.t)] }));
       const by = {};
       p.deaths.forEach(d => { if (d.by && d.t && inRange(localKey(d.t))) by[d.by] = (by[d.by] || 0) + 1; });
@@ -2016,7 +2020,7 @@
   // A name from a fight's meter: a link when that character is on the site, otherwise just the class colour.
   const whoHTML = (w, people) => {
     const p = people.find(x => x.name === w.n);
-    return p ? nameHTML(p) : `<span class="dot" style="background:${(CLASS[w.c] || classOf({}))[1]}"></span><span class="cname">${esc(w.n)}</span>`;
+    return p ? nameHTML(p) : `${classIcon({ class: w.c })}<span class="cname">${esc(w.n)}</span>`;
   };
   // The difficulty only shows for instances that were run on more than one.
   function instLabeler(records) {
@@ -2081,22 +2085,56 @@
     return blizzImg(j._k[jkey(name)]);
   };
   const bossPic = name => { const u = journalArt("boss", name); return u ? `<img class="bosspic" src="${u}" alt="" loading="lazy">` : ""; };
+  // Characters on the Ledger (any guild on this site) come first in runs and meters; the rest of the group after them.
+  const onLedger = () => new Set((state.allChars || []).map(c => c.name));
+  const ledgerFirst = (list, f) => { const L = onLedger(); return list.slice().sort((a, b) => L.has(b.n) - L.has(a.n) || f(b) - f(a)); };
+  // Damage and healing bars for a fight (per second when it has a length) or a whole run's boss fights, biggest first;
+  // the rest of the group is dimmed so Ledger characters stand out. Every Ledger healer shows, other healers up to five.
+  function meterHTML(who, dur, people) {
+    const L = onLedger();
+    const dmg = who.filter(w => w.d > 0).sort((a, b) => b.d - a.d);
+    const heal = who.filter(w => w.h > 0).sort((a, b) => b.h - a.h).filter((w, i) => L.has(w.n) || i < 5);
+    const bars = (list, f) => {
+      const max = Math.max(1, ...list.map(f));
+      return list.map(w => `<div class="hbar${L.has(w.n) ? "" : " other"}" style="--c:${(CLASS[w.c] || classOf({}))[1]}"><span>${whoHTML(w, people)}</span><span class="track"><span class="fill" style="display:block;width:${(f(w) / max) * 100}%"></span></span><span class="num">${compact(f(w))}${dur ? ` <span class="muted">${tr("({0}/s)", compact(f(w) / dur))}</span>` : ""}</span></div>`).join("");
+    };
+    return `<div class="meter">${dmg.length ? `<span class="lh">${tr("Damage")}</span>${bars(dmg, w => w.d)}` : ""}${heal.length ? `<span class="lh">${tr("Healing")}</span>${bars(heal, w => w.h)}` : ""}${!dmg.length && !heal.length ? `<p class="empty">${tr("No meter for this fight.")}</p>` : ""}</div>`;
+  }
+  // One boss fight, opening to its meter. when: the date, or (inside a run) how far into the run it was.
+  function fightHTML(g, where, when, people) {
+    const top = ledgerFirst(Object.values(g.who).filter(w => w.d > 0), w => w.d)[0];
+    const sub = [where, clock(g.dur), g.deaths ? tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths) : "", top ? tr("top damage: {0}", esc(top.n)) : ""].filter(Boolean).join(" · ");
+    return `<details class="fight"><summary><span class="res${g.ok ? "" : " wipe"}">${tr(g.ok ? "Kill" : "Wipe")}</span><span class="boss">${bossPic(g.boss)}${esc(g.boss)}</span><span class="when">${when}</span><span class="sub">${sub}</span></summary>
+      ${meterHTML(Object.values(g.who), g.dur, people)}</details>`;
+  }
+  // Who was in the run: Ledger characters first, in bold, then the rest of the group.
+  function groupNames(g, people) {
+    const L = onLedger(), names = [...g.names].sort((a, b) => L.has(b) - L.has(a));
+    return names.map(n => L.has(n) ? `<b class="ledger">${esc(n)}</b>` : esc(n)).join(", ");
+  }
+  // A run: the dungeon or raid, when, how long, its bosses in order (each opens to its meter) and the run's boss damage.
+  function runHTML(g, label, people) {
+    const start = new Date(g.t * 1000).toLocaleString(LOC(), { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+    const kills = g.fights.filter(f => f.ok).length;
+    const bits = [clock(g.dur), tr(g.bosses === 1 ? "{0} boss" : "{0} bosses", Math.max(g.bosses, kills))];
+    if (g.wipes) bits.push(tr(g.wipes === 1 ? "{0} wipe" : "{0} wipes", g.wipes));
+    if (g.deaths) bits.push(tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths));
+    const total = {};
+    g.fights.forEach(f => Object.values(f.who).forEach(w => { const t = total[w.n] ||= { n: w.n, c: w.c, d: 0, h: 0 }; t.d += w.d; t.h += w.h; }));
+    if (g.loot.length) bits.push(tr(g.loot.length === 1 ? "{0} drop" : "{0} drops", g.loot.length));
+    const art = journalArt("inst", g.inst);
+    const into = f => "+" + clock(Math.max(0, f.t - g.t));
+    const loot = g.loot.length ? `<span class="lh">${tr("Loot")}</span><div class="runloot">${g.loot.map(({ n, p }) =>
+      `<div>${itemHTML(n)} <span class="muted">→</span> ${p.name === n._char || !n._char ? nameHTML(p) : `<b>${esc(n._char)}</b>`}</div>`).join("")}</div>` : "";
+    return `<details class="fight run${art ? " has-art" : ""}"${art ? ` style="--art:url('${art}')"` : ""}><summary><span class="res">${esc(g.lvl ? tr("Lvl {0}", g.lvl) : tr(g.raid ? "Raid" : "Dungeon"))}</span><span class="boss">${label(g)}</span><span class="when">${esc(start)}</span>
+        <span class="sub">${bits.join(" · ")} · ${groupNames(g, people)}</span></summary>
+      <div class="runbody">${loot}${g.fights.length ? g.fights.slice().sort((a, b) => a.t - b.t).map(f => fightHTML(f, "", into(f), people)).join("")
+        + `<span class="lh">${tr("Boss damage this run")}</span>${meterHTML(Object.values(total), 0, people)}`
+        : `<p class="empty">${tr("No boss meters for this run.")}</p>`}</div></details>`;
+  }
   function renderDungeons(people) {
     const fights = groupFights(people);
     const label = instLabeler(fights.concat(people.flatMap(p => p.bosses.map(b => ({ ...b, boss: b.n })))));
-
-    $("fightLog").innerHTML = fights.slice(0, 60).map(g => {
-      const who = Object.values(g.who);
-      const dmg = who.filter(w => w.d > 0).sort((a, b) => b.d - a.d);
-      const heal = who.filter(w => w.h > 0).sort((a, b) => b.h - a.h).slice(0, 5);
-      const bars = (list, f) => {
-        const max = Math.max(1, ...list.map(f));
-        return list.map(w => `<div class="hbar" style="--c:${(CLASS[w.c] || classOf({}))[1]}"><span>${whoHTML(w, people)}</span><span class="track"><span class="fill" style="display:block;width:${(f(w) / max) * 100}%"></span></span><span class="num">${compact(f(w))}${g.dur ? ` <span class="muted">${tr("({0}/s)", compact(f(w) / g.dur))}</span>` : ""}</span></div>`).join("");
-      };
-      const sub = [label(g), clock(g.dur), g.deaths ? tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths) : "", dmg[0] ? tr("top damage: {0}", esc(dmg[0].n)) : ""].filter(Boolean).join(" · ");
-      return `<details class="fight"><summary><span class="res${g.ok ? "" : " wipe"}">${tr(g.ok ? "Kill" : "Wipe")}</span><span class="boss">${bossPic(g.boss)}${esc(g.boss)}</span><span class="when">${dayText(g.t)}</span><span class="sub">${sub}</span></summary>
-        <div class="meter">${dmg.length ? `<span class="lh">${tr("Damage")}</span>${bars(dmg, w => w.d)}` : ""}${heal.length ? `<span class="lh">${tr("Healing")}</span>${bars(heal, w => w.h)}` : ""}${!dmg.length && !heal.length ? `<p class="empty">${tr("No meter for this fight.")}</p>` : ""}</div></details>`;
-    }).join("") || `<p class="empty">${tr("No boss fights yet. They're recorded from FunStats 1.3 on.")}</p>`;
 
     // The tally: this range's fights, plus (all time) each character's own totals, which go back further than the fight list.
     const tally = {};
@@ -2137,6 +2175,7 @@
 
     // Per character (or per guild, on the realm page): bosses killed, kills, wipes and dungeon runs in this range.
     const { runs, all } = groupRuns(people);
+    const runLabel = instLabeler(runs);
     const hunt = list => {
       const t = { bosses: new Set(), kills: 0, wipes: 0, runs: 0, dps: 0, members: list.length };
       for (const p of list) {
@@ -2163,8 +2202,28 @@
     $("tGuildBosses").tHead.innerHTML = cols([tr("Guild"), tr("Members")]);
     $("tGuildBosses").tBodies[0].innerHTML = gRows;
 
-    // Dungeon records and the latest runs.
-    const runLabel = instLabeler(runs);
+    // Each run's boss fights: the same instance, from entering until shortly after leaving. Raids (raid runs, or fights
+    // of more than five) are listed apart from dungeons; fights outside any run (world bosses) come last.
+    const used = new Set();
+    for (const g of runs) {
+      g.fights = fights.filter(f => !used.has(f) && f.inst === g.inst && f.t >= g.t - 60 && f.t <= g.t + (g.dur || 0) + 120);
+      g.fights.forEach(f => used.add(f));
+      g.raid = g.kind === "raid" || g.fights.some(f => Object.keys(f.who).length > 5);
+      // What Ledger characters looted in the run: rare (blue) and better in dungeons, epic and better in raids.
+      // shortcut: only Ledger characters' own loot is known, other group members' drops aren't recorded.
+      const until = g.t + (g.dur || 0) + 120;
+      g.loot = people.flatMap(p => p.notable.filter(n => n.inst === g.inst && n.t >= g.t - 60 && n.t <= until && n.q >= (g.raid ? 4 : 3)).map(n => ({ n, p })))
+        .sort((a, b) => b.n.q - a.n.q || a.n.t - b.n.t);
+    }
+    const loose = fights.filter(f => !used.has(f));
+    const dungeons = runs.filter(g => !g.raid), raids = runs.filter(g => g.raid);
+    $("dungeonRuns").innerHTML = dungeons.slice(0, 40).map(g => runHTML(g, runLabel, people)).join("") || `<p class="empty">${tr("No dungeon runs in this range.")}</p>`;
+    $("raidFrame").hidden = !raids.length;
+    $("raidRuns").innerHTML = raids.slice(0, 40).map(g => runHTML(g, runLabel, people)).join("");
+    $("looseFrame").hidden = !loose.length;
+    $("fightLog").innerHTML = loose.slice(0, 40).map(f => fightHTML(f, label(f), dayText(f.t), people)).join("");
+
+    // Dungeon records.
     const byInst = {};
     runs.forEach(g => (byInst[`${g.inst}|${g.d || 0}`] ||= []).push(g));
     $("runCards").innerHTML = Object.values(byInst).sort((a, b) => b.length - a.length).map(list => {
@@ -2185,13 +2244,6 @@
           <dt>${tr("Deaths")}</dt><dd>${num(list.reduce((a, g) => a + g.deaths, 0))}</dd>
           ${top ? `<dt>${tr("Most runs")}</dt><dd>${topP ? nameHTML(topP) : esc(top[0])} ×${top[1]}</dd>` : ""}</dl></div>`;
     }).join("") || `<p class="empty">${tr("No dungeon runs yet. They're recorded from FunStats 1.3 on.")}</p>`;
-    $("runLog").innerHTML = runs.slice(0, 60).map(g => {
-      const bits = [clock(g.dur), tr(g.bosses === 1 ? "{0} boss" : "{0} bosses", g.bosses)];
-      if (g.wipes) bits.push(tr(g.wipes === 1 ? "{0} wipe" : "{0} wipes", g.wipes));
-      if (g.deaths) bits.push(tr(g.deaths === 1 ? "{0} death" : "{0} deaths", g.deaths));
-      return `<div class="ln"><span class="ts">${dayText(g.t)}</span><b class="where">${runLabel(g)}</b> · ${bits.join(" · ")}
-        <span class="alt">· ${esc([...g.names].join(", "))}</span>${g.lvl ? ` <span class="lvl">${tr("Lvl {0}", esc(g.lvl))}</span>` : ""}</div>`;
-    }).join("") || `<p class="empty">${tr("No runs in this range.")}</p>`;
   }
 
   function renderCombat(rows) {
@@ -2526,7 +2578,10 @@
     ? `<a class="q${n.q}" ${whItem(n.id)}${size ? ` data-wh-icon-size="${size}"` : ""} target="_blank" rel="noopener">[${esc(n.item)}]</a>`
     : `<span class="q${n.q}">[${esc(n.item)}]</span>`;
   // Bind on equip and dropped outside dungeons: the drops worth shouting about (recorded by the addon from 1.5 on).
-  const dropTags = n => (n.world ? `<span class="dtag world">${tr("World drop")}</span>` : "") + (n.inst ? `<span class="dtag inst">${esc(n.inst)}</span>` : "") + (n.boe ? `<span class="dtag boe">${tr("BoE")}</span>` : "");
+  // A world drop is bind-on-equip and looted outside an instance. Addons before 1.7.4 also marked quest rewards
+  // (soulbound, handed over) as world drops; those now show nothing, and new ones show as quest rewards.
+  const worldDrop = n => n.world && n.boe;
+  const dropTags = n => (worldDrop(n) ? `<span class="dtag world">${tr("World drop")}</span>` : "") + (n.quest ? `<span class="dtag quest">${tr("Quest reward")}</span>` : "") + (n.inst ? `<span class="dtag inst">${esc(n.inst)}</span>` : "") + (n.boe ? `<span class="dtag boe">${tr("BoE")}</span>` : "");
   const dropRank = n => n.q * 10 + (n.world && n.boe ? 5 : n.boe ? 2 : 0);
   const whRefresh = () => { if (window.$WowheadPower && window.$WowheadPower.refreshLinks) { try { window.$WowheadPower.refreshLinks(); } catch (e) { /* tooltips are optional */ } } };
 

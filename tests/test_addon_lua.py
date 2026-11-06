@@ -496,6 +496,16 @@ class Addon(unittest.TestCase):
         self.assertEqual(c.notable[1].item, "Helm")
         self.assertEqual(c.notable[1].id, 123)
 
+    def test_quest_rewards_are_not_world_drops(self):
+        self.start(FOREVER)
+        self.fire("CHAT_MSG_LOOT", f"You receive item: {HELM}.")
+        self.fire("CHAT_MSG_LOOT", f"You receive loot: {HELM}.")
+        reward, drop = self.char()[1].notable[1], self.char()[1].notable[2]
+        self.assertTrue(reward.quest)
+        self.assertIsNone(reward.world)
+        self.assertIsNone(drop.quest)
+        self.assertTrue(drop.world)
+
     def test_loot_inside_instances_comes_from_the_loot_window_once(self):
         self.start(FOREVER)
         self.lua.execute(f"inInstance = true; lootSlots = {{ {HELM!r} }}")

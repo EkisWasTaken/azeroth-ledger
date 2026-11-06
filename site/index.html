@@ -375,16 +375,18 @@
   </section>
 
   <section id="s-bosses" data-pg="dungeons" aria-labelledby="h-bosses">
-    <div class="sec-head"><h2 id="h-bosses">The Boss Log</h2></div>
-    <div class="duo">
-      <div class="frame">
-        <div class="frame-title"><span>Recent boss fights</span><small>open one for its damage meter</small></div>
-        <div class="fights" id="fightLog"></div>
-      </div>
-      <div class="frame">
-        <div class="frame-title"><span>Boss tally</span><small id="bossTallyNote"></small></div>
-        <div class="table-wrap tall"><table id="tBosses"><thead></thead><tbody></tbody></table></div>
-      </div>
+    <div class="sec-head"><h2 id="h-bosses">Runs</h2></div>
+    <div class="frame">
+      <div class="frame-title"><span>Dungeon Runs</span><small>open one for its bosses and meters</small></div>
+      <div class="fights" id="dungeonRuns"></div>
+    </div>
+    <div class="frame" id="raidFrame">
+      <div class="frame-title"><span>Raids</span><small>open one for its bosses and meters</small></div>
+      <div class="fights" id="raidRuns"></div>
+    </div>
+    <div class="frame" id="looseFrame">
+      <div class="frame-title"><span>Other boss fights</span><small>outside a recorded run</small></div>
+      <div class="fights" id="fightLog"></div>
     </div>
   </section>
 
@@ -407,14 +409,14 @@
   </section>
 
   <section id="s-runs" data-pg="dungeons" aria-labelledby="h-runs">
-    <div class="sec-head"><h2 id="h-runs">Dungeon Runs</h2></div>
+    <div class="sec-head"><h2 id="h-runs">Records</h2></div>
     <div class="frame">
       <div class="frame-title"><span>Dungeon records</span><small>fastest clear: quickest run that killed the most bosses</small></div>
       <div class="runcards" id="runCards"></div>
     </div>
     <div class="frame">
-      <div class="frame-title"><span>Recent runs</span><small>most recent first</small></div>
-      <div class="clog" id="runLog"></div>
+      <div class="frame-title"><span>Boss tally</span><small id="bossTallyNote"></small></div>
+      <div class="table-wrap tall"><table id="tBosses"><thead></thead><tbody></tbody></table></div>
     </div>
   </section>
 

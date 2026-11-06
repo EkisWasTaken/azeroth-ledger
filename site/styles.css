@@ -583,6 +583,8 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 
 .dot { width: 10px; height: 10px; flex: none; display: inline-block; box-shadow: none; border-radius: 0; }
 .cicon { display: inline-flex; flex: none; vertical-align: middle; }
+.cicon + .cname { margin-left: 6px; }
+a.plink .cicon + .cname { margin-left: 0; }
 #pName .cicon { margin: -8px 14px -8px 0; }
 .cname { font: 400 1.2em/1.1 var(--sf); color: var(--cc, inherit); letter-spacing: .01em; }
 a.plink { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
@@ -758,6 +760,18 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .fight .meter .hbar { grid-template-columns: minmax(80px, 130px) minmax(0, 1fr) auto; }
 .fight .meter .hbar .fill { background: var(--c, var(--accent)) !important; }
 .fight .meter .lh { margin-top: 4px; }
+.fight.run > summary { padding: 12px 14px; }
+.fight.run > summary .boss { font-size: 16px; }
+.fight.run > summary .res { background: var(--accent); }
+.fight.run.has-art > summary { background: linear-gradient(90deg, var(--panel2) 35%, transparent), var(--art) right center / cover no-repeat; border-radius: 9px; }
+.fight.run[open] > summary { border-bottom: 1px solid var(--line); }
+.runbody { display: grid; gap: 6px; padding: 10px 12px 12px; }
+.runbody > .lh { margin-top: 6px; font: 700 11px var(--pf); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.runbody .fight { background: var(--panel); }
+.runbody > .meter { padding: 0; }
+.runloot { display: grid; gap: 4px; font-size: 14px; }
+.fight .meter .hbar.other { opacity: .55; }
+.fight.run .sub .ledger { color: var(--ink); }
 .fight .meter .lh, .runcard .lh { font: 700 11px var(--pf); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .runcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .runcard { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--panel2); box-shadow: inset 0 0 0 1px var(--line); }
@@ -1020,6 +1034,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 /* BoE and world-drop badges next to an item */
 .dtag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font: 700 10px/1.5 var(--body); letter-spacing: .06em; text-transform: uppercase; vertical-align: middle; }
 .dtag.world { color: #1b1206; background: #f2d57e; }
+.dtag.quest { background: #b8860b; color: #1a1300; }
 .dtag.boe { color: #f2d57e; box-shadow: inset 0 0 0 1px #f2d57e; }
 .dtag.inst { color: var(--ink); background: color-mix(in srgb, var(--ink) 14%, transparent); text-transform: none; letter-spacing: 0; }
 .drop .eyebrow .dtag { margin-left: 0; }

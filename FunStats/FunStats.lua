@@ -1080,7 +1080,8 @@ local function OnLevelUp(level)
   if level > (C.level or 0) then C.level = level end
 end
 
-local function RecordLoot(link)
+-- quest: the item was handed to me ("You receive item:", quest rewards), not looted, so it isn't a world drop.
+local function RecordLoot(link, quest)
   local q = ItemQuality(link)
   Add("q" .. q)
   if q >= 3 then
@@ -1088,7 +1089,8 @@ local function RecordLoot(link)
     local bindType = select(14, GetItemInfo(link)) -- 2 = binds when equipped; nil while the item isn't cached yet
     local inInstance = IsInInstance()
     PushCapped(C.notable, { t = time(), q = q, item = link:match("%[(.-)%]"), id = tonumber(link:match("item:(%d+)")),
-      boe = bindType == 2 or nil, world = not inInstance or nil, inst = inInstance and (GetInstanceInfo()) or nil,
+      boe = bindType == 2 or nil, quest = quest or nil, world = not (inInstance or quest) or nil,
+      inst = inInstance and (GetInstanceInfo()) or nil,
       zone = spot.zone, cont = spot.cont, cx = spot.cx, cy = spot.cy }, MAX_NOTABLE)
   end
 end
@@ -1096,8 +1098,9 @@ end
 local function OnLoot(msg)
   if DM and IsInInstance() then return end -- counted from the loot window there, see below
   local link = msg:match(LOOT_SELF_MULTI) or msg:match(LOOT_SELF)
-    or (LOOT_PUSHED_MULTI and msg:match(LOOT_PUSHED_MULTI)) or (LOOT_PUSHED and msg:match(LOOT_PUSHED))
-  if link and link:find("|Hitem:") then RecordLoot(link) end
+  local pushed = not link and ((LOOT_PUSHED_MULTI and msg:match(LOOT_PUSHED_MULTI)) or (LOOT_PUSHED and msg:match(LOOT_PUSHED)))
+  link = link or pushed
+  if link and link:find("|Hitem:") then RecordLoot(link, pushed and true) end
 end
 
 -- Forever hides chat from addons inside instances, so what I take from the loot window is counted instead.
