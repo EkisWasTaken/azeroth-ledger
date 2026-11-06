@@ -177,15 +177,36 @@ def highlights(build):
             glow.save(os.path.join(OUT, f"{build}-hl-{mid}.webp"), "WEBP", quality=80, method=6)
             ids.append(mid)
             small = glow.convert("L").resize((max(1, w // SHAPE_SCALE),) * 2)
+            # Some glows are only an outline (the continents on Azeroth) or have dim patches: the zone is everything the
+            # glow encloses, so fill in what can't be reached from outside the texture without crossing the glow.
+            lit = small.point(lambda v: 255 if v > 8 else 0)
+            outside = Image.new("L", (lit.width + 2, lit.height + 2), 0)
+            outside.paste(lit, (1, 1))
+            ImageDraw.floodfill(outside, (0, 0), 128)
             px, py = round(x0 * W), round(y0 * H)
             for y in range(small.height):
                 for x in range(small.width):
-                    v = small.getpixel((x, y))
+                    if outside.getpixel((x + 1, y + 1)) == 128:
+                        continue
+                    v = max(1, small.getpixel((x, y)))  # a filled-in spot is weaker than a lit one where zones overlap
                     gx, gy = px + x, py + y
-                    if v > 8 and 0 <= gx < W and 0 <= gy < H and v > best[gy][gx][0]:
+                    if 0 <= gx < W and 0 <= gy < H and v > best[gy][gx][0]:
                         best[gy][gx] = (v, len(ids) - 1)
         if len(ids) == 1:
             continue
+        # The glows stop a few pixels short of each other: the seams between zones go to the zone next to them.
+        for _ in range(3):
+            grown = [row[:] for row in best]
+            for y in range(H):
+                for x in range(W):
+                    if best[y][x][1]:
+                        continue
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        qx, qy = x + dx, y + dy
+                        if 0 <= qx < W and 0 <= qy < H and best[qy][qx][1]:
+                            grown[y][x] = (0, best[qy][qx][1])
+                            break
+            best = grown
         rows = []
         for line in best:
             runs, last, count = [], None, 0
