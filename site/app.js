@@ -176,7 +176,7 @@
     "Top damage": "Mest damage", "Open guild page": "Öppna guildsidan", "No guilds yet.": "Inga guilds än.",
     "Top level {0}": "Högsta level {0}", "No stats yet.": "Ingen statistik än.",
     "Previous page": "Föregående sida", "Next page": "Nästa sida",
-    "Gold": "Guld", "Ctrl + scroll to zoom · drag to move": "Ctrl + scrolla för att zooma · dra för att flytta", "Zoom in": "Zooma in", "Zoom out": "Zooma ut",
+    "Gold": "Guld",  "Zoom in": "Zooma in", "Zoom out": "Zooma ut",
     "Show the whole continent": "Visa hela kontinenten", "Map of the Fallen": "De fallnas karta", "Every death, ding and drop, where it happened": "Varje död, ding och drop, där det hände",
     "Level-ups": "Dings", "Rare loot": "Rare loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
     "Top killer: {0}": "Värsta mördaren: {0}", "No deaths in this range. Impressive.": "Inga dödsfall här. Imponerande.", "reached level {0}": "dingade {0}",
@@ -247,7 +247,7 @@
     "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer",
     "Gold before max level": "Guld innan maxnivå", "looted and spent while levelling": "lootat och spenderat under levlingen",
     "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
-    "Click a zone to open its map. Right-click to zoom back out.": "Klicka på en zon för att öppna dess karta. Högerklicka för att zooma ut igen.",
+    "Click a zone to open its map. Scroll to zoom, drag to move, right-click or scroll out to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka eller scrolla ut för att gå tillbaka.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
     "Achievements": "Achievements", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
     "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Spellbook", "Bonds": "Band", "Full Ledger": "Hela liggaren",
@@ -941,13 +941,14 @@
       return;
     }
     mapBusy = true;
-    $("mapTip").hidden = true; $("mapHover").hidden = true;
+    $("mapTip").hidden = true; $("mapHover").hidden = true; showGlow(null);
     const m = state.map;
-    await loadArt(mapSrc(z.id)); // straight in once its art is ready; the map underneath keeps its view for the way back
-    (m.trail ||= []).push(m.zone || "");
-    m.zone = String(z.id);
-    m.views[m.zone] = { z: 1, x: 0, y: 0 };
-    mapBusy = false;
+    try {
+      await loadArt(mapSrc(z.id)); // straight in once its art is ready; the map underneath keeps its view for the way back
+      (m.trail ||= []).push(m.zone || "");
+      m.zone = String(z.id);
+      m.views[m.zone] = { z: 1, x: 0, y: 0 };
+    } finally { mapBusy = false; }
     render();
   }
   // Back out one level: a zone to its continent, a continent to Azeroth.
@@ -961,11 +962,12 @@
     else Object.assign(m, { cont: up, trail: [] });
     const child = zoneById(from);
     const view = mapView(), back = { ...view };
-    render();
-    // start on the zone's rectangle, then glide back to where the map was before
-    if (child) { Object.assign(view, viewOnto(rectOnOpen(child))); applyMapView(true); }
-    await glide(() => { Object.assign(view, back); applyMapView(); });
-    mapBusy = false;
+    try {
+      render();
+      // start on the zone's rectangle, then glide back to where the map was before
+      if (child) { Object.assign(view, viewOnto(rectOnOpen(child))); applyMapView(true); }
+      await glide(() => { Object.assign(view, back); applyMapView(); });
+    } finally { mapBusy = false; }
   }
 
   // The game's glow over a zone on a continent: its texture stretched to the zone's width from its top-left corner, added on top.
@@ -978,13 +980,17 @@
     g.hidden = false;
   }
 
-  // Drag, pinch, Ctrl + scroll and the zoom buttons (wired up once the page helpers exist).
+  // Drag, pinch, scroll and the zoom buttons (wired up once the page helpers exist).
   function initMapZoom() {
     const box = $("map"), pts = new Map();
-    let last = null, moved = false, pinch = 0, hintT = 0;
+    let last = null, moved = false, pinch = 0, wheelHold = 0;
     const rel = (x, y) => { const r = box.getBoundingClientRect(); return [x - r.left, y - r.top]; };
+    const release = () => { pts.clear(); last = null; pinch = 0; box.classList.remove("dragging"); };
     box.addEventListener("pointerdown", e => {
-      if (e.target.closest(".mapzoom")) return;
+      // Only the left button (or a finger) drags. A right-click that opens the browser's menu never sends its pointerup,
+      // which used to leave a press behind: hover stopped, the cursor stuck and the next click became a pinch.
+      if (e.target.closest(".mapzoom") || (e.pointerType === "mouse" && e.button !== 0)) return;
+      if (e.pointerType === "mouse") release(); // a mouse is one pointer: anything still held is left over
       pts.set(e.pointerId, [e.clientX, e.clientY]);
       if (pts.size === 1) { last = [e.clientX, e.clientY]; moved = false; }
     });
@@ -1012,21 +1018,27 @@
     };
     box.addEventListener("pointerup", up);
     box.addEventListener("pointercancel", up);
-    // A drag isn't a click on whatever marker it started on.
+    box.addEventListener("lostpointercapture", up);
+    // A drag isn't a click on whatever marker it started on. moved is cleared on the next press too, so a drag that
+    // ended without a click (released outside the map) can't swallow the next real click.
     box.addEventListener("click", e => { if (moved) { e.stopPropagation(); moved = false; } }, true);
-    // Plain scrolling keeps scrolling the page; Ctrl + scroll (or a trackpad pinch) zooms.
+    // Scrolling over the map zooms it, like the game's map. Scrolling out past fully zoomed out goes up a level (zone to
+    // continent to Azeroth); only on the top map, fully zoomed out, does the page scroll on. A trackpad flick sends many
+    // events, so after a change of map the wheel waits a moment.
     box.addEventListener("wheel", e => {
-      if (!(e.ctrlKey || e.metaKey)) {
-        $("mapHint").hidden = false; clearTimeout(hintT); hintT = setTimeout(() => { $("mapHint").hidden = true; }, 1400);
-        return;
-      }
+      const v = mapView(), out = e.deltaY > 0, m = state.map;
+      if (out && v.z <= 1.01 && !m.zone && !worldOf(m.cont)) return;
       e.preventDefault();
-      zoomMap(Math.exp(-e.deltaY * .0025), ...rel(e.clientX, e.clientY));
+      if (mapBusy || Date.now() < wheelHold) return;
+      if (out && v.z <= 1.01) { wheelHold = Date.now() + 500; closeZone(); return; }
+      const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+      zoomMap(Math.exp(-px * .0025), ...rel(e.clientX, e.clientY));
     }, { passive: false });
     // where the pointer is on the open map, 0-100
     const at = e => { const [rx, ry] = rel(e.clientX, e.clientY), v = mapView(); return [(rx - v.x) / (box.clientWidth * v.z) * 100, (ry - v.y) / (box.clientHeight * v.z) * 100]; };
     let hovered = null;
     box.addEventListener("mousemove", e => {
+      if (!e.buttons && pts.size) release();
       if (pts.size || mapBusy) return;
       const z = e.target.closest(".mapzoom, .mk") ? null : mapHit(...at(e));
       box.classList.toggle("can-open", !!z);
