@@ -103,6 +103,13 @@
     "dissolved in slime": "löstes upp i slem", "succumbed to fatigue": "dukade under av utmattning", "was killed by the world itself": "dödades av världen själv",
     "died under mysterious circumstances": "dog under mystiska omständigheter", "died": "dog",
     "was slain by {0}'s {1}": "dödades av {0}s {1}", "was slain by {0}": "dödades av {0}", " in {0}": " i {0}",
+    "{0} damage": "{0} skada", "Talents": "Talanger", "points": "poäng", "{0} of other {1}s take it": "{0} av andra {1}s tar den",
+    "Gold rings: talents most other {0}s on the Ledger take ({1} characters). Their average split: {2}.": "Guldringar: talanger som de flesta andra {0}s på Ledger tar ({1} karaktärer). Deras snittfördelning: {2}.",
+    "Popular picks show once {0} other {1}s with 10+ points have uploaded their talents.": "Populära val visas när {0} andra {1}s med 10+ poäng har laddat upp sina talanger.", "PvP": "PvP", "Mob": "Mob", "another player": "en annan spelare", "killed in PvP by {0}": "dödad i PvP av {0}",
+    "Pick Deaths, Level-ups or Rare loot above to show them on the map.": "Välj Dödsfall, Level-ups eller Rare loot ovan för att visa dem på kartan.",
+    "Who's Clearing What": "Vem klarar vad", "Hardest bosses": "Svåraste bossarna", "most wipes, then most deaths": "flest wipes, sedan flest dödsfall", "Boss hunters": "Bossjägare",
+    "Guild progress": "Guildernas progress", "Character": "Karaktär", "Guild": "Guild", "Members": "Medlemmar", "Runs": "Runs", "Bosses": "Bossar",
+    "{0} kill rate": "{0} lyckade", "fastest {0}": "snabbast {0}", "bosses killed and dungeon runs in this range": "dödade bossar och dungeon runs i perioden",
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst", "for the murder of {0} hero": "för mordet på {0} hjälte", "for the murder of {0} heroes": "för mordet på {0} hjältar",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}", "Reward: {0} gold": "Belöning: {0} guld",
@@ -527,7 +534,7 @@
       return {
         id: pid, name: String(p.name || "Friend"), class: main ? main.class : "", rows, chars: owned, raw: p,
         days: mergeDays(owned),
-        deaths: owned.flatMap(ch => ch.deaths.map(d => ({ ...d, _char: ch.name }))),
+        deaths: owned.flatMap(ch => ch.deaths.filter((d, i, a) => !d || a.findIndex(o => o && o.t === d.t && o.by === d.by) === i).map(d => ({ ...d, _char: ch.name }))),
         spellDmg: mergeMaps(owned, "spellDmg"), casts: mergeMaps(owned, "casts"), heat: mergeMaps(owned, "heat"),
         zones: mergeMaps(owned, "zones"), healers: mergeMaps(owned, "healers"), kills: mergeMaps(owned, "kills"), duels,
         notable: owned.flatMap(ch => (ch.notable || []).filter(Boolean).map(n => ({ ...n, _char: ch.name }))),
@@ -777,15 +784,22 @@
   const ATLAS_MOP = { v: "mop-builtin",
     "947": { n: "Azeroth", zones: [Z(13, "Eastern Kingdoms", 49.2, 120.6, 12.1, 83.4), Z(12, "Kalimdor", -11.7, 50.7, 17.1, 79.5), Z(113, "Northrend", 36.7, 68.3, 2.3, 33.9), Z(424, "Pandaria", 37.5, 66.7, 67.9, 97.1)] },
   };
+  // WoW Forever (1.60, wago.tools product wowf): Classic Era's continents with its own new zones (Mount Hyjal,
+  // Shen'dralas, Riverglades) and moved borders (Mulgore, Stormwind City), from design/src/make_maps.py like the others.
+  const ATLAS_FOREVER = { v: "forever-builtin",
+    "1414": { n: "Kalimdor", zones: [Z(1440, "Ashenvale", 41.8, 57.4, 33.1, 48.8), Z(1447, "Azshara", 55.3, 69.1, 30.4, 44.2), Z(1439, "Darkshore", 38.4, 56.2, 18.2, 36.0), Z(1457, "Darnassus", 38.4, 41.3, 10.4, 13.3), Z(1443, "Desolace", 34.9, 47.1, 50.3, 62.6), Z(1411, "Durotar", 51.7, 66.1, 44.8, 59.2), Z(1445, "Dustwallow Marsh", 49.0, 63.3, 60.5, 74.7), Z(1448, "Felwood", 41.9, 57.5, 23.1, 38.7), Z(1444, "Feralas", 31.6, 50.5, 61.8, 80.7), Z(1450, "Moonglade", 50.1, 56.4, 17.6, 23.8), Z(2482, "Mount Hyjal", 48.9, 58.3, 26.5, 35.9), Z(1412, "Mulgore", 39.6, 56.4, 51.1, 67.8), Z(1454, "Orgrimmar", 56.4, 60.2, 42.9, 46.7), Z(2652, "Shen'dralas", 40.9, 46.4, 59.9, 65.5), Z(1451, "Silithus", 39.5, 48.9, 76.5, 85.9), Z(1442, "Stonetalon Mountains", 37.6, 50.8, 40.3, 53.6), Z(1446, "Tanaris", 47.0, 65.7, 76.1, 94.9), Z(1438, "Teldrassil", 36.0, 49.8, 3.9, 17.8), Z(1413, "The Barrens", 39.2, 66.8, 45.6, 73.1), Z(1441, "Thousand Needles", 47.6, 59.5, 68.3, 80.3), Z(1456, "Thunder Bluff", 45.0, 47.8, 55.6, 58.5), Z(1449, "Un'Goro Crater", 44.9, 55.0, 76.5, 86.5), Z(1452, "Winterspring", 47.2, 66.5, 17.4, 36.7)] },
+    "1415": { n: "Eastern Kingdoms", zones: [Z(1416, "Alterac Mountains", 43.2, 51.2, 25.4, 33.4), Z(1417, "Arathi Highlands", 47.9, 58.1, 32.4, 42.6), Z(1418, "Badlands", 51.4, 58.4, 56.9, 64.0), Z(1419, "Blasted Lands", 49.0, 58.5, 76.8, 86.4), Z(1428, "Burning Steppes", 46.2, 54.5, 61.8, 70.1), Z(1430, "Deadwind Pass", 47.8, 54.9, 73.9, 81.0), Z(1426, "Dun Morogh", 40.3, 54.3, 48.3, 62.3), Z(1431, "Duskwood", 43.1, 50.8, 73.2, 80.9), Z(1423, "Eastern Plaguelands", 51.9, 64.1, 16.1, 28.3), Z(1429, "Elwynn Forest", 41.1, 51.0, 65.7, 75.5), Z(1424, "Hillsbrad Foothills", 42.4, 51.5, 30.1, 39.2), Z(1455, "Ironforge", 47.5, 49.7, 51.3, 53.5), Z(1432, "Loch Modan", 51.1, 59.0, 50.9, 58.8), Z(1433, "Redridge Mountains", 50.2, 56.4, 68.4, 74.5), Z(2548, "Riverglades", 50.8, 64.6, 59.4, 73.2), Z(1427, "Searing Gorge", 46.4, 52.7, 57.8, 64.2), Z(1421, "Silverpine Forest", 35.7, 47.6, 24.7, 36.6), Z(1453, "Stormwind City", 40.6, 45.5, 65.9, 70.8), Z(1434, "Stranglethorn Vale", 39.1, 57.3, 79.4, 97.5), Z(1435, "Swamp of Sorrows", 51.8, 58.3, 72.8, 79.3), Z(1425, "The Hinterlands", 49.9, 60.9, 25.6, 36.5), Z(1420, "Tirisfal Glades", 36.8, 49.7, 15.5, 28.3), Z(1458, "Undercity", 43.0, 45.7, 23.8, 26.5), Z(1422, "Western Plaguelands", 44.3, 56.5, 17.5, 29.7), Z(1436, "Westfall", 36.9, 46.8, 71.9, 81.8), Z(1437, "Wetlands", 46.6, 58.3, 41.0, 52.7)] },
+    "947": { n: "Azeroth", zones: [Z(1415, "Eastern Kingdoms", 37.1, 115.9, 8.2, 86.9), Z(1414, "Kalimdor", -18.6, 63.4, 6.8, 88.8)] },
+  };
   // The realm's own uploaded atlas if there is one with this game's maps, otherwise the built-in one for its game.
   // Maps the upload lacks (Azeroth, on Classic Era and Anniversary) come from the built-in one.
   const mapGame = () => {
     const vs = (state.allChars || []).filter(realmMatch).map(c => String((c.game || {}).version || ""));
-    return vs.some(v => v.startsWith("5.")) ? "mop" : vs.some(v => v.startsWith("2.")) ? "tbc" : "era";
+    return vs.some(v => v.startsWith("5.")) ? "mop" : vs.some(v => v.startsWith("2.")) ? "tbc" : vs.some(v => /^1\.(1[6-9]|[2-9]\d)/.test(v)) ? "forever" : "era";
   };
   const pickAtlas = () => {
     const game = mapGame(), fits = a => a && MAP_ART[game].some(c => a[c] && (a[c].zones || []).length);
-    const builtin = { era: ATLAS_ERA, tbc: ATLAS_TBC, mop: ATLAS_MOP }[game];
+    const builtin = { era: ATLAS_ERA, tbc: ATLAS_TBC, mop: ATLAS_MOP, forever: ATLAS_FOREVER }[game];
     const shared = (state.atlases || {})[String(state.realm || "").split("|")[1]];
     if (fits(shared)) return { ...builtin, ...shared };
     const up = (state.allChars || []).filter(c => realmMatch(c) && fits(c.atlas)).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0))[0];
@@ -803,7 +817,7 @@
   // The continents' map art from the game client, built by design/src/make_maps.py into site/maps/. Each image is
   // the in-game map frame, so a position's percentages on it are the game's own map coordinates, the same ones the
   // addon records and the zone rectangles above use.
-  const MAP_ART = { era: ["1414", "1415", "947"], tbc: ["1414", "1415", "1945", "947"], mop: ["947"] };
+  const MAP_ART = { era: ["1414", "1415", "947"], tbc: ["1414", "1415", "1945", "947"], mop: ["947"], forever: ["1414", "1415", "947"] };
   // The maps with a tab of their own: Azeroth (where every map starts), and Outland, which isn't on it.
   // Kalimdor and the Eastern Kingdoms open from Azeroth, and right-clicking them goes back out to it.
   const MAP_TABS = ["947", "1945"];
@@ -856,8 +870,10 @@
     const cx = open ? open.x0 + (open.x1 - open.x0) * x / 100 : x, cy = open ? open.y0 + (open.y1 - open.y0) * y / 100 : y;
     const built = ((state.mapIndex || {})[mapGame()] || []).concat(MAP_ART[mapGame()].map(Number));
     const hits = zones.filter(z => z !== open && built.includes(z.id) && CITY.test(z.n) === !!open && cx >= z.x0 && cx <= z.x1 && cy >= z.y0 && cy <= z.y1);
-    // continents' rectangles on Azeroth overlap over the sea, so there the nearest one wins; elsewhere the smallest
-    const size = z => m.cont === "947" && !open ? Math.hypot((z.x0 + z.x1) / 2 - cx, (z.y0 + z.y1) / 2 - cy) : (z.x1 - z.x0) * (z.y1 - z.y0);
+    // Rectangles overlap (zones are not rectangles): on Azeroth the nearest continent wins; elsewhere the zone whose
+    // middle the click is closest to, measured in that zone's own size, so a small zone doesn't swallow its neighbour's edge.
+    const size = z => m.cont === "947" && !open ? Math.hypot((z.x0 + z.x1) / 2 - cx, (z.y0 + z.y1) / 2 - cy)
+      : Math.max(Math.abs((z.x0 + z.x1) / 2 - cx) / (z.x1 - z.x0), Math.abs((z.y0 + z.y1) / 2 - cy) / (z.y1 - z.y0));
     return hits.sort((a, b) => size(a) - size(b))[0] || null;
   }
   const mapSrc = id => `maps/${mapGame()}-${id}.webp`;
@@ -986,7 +1002,13 @@
     if (window.ResizeObserver) new ResizeObserver(() => { if (state.map) applyMapView(); }).observe(box);
   }
 
-  const MAP_ICON = { deaths: () => "skull", dings: () => "crit", loot: e => (e.d.q >= 4 ? "lotus" : "loot") };
+  // Game icons (Wowhead's 18 px set): the same few files for every marker, so the browser fetches each once.
+  const MAP_ICON = {
+    deaths: e => (e.d.cause === "player" ? "ability_dualwield" : "inv_misc_bone_humanskull_01"),
+    dings: () => "spell_holy_innerfire",
+    loot: e => (e.d.q >= 4 ? "inv_misc_gem_amethyst_02" : "inv_misc_bag_10"),
+  };
+  const mapIcon = e => `<img class="wicon" src="https://wow.zamimg.com/images/wow/icons/small/${MAP_ICON[e.kind](e)}.jpg" width="16" height="16" alt="">`;
   // Where on its continent something happened: the addon's own continent position, or, for records uploaded
   // without one, the zone position placed through the zone's rectangle (what C_Map.GetMapRectOnMap does in game).
   function contSpot(d, atlas) {
@@ -1021,7 +1043,7 @@
     const who = esc(e.d._char || nameTxt(e.p)), when = shortDate(localKey(e.t)), where = esc(e.d.zone || "");
     if (e.kind === "deaths") {
       const how = e.d.cause === "fall" ? tr("fell to their death") : e.d.cause === "drown" ? tr("drowned")
-        : e.d.by ? tr("killed by {0}", esc(e.d.by)) + (e.d.spell ? ` (${esc(e.d.spell)}${e.d.amt ? " " + num(e.d.amt) : ""})` : "") : tr("died");
+        : e.d.by ? tr(e.d.cause === "player" ? "killed in PvP by {0}" : "killed by {0}", esc(e.d.by)) + (e.d.spell || e.d.amt ? ` (${[e.d.spell ? esc(e.d.spell) : "", e.d.amt ? tr("{0} damage", num(e.d.amt)) : ""].filter(Boolean).join(", ")})` : "") : tr("died");
       return `<b>${who}</b> ${how}<br><span class="muted">${[e.d.lvl ? tr("Lvl {0}", e.d.lvl) : "", where, when].filter(Boolean).join(" · ")}</span>`;
     }
     if (e.kind === "dings") return `<b>${who}</b> ${tr("reached level {0}", e.d.lvl)}<br><span class="muted">${[where, when].filter(Boolean).join(" · ")}</span>`;
@@ -1029,7 +1051,7 @@
   }
 
   function renderMap(people) {
-    const m = (state.map ||= { cont: "", layers: { deaths: true, dings: true, loot: true }, who: "" });
+    const m = (state.map ||= { cont: "", layers: { deaths: false, dings: false, loot: false }, who: "" });
     const atlas = pickAtlas(), game = mapGame();
     if (!people.some(p => p.id === m.who)) m.who = "";
     const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people);
@@ -1081,7 +1103,7 @@
     state.mapShown = shown;
     $("mapMarks").classList.remove("replaying");
     $("mapMarks").innerHTML = shown.map((e, i) =>
-      `<button type="button" class="mk" data-i="${i}" style="left:${e.x}%;top:${e.y}%;--d:${(i / Math.max(1, shown.length) * 6).toFixed(2)}s" aria-label="${esc(e.d._char || e.p.name)}">${sprite(MAP_ICON[e.kind](e), 1)}</button>`).join("");
+      `<button type="button" class="mk" data-i="${i}" style="left:${e.x}%;top:${e.y}%;--d:${(i / Math.max(1, shown.length) * 6).toFixed(2)}s" aria-label="${esc(e.d._char || e.p.name)}">${mapIcon(e)}</button>`).join("");
     $("mapTip").hidden = true;
     $("mapReplay").hidden = shown.length < 2;
     applyMapView();
@@ -1098,6 +1120,7 @@
       : `<p class="empty">${tr("No deaths in this range. Impressive.")}</p>`;
     const unplaced = deaths.filter(d => !contSpot(d, pickAtlas())).length;
     $("mapNote").textContent = [
+      Object.values(m.layers).some(Boolean) ? "" : tr("Pick Deaths, Level-ups or Rare loot above to show them on the map."),
       unplaced ? tr("{0} deaths happened before positions were saved (FunStats 1.1), so they're only counted, not placed.", num(unplaced)) : "",
     ].filter(Boolean).join(" ");
   }
@@ -1784,9 +1807,10 @@
   function deathWhat(d) {
     let what;
     if (d.cause === "mob" || d.cause === "player") {
-      const mob = `<span class="mob">${esc(d.by || tr("something"))}</span>`;
-      what = (d.spell && d.spell !== "Melee" ? tr("was slain by {0}'s {1}", mob, `<span class="sp">${esc(d.spell)}</span>`) : tr("was slain by {0}", mob))
-        + (d.amt ? ` <span class="dmg">(${num(d.amt)})</span>` : "");
+      const pvp = d.cause === "player", mob = `<span class="mob">${esc(d.by || tr(pvp ? "another player" : "something"))}</span>`;
+      what = `<span class="badge ${pvp ? "pvp" : "pve"}">${tr(pvp ? "PvP" : "Mob")}</span> `
+        + (d.spell && d.spell !== "Melee" ? tr("was slain by {0}'s {1}", mob, `<span class="sp">${esc(d.spell)}</span>`) : tr("was slain by {0}", mob))
+        + (d.amt ? ` <span class="dmg">(${tr("{0} damage", num(d.amt))})</span>` : "");
     } else what = tr(DEATH_VERB[d.cause] || "died");
     const where = d.inst || d.zone;
     return what + (where ? tr(" in {0}", `<span class="where">${esc(where)}</span>`) : "");
@@ -1901,6 +1925,8 @@
     return r => esc(r.inst || "?") + (r.dn && diffs[r.inst] && diffs[r.inst].size > 1 ? ` <span class="muted">(${esc(r.dn)})</span>` : "");
   }
 
+  // WoW Forever's meter adds the server to other players' names ("Arrow Minded CAMWOWEU5Realm4PvP"): one ruleset is one realm, so it goes.
+  const bareName = n => String(n).replace(/\s+\S*Realm\d+\S*$/, "");
   // A fight seen by several characters in the group is one fight: the same boss within half a minute.
   // Their meters are combined with max, so nobody's damage counts twice.
   function groupFights(people) {
@@ -1918,7 +1944,7 @@
       g.seen.push(p);
       const add = r => {
         if (!r || !r.n) return;
-        const w = g.who[r.n] ||= { n: String(r.n), c: r.c, d: 0, h: 0 };
+        const n = bareName(r.n), w = g.who[n] ||= { n, c: r.c, d: 0, h: 0 };
         w.d = Math.max(w.d, +r.d || 0); w.h = Math.max(w.h, +r.h || 0); w.c ||= r.c;
       };
       asArr(f.who).forEach(add);
@@ -1941,7 +1967,7 @@
       g.deaths += +r.deaths || 0;
       g.lastBoss ||= r.lastBoss;
       g.people.push(p); g.names.add(p.name);
-      asArr(r.with).forEach(n => g.names.add(String(n)));
+      asArr(r.with).forEach(n => g.names.add(bareName(n)));
     }
     return { runs: out.sort((a, b) => b.t - a.t), all };
   }
@@ -1998,8 +2024,46 @@
         <td>${r.dps ? `<span class="nm">${whoHTML(r.dps.w, people)} ${num(r.dps.v)}</span>` : "–"}</td><td>${r.last ? dayText(r.last) : "–"}</td></tr>`).join("")
       || `<tr><td colspan="6" class="empty">${tr("No bosses fought in this range.")}</td></tr>`;
 
-    // Dungeon records and the latest runs.
+    // Hardest bosses: most wipes, then most deaths in their fights, then the longest kill.
+    const deathsBy = {};
+    fights.forEach(g => { deathsBy[g.key] = (deathsBy[g.key] || 0) + g.deaths; });
+    const hard = trows.map(r => ({ ...r, deaths: deathsBy[bossKey(r)] || 0 }))
+      .sort((a, b) => b.wipes - a.wipes || b.deaths - a.deaths || (b.fast || 0) - (a.fast || 0)).slice(0, 6);
+    $("hardBosses").innerHTML = hard.map((r, i) => {
+      const bits = [r.wipes ? tr(r.wipes === 1 ? "{0} wipe" : "{0} wipes", num(r.wipes)) : "", r.deaths ? tr(r.deaths === 1 ? "{0} death" : "{0} deaths", num(r.deaths)) : "",
+        r.kills + r.wipes ? tr("{0} kill rate", pct(r.kills / (r.kills + r.wipes))) : "", r.fast ? tr("fastest {0}", clock(r.fast)) : ""].filter(Boolean);
+      return `<div class="hardboss"><span class="hrank">${i + 1}</span>${bossPic(r.boss)}<div><b>${esc(r.boss)}</b> <span class="muted">${label(r)}</span><br><span class="muted">${bits.join(" · ")}</span></div></div>`;
+    }).join("") || `<p class="empty">${tr("No bosses fought in this range.")}</p>`;
+
+    // Per character (or per guild, on the realm page): bosses killed, kills, wipes and dungeon runs in this range.
     const { runs, all } = groupRuns(people);
+    const hunt = list => {
+      const t = { bosses: new Set(), kills: 0, wipes: 0, runs: 0, dps: 0, members: list.length };
+      for (const p of list) {
+        for (const f of p.fights) if (inRange(localKey(f.t))) {
+          if (!f.ok) { t.wipes++; continue; }
+          t.kills++; t.bosses.add(bossKey(f));
+          if (f.dur > 0) t.dps = Math.max(t.dps, (+f.dmg || 0) / f.dur);
+        }
+        t.runs += all.filter(x => x.p === p).length;
+      }
+      return t;
+    };
+    const huntRows = (groups, first) => groups.map(([head, list]) => [head, hunt(list)]).filter(([, t]) => t.kills || t.wipes || t.runs)
+      .sort((a, b) => b[1].bosses.size - a[1].bosses.size || b[1].kills - a[1].kills || b[1].runs - a[1].runs)
+      .map(([head, t]) => `<tr><td>${head}</td>${first(t)}<td>${num(t.bosses.size)}</td><td>${num(t.kills)}</td><td>${num(t.wipes)}</td><td>${num(t.runs)}</td></tr>`).join("");
+    const cols = heads => `<tr>${heads.map(h => `<th>${h}</th>`).join("")}<th>${tr("Bosses")}</th><th>${tr("Kills")}</th><th>${tr("Wipes")}</th><th>${tr("Runs")}</th></tr>`;
+    $("tHunters").tHead.innerHTML = cols([tr("Character"), tr("Best DPS")]);
+    $("tHunters").tBodies[0].innerHTML = huntRows(people.map(p => [nameHTML(p), [p]]), t => `<td>${t.dps ? num(t.dps) : "–"}</td>`)
+      || `<tr><td colspan="6" class="empty">${tr("No bosses fought in this range.")}</td></tr>`;
+    const guilds = {};
+    if (parseRoute().kind === "main") people.forEach(p => { const g = p.chars[0] && p.chars[0].guild; if (g) (guilds[g] ||= []).push(p); });
+    const gRows = huntRows(Object.entries(guilds).map(([g, list]) => [`<a class="glink" href="${guildHref(state.realm, g)}">&lt;${esc(g)}&gt;</a>`, list]), t => `<td>${num(t.members)}</td>`);
+    $("guildProgress").hidden = !gRows;
+    $("tGuildBosses").tHead.innerHTML = cols([tr("Guild"), tr("Members")]);
+    $("tGuildBosses").tBodies[0].innerHTML = gRows;
+
+    // Dungeon records and the latest runs.
     const runLabel = instLabeler(runs);
     const byInst = {};
     runs.forEach(g => (byInst[`${g.inst}|${g.d || 0}`] ||= []).push(g));
@@ -2348,12 +2412,15 @@
   // Mists of Pandaria Classic (5.x) its MoP Classic database and level 90.
   const isTBC = ch => /^2\./.test(String(ch && ch.game && ch.game.version || ""));
   const isMoP = ch => /^5\./.test(String(ch && ch.game && ch.game.version || ""));
+  // WoW Forever is 1.60 and up, with its own items (ids like 281268) in Wowhead's Forever database.
+  const isForever = ch => /^1\.(1[6-9]|[2-9]\d)/.test(String(ch && ch.game && ch.game.version || ""));
   function realmExpansion(realmChars) {
+    state.forever = realmChars.some(isForever);
     state.mop = realmChars.some(isMoP);
     state.tbc = !state.mop && realmChars.some(isTBC);
     state.cap = state.mop || realmChars.some(c => (c.level || 0) > 70) ? 90 : state.tbc || realmChars.some(c => (c.level || 0) > 60) ? 70 : 60;
   }
-  const whDomain = () => state.mop ? "mop-classic" : state.tbc ? "tbc" : "classic";
+  const whDomain = () => state.forever ? "forever" : state.mop ? "mop-classic" : state.tbc ? "tbc" : "classic";
   const whItem = id => `href="https://www.wowhead.com/${whDomain()}/item=${encodeURIComponent(id)}" data-wowhead="item=${encodeURIComponent(id)}&domain=${whDomain()}"`;
   const itemHTML = (n, size) => n.id
     ? `<a class="q${n.q}" ${whItem(n.id)}${size ? ` data-wh-icon-size="${size}"` : ""} target="_blank" rel="noopener">[${esc(n.item)}]</a>`
@@ -2492,11 +2559,78 @@
     });
   }
 
+  // ---------- talent trees (WoW Forever) ----------
+  // The addon saves the character's trait tree and "node:rank" pairs; site/talents/forever.json (design/src/make_talents.py)
+  // says where each node sits. Loaded the first time a character with talents is shown.
+  const TALENTS = { data: null, loading: false };
+  function talentTree(id) {
+    if (!TALENTS.data && !TALENTS.loading) {
+      TALENTS.loading = true;
+      fetch("talents/forever.json").then(r => (r.ok ? r.json() : {})).catch(() => ({})).then(d => { TALENTS.data = d; render(); });
+    }
+    return TALENTS.data && TALENTS.data[id];
+  }
+  const traitRanks = t => {
+    const out = {};
+    String(t && t.r || "").split(" ").forEach(pair => { const [n, r] = pair.split(":").map(Number); if (n && r > 0) out[n] = r; });
+    return out;
+  };
+  // Points per spec, in the same shape as the older clients' talent tabs, so the sheet's header shows the spec.
+  function traitTabs(ch) {
+    const tree = ch.traits && talentTree(ch.traits.tree);
+    if (!tree) return [];
+    const mine = traitRanks(ch.traits);
+    return tree.specs.map(sp => ({ n: sp.n, p: sp.nodes.reduce((a, nd) => a + (mine[nd[0]] || 0), 0) }));
+  }
+  // Popular on the Ledger: how often other characters with the same tree (any realm) take each talent.
+  // Only characters with 10+ points count, and picks show once 3 of them have uploaded.
+  const POP_MIN = 3, POP_SHARE = 0.5;
+  function talentsHTML(ch) {
+    const tree = ch.traits && talentTree(ch.traits.tree);
+    if (!tree) return "";
+    const mine = traitRanks(ch.traits);
+    const spent = r => Object.values(r).reduce((a, v) => a + v, 0);
+    const peers = (state.allChars || []).filter(c => c !== ch && c.key !== ch.key && c.traits && c.traits.tree === ch.traits.tree)
+      .map(c => traitRanks(c.traits)).filter(r => spent(r) >= 10);
+    const share = id => peers.length ? peers.filter(r => r[id]).length / peers.length : 0;
+    const showPop = peers.length >= POP_MIN;
+    const [cname] = classOf(ch);
+    const CELL = 46, GAP = 10, at = (col, row) => [col * (CELL + GAP) + CELL / 2, row * (CELL + GAP) + CELL / 2];
+    const specs = tree.specs.map(sp => {
+      const where = Object.fromEntries(sp.nodes.map(nd => [nd[0], nd]));
+      const pts = sp.nodes.reduce((a, nd) => a + (mine[nd[0]] || 0), 0);
+      // arrows: from a talent down (or across) to the one it unlocks
+      const arrows = tree.edges.filter(([a, b]) => where[a] && where[b]).map(([a, b]) => {
+        const [x1, y1] = at(where[a][1], where[a][2]), [x2, y2] = at(where[b][1], where[b][2]);
+        const on = mine[a] && mine[b] ? " on" : "";
+        return y1 === y2 ? `<line class="arr${on}" x1="${x1 + CELL / 2}" y1="${y1}" x2="${x2 - CELL / 2}" y2="${y2}"/>`
+          : `<line class="arr${on}" x1="${x1}" y1="${y1 + CELL / 2}" x2="${x2}" y2="${y2 - CELL / 2}"/>`;
+      }).join("");
+      const rows = Math.max(7, ...sp.nodes.map(nd => nd[2] + 1)), W = 4 * CELL + 3 * GAP, H = rows * CELL + (rows - 1) * GAP;
+      const cells = sp.nodes.map(([id, col, row, max, spell, name, icon]) => {
+        const r = mine[id] || 0, pop = showPop ? share(id) : 0;
+        const cls = ["tn", r ? "on" : "", r >= max ? "max" : "", pop >= POP_SHARE ? "pop" : ""].filter(Boolean).join(" ");
+        const label = `${name}: ${r}/${max}` + (showPop ? ` · ${tr("{0} of other {1}s take it", pct(pop), cname)}` : "");
+        return `<a class="${cls}" style="left:${col * (CELL + GAP)}px;top:${row * (CELL + GAP)}px" href="https://www.wowhead.com/forever/spell=${spell}" data-wowhead="spell=${spell}&domain=forever" data-wh-icon-added="true" target="_blank" rel="noopener" aria-label="${esc(label)}">`
+          + `<img src="https://wow.zamimg.com/images/wow/icons/medium/${esc(icon)}.jpg" width="${CELL}" height="${CELL}" alt="" loading="lazy"><b>${r}/${max}</b>${pop >= POP_SHARE ? `<i>${Math.round(pop * 100)}%</i>` : ""}</a>`;
+      }).join("");
+      return `<div class="tspec"><h4>${esc(sp.n)} <span>${num(pts)}</span></h4><div class="tgrid" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}" aria-hidden="true">${arrows}</svg>${cells}</div></div>`;
+    }).join("");
+    // The most common split among the others: the spec most of them put the most points in, and their average points per spec.
+    let note;
+    if (showPop) {
+      const tabs = peers.map(r => tree.specs.map(sp => sp.nodes.reduce((a, nd) => a + (r[nd[0]] || 0), 0)));
+      const avg = tree.specs.map((sp, i) => `${esc(sp.n)} ${Math.round(tabs.reduce((a, t) => a + t[i], 0) / tabs.length)}`);
+      note = tr("Gold rings: talents most other {0}s on the Ledger take ({1} characters). Their average split: {2}.", cname, num(peers.length), avg.join(" / "));
+    } else note = tr("Popular picks show once {0} other {1}s with 10+ points have uploaded their talents.", POP_MIN, cname);
+    return `<div class="talenttrees"><div class="frame-title"><span>${tr("Talents")}</span><small>${num(spent(mine))} ${tr("points")}</small></div><div class="tspecs">${specs}</div><p class="muted" style="font-size:13px">${note}</p></div>`;
+  }
+
   function sheetHTML(ch, color) {
     const gear = ch.gear && typeof ch.gear === "object" ? ch.gear : {};
     const items = Object.entries(gear).filter(([s, it]) => it && it.il && s !== "s4" && s !== "s19");
     const avgIlvl = items.length ? Math.round(items.reduce((a, [, it]) => a + it.il, 0) / items.length) : 0;
-    const talents = Array.isArray(ch.talents) ? ch.talents.filter(t => t && t.n) : [];
+    const talents = Array.isArray(ch.talents) ? ch.talents.filter(t => t && t.n) : traitTabs(ch);
     const spec = talents.slice().sort((a, b) => (b.p || 0) - (a.p || 0))[0];
     const profs = Array.isArray(ch.professions) ? ch.professions.filter(x => x && x.n) : [];
     const [cname] = classOf(ch);
@@ -2516,6 +2650,7 @@
       </div>
       <div class="weapons">${[16, 17, 18].map(s => slotHTML(gear, s)).join("")}</div>
       ${ch.armory ? `<p class="muted" style="font-size:13px">${tr("Gear from the Blizzard armory. Fun stats need the FunStats addon.")}</p>` : ""}
+      ${talentsHTML(ch)}
       ${profs.length ? `<div class="profs">${profs.map(x => `<div class="prof"><span>${esc(x.n)}</span><span class="track"><span class="fill" style="width:${Math.min(100, (x.r / Math.max(1, x.m || 300)) * 100)}%"></span></span><span class="num">${num(x.r)} / ${num(x.m || 300)}</span></div>`).join("")}</div>` : ""}`;
   }
 

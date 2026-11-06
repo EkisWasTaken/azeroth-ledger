@@ -300,6 +300,35 @@ class Addon(unittest.TestCase):
         self.assertEqual(c.spec, "Arms")
         self.assertEqual(c.professions[1].n, "Mining")
 
+    TRAITS = r"""
+    C_SpecializationInfo.GetActiveSpecGroup = function() return 1 end
+    C_SpecializationInfo.GetCombatConfigIDForSpecGroup = function(g) return g == 1 and 77 or nil end
+    traitRanks = { [105958] = 3, [105957] = 2, [105956] = 0 }
+    C_Traits = {
+      GetConfigInfo = function(id) return id == 77 and { treeIDs = { 1117 } } or nil end,
+      GetTreeNodes = function(tree) return tree == 1117 and { 105958, 105957, 105956 } or {} end,
+      GetNodeInfo = function(_, node) return { ranksPurchased = traitRanks[node] } end,
+    }
+    """
+
+    def test_forever_talents_come_from_the_trait_tree(self):
+        self.start(FOREVER + self.TRAITS)
+        _, c = self.char()
+        self.assertEqual(c.traits.tree, 1117)
+        self.assertEqual(c.traits.r, "105958:3 105957:2")
+        self.assertIsNone(c.spec)  # Forever has trees, not a specialization
+        self.lua.execute("traitRanks[105956] = 1")
+        self.fire("TRAIT_CONFIG_UPDATED", 77)
+        self.lua.execute("runTimers()")
+        self.assertEqual(self.char()[1].traits.r, "105958:3 105957:2 105956:1")
+
+    def test_secret_talents_keep_the_last_snapshot(self):
+        self.start(FOREVER + self.TRAITS)
+        self.lua.execute("traitRanks[105958] = secretMark")
+        self.fire("TRAIT_CONFIG_UPDATED", 77)
+        self.lua.execute("runTimers()")
+        self.assertEqual(self.char()[1].traits.r, "105958:3 105957:2")
+
     # ---- Forever: damage meter
 
     def test_meter_counts_each_session_once(self):

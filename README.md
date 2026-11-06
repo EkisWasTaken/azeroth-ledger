@@ -29,7 +29,7 @@ The **FunStats** addon quietly records everything worth laughing about, per char
 | 💀 **Deaths** | who or what killed you, where, at what level, falling and drowning included, plus your nemeses |
 | 💰 **Loot & gold** | rare drops, gold looted and spent, repairs, your richest moment |
 | 🗺️ **The world** | zones, distance run, jumps (yes, every one), time played, hearthstones |
-| 🛡️ **Your character** | gear with Wowhead icons and tooltips, talents, professions, level-ups |
+| 🛡️ **Your character** | gear with Wowhead icons and tooltips, talents (full talent trees on WoW Forever, with the picks most popular on your site), professions, level-ups |
 | 🏆 **Glory** | achievements like *Can't stop jumping* and *Spends ages dead*, personal bests, a Hall of Fame |
 
 Everything is shown **per realm**, with **guild pages**, **search**, **character comparisons**, **weekly and all-time** views, four themes (**Forever**, **Horde**, **Alliance**, **Felfire**) and **English or Swedish**.

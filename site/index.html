@@ -338,9 +338,9 @@
     <div class="mapbar">
       <span class="maptabs" id="mapConts" role="group" aria-label="Continent"></span>
       <span class="maplayers" role="group" aria-label="Show on the map">
-        <button type="button" class="chip" data-layer="deaths" aria-pressed="true">Deaths</button>
-        <button type="button" class="chip" data-layer="dings" aria-pressed="true">Level-ups</button>
-        <button type="button" class="chip" data-layer="loot" aria-pressed="true">Rare loot</button>
+        <button type="button" class="chip" data-layer="deaths" aria-pressed="false">Deaths</button>
+        <button type="button" class="chip" data-layer="dings" aria-pressed="false">Level-ups</button>
+        <button type="button" class="chip" data-layer="loot" aria-pressed="false">Rare loot</button>
       </span>
       <label class="toggle" for="mapWho"><span>Who</span> <select id="mapWho" class="sel"></select></label>
       <button type="button" class="btn" id="mapReplay">Replay</button>
@@ -385,6 +385,24 @@
         <div class="frame-title"><span>Boss tally</span><small id="bossTallyNote"></small></div>
         <div class="table-wrap tall"><table id="tBosses"><thead></thead><tbody></tbody></table></div>
       </div>
+    </div>
+  </section>
+
+  <section id="s-hunters" data-pg="dungeons" aria-labelledby="h-hunters">
+    <div class="sec-head"><h2 id="h-hunters">Who's Clearing What</h2></div>
+    <div class="duo">
+      <div class="frame">
+        <div class="frame-title"><span>Hardest bosses</span><small>most wipes, then most deaths</small></div>
+        <div class="hardbosses" id="hardBosses"></div>
+      </div>
+      <div class="frame">
+        <div class="frame-title"><span>Boss hunters</span><small>bosses killed and dungeon runs in this range</small></div>
+        <div class="table-wrap tall"><table id="tHunters"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="frame" id="guildProgress">
+      <div class="frame-title"><span>Guild progress</span><small>bosses killed and dungeon runs in this range</small></div>
+      <div class="table-wrap"><table id="tGuildBosses"><thead></thead><tbody></tbody></table></div>
     </div>
   </section>
 

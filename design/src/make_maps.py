@@ -39,12 +39,14 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 CACHE = os.path.join(ROOT, "design", ".map-cache")
 CHECK = os.path.join(ROOT, "design", "maps-check")
 OUT = os.path.join(ROOT, "site", "maps")
-BUILDS = {"tbc": "2.5.6.70006", "era": "1.15.9.70003", "mop": "5.5.4.70531"}
+BUILDS = {"tbc": "2.5.6.70006", "era": "1.15.9.70003", "mop": "5.5.4.70531", "forever": "1.60.1.70790"}
 # The top maps the site draws per build, and the type of map shown on each: zones (3) or, on Azeroth, continents (2).
 TOP = {
     "era": {1414: ("Kalimdor", 3), 1415: ("Eastern Kingdoms", 3), 947: ("Azeroth", 2)},
     "tbc": {1414: ("Kalimdor", 3), 1415: ("Eastern Kingdoms", 3), 1945: ("Outland", 3), 947: ("Azeroth", 2)},
     "mop": {947: ("Azeroth", 2)},
+    # WoW Forever (wago.tools product wowf): Classic Era's maps plus its new zones, and Zephras Isle, a zone right on Azeroth.
+    "forever": {1414: ("Kalimdor", 3), 1415: ("Eastern Kingdoms", 3), 947: ("Azeroth", (2, 3))},
 }
 FRAME = (1002, 668)  # the in-game world map frame inside the 1024 x 768 tile grid: map coordinates 0-1
 
@@ -86,7 +88,7 @@ def zone_rects(build, cont, kind=3, ids=False):
         assign.setdefault(int(r["UiMapID"]), []).append({k: float(v) for k, v in r.items() if k.startswith(("Ui", "Region")) or k == "MapID"})
     out = []
     for mid, m in maps.items():
-        if int(m["ParentUiMapID"]) != cont or int(m["Type"]) != kind or mid not in assign:
+        if int(m["ParentUiMapID"]) != cont or int(m["Type"]) not in (kind if isinstance(kind, tuple) else (kind,)) or mid not in assign:
             continue
         za = assign[mid][0]
         cx, cy = (za["Region_0"] + za["Region_3"]) / 2, (za["Region_1"] + za["Region_4"]) / 2

@@ -238,6 +238,7 @@ local function Meta(ch)
   m.best, m.levels, m.levelPlayed, m.dingAt = ch.best, ch.levels, ch.levelPlayed, ch.dingAt
   m.heat, m.duels, m.instances = ch.heat, ch.duels, ch.instances
   m.gear, m.gearAt, m.talents, m.spec, m.professions = ch.gear, ch.gearAt, ch.talents, ch.spec, ch.professions
+  m.traits = ch.traits
   m.game = ch.game
   m.kills = Top(ch.kills, 40)
   m.spellDmg = Top(ch.spellDmg, 30)

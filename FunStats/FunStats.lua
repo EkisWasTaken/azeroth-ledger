@@ -1224,8 +1224,34 @@ local function SnapshotGear(retries)
   end
 end
 
+-- WoW Forever keeps the classic talent trees in the game's trait system: one trait tree per class, the three
+-- specs side by side. Saved as the tree and "node:rank" pairs; the website draws the trees from Forever's game data.
+local function ReadTraits()
+  local SI = C_SpecializationInfo
+  local configID = SI.GetCombatConfigIDForSpecGroup(SI.GetActiveSpecGroup and SI.GetActiveSpecGroup() or 1)
+  local config = configID and C_Traits.GetConfigInfo(configID)
+  local treeID = config and config.treeIDs and config.treeIDs[1]
+  if not treeID then return nil end
+  local picks = {}
+  for _, nodeID in ipairs(C_Traits.GetTreeNodes(treeID) or {}) do
+    local node = C_Traits.GetNodeInfo(configID, nodeID)
+    local rank = node and node.ranksPurchased or 0
+    if hasanysecretvalues and hasanysecretvalues(rank) then return nil end
+    if rank > 0 then picks[#picks + 1] = nodeID .. ":" .. rank end
+  end
+  return { tree = treeID, r = table.concat(picks, " ") }
+end
+
 local function SnapshotTalents()
   if not C then return end
+  if C_Traits and C_SpecializationInfo and C_SpecializationInfo.GetCombatConfigIDForSpecGroup then
+    -- pcall: an unreadable tree (secret inside instances) keeps the last good snapshot.
+    local ok, traits = pcall(ReadTraits)
+    if ok and traits then
+      C.traits, C.talents, C.spec = traits, nil, nil
+      return
+    end
+  end
   -- Mists of Pandaria and later: a specialization instead of talent trees.
   if MODERN and GetSpecialization and GetSpecializationInfo then
     local index = GetSpecialization()
@@ -1436,6 +1462,7 @@ handlers.PLAYER_EQUIPMENT_CHANGED = SheetSoon
 handlers.CHARACTER_POINTS_CHANGED = SheetSoon
 handlers.SKILL_LINES_CHANGED = SheetSoon
 handlers.PLAYER_SPECIALIZATION_CHANGED = SheetSoon
+handlers.TRAIT_CONFIG_UPDATED = SheetSoon
 
 function handlers.QUEST_TURNED_IN()
   Add("quests")
