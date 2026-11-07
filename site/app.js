@@ -167,7 +167,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "Adventure": "Äventyr", "Shame": "Skam", "{0} points": "{0} poäng", "Unclaimed": "Ledig", "{0} of {1} claimed": "{0} av {1} tagna", "{0} of {1}'s": "{0} av {1}s", "Not started": "Inte påbörjad", "broken once": "slaget en gång", "broken {0} times": "slaget {0} gånger", "has held it {0} day": "har hållit det {0} dag", "has held it {0} days": "har hållit det {0} dagar", "set it today": "satte det i dag", "Held by {0} players": "Hållet av {0} spelare", "{0} day": "{0} dag", "{0} days": "{0} dagar", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
+    "Grudge match": "Gammalt groll", "Boss Slayer": "Bossdräparen", "Gankmaster": "Gankmästaren", "Spell Slinger": "Besvärjaren", "Battle Hardened": "Stridshärdad", "Natural 100": "Perfekt 100", "Snake Eyes": "Ormögon", "Hearth Hugger": "Hemmakär", "Fish Out of Water": "Som en fisk i vattnet", "Drama Queen": "Dramadrottning", "Big Spender": "Slösaren", "Overhealer": "Överhealaren", "Wipe Lord": "Wipe-lorden", "Swing and a Miss": "Bom igen", "Sore Loser": "Dålig förlorare", "Glug Glug": "Blubb blubb", "Kill the most bosses": "Döda flest bossar", "Kill the most enemy players": "Döda flest fiendespelare", "Cast the most spells": "Kasta flest spells", "Spend the most time in combat": "Var i strid längst", "Roll a perfect 100 the most times": "Slå 100 flest gånger", "Roll a 1 the most times": "Slå 1 flest gånger", "Use your Hearthstone the most": "Använd Hearthstone flest gånger", "Spend the most time swimming": "Simma längst", "Use the most emotes": "Använd flest emotes", "Spend the most gold": "Spendera mest guld", "Overheal the most": "Överheala mest", "Be in the most boss wipes": "Var med i flest boss-wipes", "Miss the most attacks": "Missa flest attacker", "Lose the most duels": "Förlora flest dueller", "Drown the most": "Drunkna flest gånger", "{0} boss kills": "{0} boss-kills", "Killed {0} players": "Dödade {0} spelare", "Cast {0} spells": "Kastade {0} spells", "{0} in combat": "{0} i strid", "Rolled 100 {0} times": "Slog 100 {0} gånger", "Rolled a 1 {0} times": "Slog 1 {0} gånger", "Hearthed {0} times": "Hearthade {0} gånger", "Swam for {0}": "Simmade i {0}", "{0} emotes": "{0} emotes", "Spent {0}": "Spenderade {0}", "{0} healing wasted": "{0} healing i onödan", "Wiped {0} times": "Wipade {0} gånger", "Missed {0} times": "Missade {0} gånger", "Lost {0} duels": "Förlorade {0} dueller", "Drowned {0} times": "Drunknade {0} gånger", "Most spells cast in one day": "Flest spells på en dag", "Most boss kills in one day": "Flest boss-kills på en dag", "Most players killed in one day": "Flest dödade spelare på en dag", "Longest time in combat in one day": "Längst tid i strid på en dag", "Most hearthstones in one day": "Flest hearthstones på en dag", "Longest swim in one day": "Längsta simturen på en dag", "Chattiest day": "Pratigaste dagen", "Biggest spending spree in one day": "Största shoppingrundan på en dag", "Longest time dead in one day": "Längst tid död på en dag", "Most falls to death in one day": "Flest dödsfall av fall på en dag", "Most wipes in one day": "Flest wipes på en dag", "Biggest repair bill in one day": "Största reparationsnotan på en dag", "Longest AFK in one day": "Längst AFK på en dag", "Most apologies in one day": "Flest förlåt på en dag", "Die the most": "Dö flest gånger", "Deal the most damage": "Gör mest damage", "Heal the most": "Heala mest", "Land the most killing blows": "Ta flest killing blows", "Land the single biggest hit": "Gör den största träffen", "Have the highest crit rate (100+ hits)": "Ha högst crit-andel (100+ träffar)", "Deal the most damage past a kill": "Gör mest damage efter att målet dött", "Fall to your death the most": "Fall ihjäl flest gånger", "Spend the most time dead": "Var död längst", "Take the most damage": "Ta mest damage", "Dodge, parry or block the most attacks": "Dodga, parrya eller blocka flest attacker", "Need the most healing from friends": "Behöv mest healing från vänner", "Turn in the most quests": "Lämna in flest quests", "Jump the most": "Hoppa mest", "Travel the farthest on foot": "Gå längst", "Loot the most gold": "Loota mest guld", "Pay the most for repairs": "Betala mest för reparationer", "Say sorry the most in chat": "Säg förlåt flest gånger i chatten", "Send the most chat messages": "Skicka flest chattmeddelanden", "Loot the most rare or better items": "Loota flest rare eller bättre", "Loot the most grey items": "Loota flest gråa saker", "Have the best average /roll (3+ rolls)": "Ha bäst snitt på /roll (3+ rolls)", "Win the most duels": "Vinn flest dueller", "Run the most dungeons": "Kör flest dungeons", "Spend the most time on flight paths": "Flyg längst med flight paths", "Spend the most time AFK": "Var AFK längst", "Adventure": "Äventyr", "Shame": "Skam", "{0} points": "{0} poäng", "{0} of {1} claimed": "{0} av {1} tagna", "{0} of {1}'s": "{0} av {1}s", "broken once": "slaget en gång", "broken {0} times": "slaget {0} gånger", "has held it {0} day": "har hållit det {0} dag", "has held it {0} days": "har hållit det {0} dagar", "set it today": "satte det i dag", "Held by {0} players": "Hållet av {0} spelare", "{0} day": "{0} dag", "{0} days": "{0} dagar", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -1719,32 +1719,47 @@
   }
 
   const ACH = [
-    { t: "Spirit Healer's Regular", i: "skull", pts: 10, k: s => s.deaths, v: s => tr("Died {0} times", num(s.deaths)), shame: true },
-    { t: "Big Pumper", i: "sword", pts: 50, k: s => s.dmg, v: s => tr("Dealt {0} damage", num(s.dmg)) },
-    { t: "Lifebinder", i: "heart", pts: 50, k: s => s.heal, v: s => tr("Healed {0}", num(s.heal)) },
-    { t: "Executioner", i: "axe", pts: 25, k: s => s.kb, v: s => tr("{0} killing blows", num(s.kb)) },
-    { t: "One-Hit Wonder", i: "sulfuras", pts: 25, k: s => s.maxHit, v: s => tr("Hit for {0} with {1}", num(s.maxHit), esc(s.maxHitSpell || tr("something"))) }, // the target is on the Hardest hit card
-    { t: "Critical Mass", i: "crit", pts: 25, k: s => s.hits >= 100 ? s.critRate : 0, v: s => tr("{0} of hits were crits", pct(s.critRate)) },
-    { t: "Overkill", i: "tomb", pts: 10, k: s => s.overkill, v: s => tr("{0} damage past dead", num(s.overkill)) },
-    { t: "Gravity's Favorite", i: "feather", pts: 10, k: s => (s.deaths_fall || 0) * 1e6 + (s.fallDmg || 0), v: s => s.deaths_fall ? tr("{0} deaths from falling", num(s.deaths_fall)) : tr("Took {0} fall damage", num(s.fallDmg)), shame: true },
-    { t: "Professional Ghost", i: "ghost", pts: 10, k: s => s.ghost, v: s => tr("Spent {0} dead", dur(s.ghost)), shame: true },
-    { t: "Meat Shield", i: "meat", pts: 25, k: s => s.taken, v: s => tr("Took {0} damage", num(s.taken)) },
-    { t: "Untouchable", i: "rogue", pts: 25, k: s => (s.dodges || 0) + (s.parries || 0) + (s.blocks || 0), v: s => tr("Dodged, parried or blocked {0} attacks", num((s.dodges || 0) + (s.parries || 0) + (s.blocks || 0))) },
-    { t: "Life Support", i: "bandage", pts: 10, k: s => s.healedBy, v: s => tr("Needed {0} healing from friends", num(s.healedBy)), shame: true },
-    { t: "Loremaster", i: "scroll", pts: 25, k: s => s.quests, v: s => tr("{0} quests turned in", num(s.quests)) },
-    { t: "Bunny Hopper", i: "bunny", pts: 10, k: s => s.jumps, v: s => tr("{0} jumps", num(s.jumps)) },
-    { t: "Explorer", i: "map", pts: 25, k: s => s.dist, v: s => tr("{0} yards on foot", num(s.dist)) },
-    { t: "Goblin Tycoon", i: "coin", pts: 25, k: s => s.goldIn, v: s => tr("Looted {0}", goldHTML(s.goldIn)) },
-    { t: "Repair Bill", i: "anvil", pts: 10, k: s => s.repair, v: s => tr("Paid {0} in repairs", goldHTML(s.repair)), shame: true },
-    { t: "Apology Tour", i: "flag", pts: 10, k: s => s.sorry, v: s => tr("Said sorry {0} times", num(s.sorry)), shame: true },
-    { t: "Chatterbox", i: "speech", pts: 10, k: s => s.msgs, v: s => tr("{0} chat messages", num(s.msgs)) },
-    { t: "Loot Goblin", i: "lotus", pts: 25, k: s => s.loot, v: s => tr("{0} rare or better drops", num(s.loot)) },
-    { t: "Vendor Trash Collector", i: "loot", pts: 10, k: s => s.q0, v: s => tr("{0} grey items looted", num(s.q0)) },
-    { t: "Lucky Roller", i: "dice", pts: 10, k: s => s.rolls >= 3 ? s.avgRoll : 0, v: s => tr("Averaged {0} over {1} rolls", dec(s.avgRoll, 1), s.rolls) },
-    { t: "Duelist", i: "warrior", pts: 25, k: s => s.duelsWon, v: s => tr("Won {0} duels", num(s.duelsWon)) },
-    { t: "Dungeon Crawler", i: "gate", pts: 25, k: s => s.dungeons, v: s => tr("{0} dungeon runs", num(s.dungeons)) },
-    { t: "Frequent Flyer", i: "wing", pts: 10, k: s => s.taxi, v: s => tr("{0} on flight paths", dur(s.taxi)) },
-    { t: "Professional AFK", i: "zzz", pts: 10, k: s => s.afk, v: s => tr("{0} away from keyboard", dur(s.afk)), shame: true },
+    { t: "Spirit Healer's Regular", h: "Die the most", i: "skull", pts: 10, k: s => s.deaths, v: s => tr("Died {0} times", num(s.deaths)), shame: true },
+    { t: "Big Pumper", h: "Deal the most damage", i: "sword", pts: 50, k: s => s.dmg, v: s => tr("Dealt {0} damage", num(s.dmg)) },
+    { t: "Lifebinder", h: "Heal the most", i: "heart", pts: 50, k: s => s.heal, v: s => tr("Healed {0}", num(s.heal)) },
+    { t: "Executioner", h: "Land the most killing blows", i: "axe", pts: 25, k: s => s.kb, v: s => tr("{0} killing blows", num(s.kb)) },
+    { t: "One-Hit Wonder", h: "Land the single biggest hit", i: "sulfuras", pts: 25, k: s => s.maxHit, v: s => tr("Hit for {0} with {1}", num(s.maxHit), esc(s.maxHitSpell || tr("something"))) }, // the target is on the Hardest hit card
+    { t: "Critical Mass", h: "Have the highest crit rate (100+ hits)", i: "crit", pts: 25, k: s => s.hits >= 100 ? s.critRate : 0, v: s => tr("{0} of hits were crits", pct(s.critRate)) },
+    { t: "Overkill", h: "Deal the most damage past a kill", i: "tomb", pts: 10, k: s => s.overkill, v: s => tr("{0} damage past dead", num(s.overkill)) },
+    { t: "Gravity's Favorite", h: "Fall to your death the most", i: "feather", pts: 10, k: s => (s.deaths_fall || 0) * 1e6 + (s.fallDmg || 0), v: s => s.deaths_fall ? tr("{0} deaths from falling", num(s.deaths_fall)) : tr("Took {0} fall damage", num(s.fallDmg)), shame: true },
+    { t: "Professional Ghost", h: "Spend the most time dead", i: "ghost", pts: 10, k: s => s.ghost, v: s => tr("Spent {0} dead", dur(s.ghost)), shame: true },
+    { t: "Meat Shield", h: "Take the most damage", i: "meat", pts: 25, k: s => s.taken, v: s => tr("Took {0} damage", num(s.taken)) },
+    { t: "Untouchable", h: "Dodge, parry or block the most attacks", i: "rogue", pts: 25, k: s => (s.dodges || 0) + (s.parries || 0) + (s.blocks || 0), v: s => tr("Dodged, parried or blocked {0} attacks", num((s.dodges || 0) + (s.parries || 0) + (s.blocks || 0))) },
+    { t: "Life Support", h: "Need the most healing from friends", i: "bandage", pts: 10, k: s => s.healedBy, v: s => tr("Needed {0} healing from friends", num(s.healedBy)), shame: true },
+    { t: "Loremaster", h: "Turn in the most quests", i: "scroll", pts: 25, k: s => s.quests, v: s => tr("{0} quests turned in", num(s.quests)) },
+    { t: "Bunny Hopper", h: "Jump the most", i: "bunny", pts: 10, k: s => s.jumps, v: s => tr("{0} jumps", num(s.jumps)) },
+    { t: "Explorer", h: "Travel the farthest on foot", i: "map", pts: 25, k: s => s.dist, v: s => tr("{0} yards on foot", num(s.dist)) },
+    { t: "Goblin Tycoon", h: "Loot the most gold", i: "coin", pts: 25, k: s => s.goldIn, v: s => tr("Looted {0}", goldHTML(s.goldIn)) },
+    { t: "Repair Bill", h: "Pay the most for repairs", i: "anvil", pts: 10, k: s => s.repair, v: s => tr("Paid {0} in repairs", goldHTML(s.repair)), shame: true },
+    { t: "Apology Tour", h: "Say sorry the most in chat", i: "flag", pts: 10, k: s => s.sorry, v: s => tr("Said sorry {0} times", num(s.sorry)), shame: true },
+    { t: "Chatterbox", h: "Send the most chat messages", i: "speech", pts: 10, k: s => s.msgs, v: s => tr("{0} chat messages", num(s.msgs)) },
+    { t: "Loot Goblin", h: "Loot the most rare or better items", i: "lotus", pts: 25, k: s => s.loot, v: s => tr("{0} rare or better drops", num(s.loot)) },
+    { t: "Vendor Trash Collector", h: "Loot the most grey items", i: "loot", pts: 10, k: s => s.q0, v: s => tr("{0} grey items looted", num(s.q0)) },
+    { t: "Lucky Roller", h: "Have the best average /roll (3+ rolls)", i: "dice", pts: 10, k: s => s.rolls >= 3 ? s.avgRoll : 0, v: s => tr("Averaged {0} over {1} rolls", dec(s.avgRoll, 1), s.rolls) },
+    { t: "Duelist", h: "Win the most duels", i: "warrior", pts: 25, k: s => s.duelsWon, v: s => tr("Won {0} duels", num(s.duelsWon)) },
+    { t: "Dungeon Crawler", h: "Run the most dungeons", i: "gate", pts: 25, k: s => s.dungeons, v: s => tr("{0} dungeon runs", num(s.dungeons)) },
+    { t: "Frequent Flyer", h: "Spend the most time on flight paths", i: "wing", pts: 10, k: s => s.taxi, v: s => tr("{0} on flight paths", dur(s.taxi)) },
+    { t: "Professional AFK", h: "Spend the most time AFK", i: "zzz", pts: 10, k: s => s.afk, v: s => tr("{0} away from keyboard", dur(s.afk)), shame: true },
+    { t: "Boss Slayer", h: "Kill the most bosses", i: "onyxia", pts: 50, k: s => s.bossKills, v: s => tr("{0} boss kills", num(s.bossKills)) },
+    { t: "Gankmaster", h: "Kill the most enemy players", i: "crest", pts: 50, k: s => s.hk, v: s => tr("Killed {0} players", num(s.hk)) },
+    { t: "Spell Slinger", h: "Cast the most spells", i: "mage", pts: 25, k: s => s.casts, v: s => tr("Cast {0} spells", num(s.casts)) },
+    { t: "Battle Hardened", h: "Spend the most time in combat", i: "shield", pts: 25, k: s => s.combat, v: s => tr("{0} in combat", dur(s.combat)) },
+    { t: "Natural 100", h: "Roll a perfect 100 the most times", i: "atiesh", pts: 25, k: s => s.roll100, v: s => tr("Rolled 100 {0} times", num(s.roll100)) },
+    { t: "Snake Eyes", h: "Roll a 1 the most times", i: "dice", pts: 10, k: s => s.roll1, v: s => tr("Rolled a 1 {0} times", num(s.roll1)), shame: true },
+    { t: "Hearth Hugger", h: "Use your Hearthstone the most", i: "hearth", pts: 10, k: s => s.hearth, v: s => tr("Hearthed {0} times", num(s.hearth)) },
+    { t: "Fish Out of Water", h: "Spend the most time swimming", i: "spring", pts: 10, k: s => s.swim, v: s => tr("Swam for {0}", dur(s.swim)) },
+    { t: "Drama Queen", h: "Use the most emotes", i: "speech", pts: 10, k: s => s.emotes, v: s => tr("{0} emotes", num(s.emotes)) },
+    { t: "Big Spender", h: "Spend the most gold", i: "coin", pts: 10, k: s => s.goldOut, v: s => tr("Spent {0}", goldHTML(s.goldOut)) },
+    { t: "Overhealer", h: "Overheal the most", i: "heart", pts: 10, k: s => s.overheal, v: s => tr("{0} healing wasted", num(s.overheal)), shame: true },
+    { t: "Wipe Lord", h: "Be in the most boss wipes", i: "shieldBad", pts: 10, k: s => s.wipes, v: s => tr("Wiped {0} times", num(s.wipes)), shame: true },
+    { t: "Swing and a Miss", h: "Miss the most attacks", i: "boot", pts: 10, k: s => s.whiffs, v: s => tr("Missed {0} times", num(s.whiffs)), shame: true },
+    { t: "Sore Loser", h: "Lose the most duels", i: "flag", pts: 10, k: s => s.duelsLost, v: s => tr("Lost {0} duels", num(s.duelsLost)), shame: true },
+    { t: "Glug Glug", h: "Drown the most", i: "tomb", pts: 10, k: s => s.deaths_drown, v: s => tr("Drowned {0} times", num(s.deaths_drown)), shame: true },
   ];
   // Each achievement's badge is coloured by how big it is: gold, silver or copper (red for shame).
   const TIER = { 50: "gold", 25: "silver", 10: "copper" };
@@ -1770,7 +1785,7 @@
     const claimed = [], open = [];
     for (const a of ACH) {
       const { best, winners } = achLeaders(a, rows), w = winners[0];
-      if (!best) { open.push(badgeHTML(a, { fill: 0, locked: true, d: tr("Unclaimed") })); continue; }
+      if (!best) { open.push(badgeHTML(a, { fill: 0, locked: true, d: tr(a.h) })); continue; }
       claimed.push({ pts: a.pts, html: badgeHTML(a, { who: nameHTML(w.p) + (winners.length > 1 ? `<span class="muted">${tr("+{0} tied", winners.length - 1)}</span>` : ""), d: a.v(w.s) }) });
     }
     const played = rows.filter(r => (r.s.played || 0) >= 3600);
@@ -2578,6 +2593,13 @@
       ["played", "Longest day of play", dur, "adventure", "clock"], ["jumps", "Most jumps in one day", num, "adventure", "bunny"],
       ["dist", "Longest journey in one day", yards, "adventure", "map"], ["goldIn", "Biggest haul in one day", goldHTML, "loot", "coin"],
       ["levels", "Most levels in one day", num, "adventure", "ashbringer"],
+      ["casts", "Most spells cast in one day", num, "combat", "mage"], ["bossKills", "Most boss kills in one day", num, "combat", "onyxia"],
+      ["hk", "Most players killed in one day", num, "combat", "crest"], ["combat", "Longest time in combat in one day", dur, "combat", "shield"],
+      ["hearth", "Most hearthstones in one day", num, "adventure", "hearth"], ["swim", "Longest swim in one day", dur, "adventure", "spring"],
+      ["msgs", "Chattiest day", num, "adventure", "speech"], ["goldOut", "Biggest spending spree in one day", goldHTML, "loot", "anvil"],
+      ["ghost", "Longest time dead in one day", dur, "shame", "ghost"], ["deaths_fall", "Most falls to death in one day", num, "shame", "feather"],
+      ["wipes", "Most wipes in one day", num, "shame", "shieldBad"], ["repair", "Biggest repair bill in one day", goldHTML, "shame", "anvil"],
+      ["afk", "Longest AFK in one day", dur, "shame", "zzz"], ["sorry", "Most apologies in one day", num, "shame", "flag"],
     ];
     const recs = [];
     DAY.forEach(([f, t, fmt, cat, i]) => {
@@ -2930,7 +2952,7 @@
       if (w) { held.push(badgeHTML(a, { d: a.v(w.s) + (winners.length > 1 ? ` ${tr("(tied)")}` : "") })); continue; }
       const v = (mine && a.k(mine.s)) || 0;
       chase.push({ v: v / best, html: badgeHTML(a, { locked: true, fill: (v / best) * 100,
-        d: v ? tr("{0} of {1}'s", pct(v / best), esc(winners[0].p.name)) : tr("Not started") }) });
+        d: v ? tr("{0} of {1}'s", pct(v / best), esc(winners[0].p.name)) : tr(a.h) }) });
     }
     chase.sort((a, b) => b.v - a.v);
     $("pAch").innerHTML = held.length || chase.length ? held.concat(chase.map(c => c.html)).join("")
