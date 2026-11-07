@@ -127,8 +127,8 @@
     </div>
 
     <div class="frame" id="p-ach" data-pg="p-records">
-      <div class="frame-title"><span>Achievements Held</span><small>all time</small></div>
-      <div class="achievements" id="pAch"></div>
+      <div class="frame-title"><span>Achievements</span><small>all time</small></div>
+      <div class="achievements badges" id="pAch"></div>
     </div>
 
 
@@ -239,9 +239,8 @@
   <div class="pair" data-pg="overview">
   <section id="s-ach" data-pg="overview" aria-labelledby="h-ach">
     <div class="sec-head"><h2 id="h-ach">Achievements Earned</h2>
-      <span class="car-dots" data-for="achievements" role="group" aria-label="Pages" hidden></span>
       <button type="button" class="linkbtn" data-goto="glory" data-sub="s-glory-ach">View all ›</button></div>
-    <div class="car"><div class="achievements pages" id="achievements"></div></div>
+    <div class="achievements badges" id="achievements"></div>
   </section>
 
   <section id="s-fame" data-pg="overview" aria-labelledby="h-fame">
@@ -253,13 +252,13 @@
   </div>
 
   <section id="s-glory-fame" data-pg="glory" aria-labelledby="h-glory-fame">
-    <div class="sec-head"><h2 id="h-glory-fame">Hall of Fame</h2></div>
+    <div class="sec-head"><h2 id="h-glory-fame">Hall of Fame</h2><span class="chips" id="fameCats" role="group" aria-label="Category"></span></div>
     <div class="fame" id="fameAll"></div>
   </section>
 
   <section id="s-glory-ach" data-pg="glory" aria-labelledby="h-glory-ach">
-    <div class="sec-head"><h2 id="h-glory-ach">Achievements Earned</h2></div>
-    <div class="achievements" id="achAll"></div>
+    <div class="sec-head"><h2 id="h-glory-ach">Achievements Earned</h2><span class="muted" id="achCount"></span></div>
+    <div class="achievements badges" id="achAll"></div>
   </section>
 
   <section id="s-meter" data-pg="meters" aria-labelledby="h-meter">

@@ -167,7 +167,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "Broken once": "Slaget en gång", "Broken {0} times": "Slaget {0} gånger", "Broken {0} times by {1} players": "Slaget {0} gånger av {1} spelare", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
+    "Grudge match": "Gammalt groll", "Adventure": "Äventyr", "Shame": "Skam", "{0} points": "{0} poäng", "Unclaimed": "Ledig", "{0} of {1} claimed": "{0} av {1} tagna", "{0} of {1}'s": "{0} av {1}s", "Not started": "Inte påbörjad", "broken once": "slaget en gång", "broken {0} times": "slaget {0} gånger", "has held it {0} day": "har hållit det {0} dag", "has held it {0} days": "har hållit det {0} dagar", "set it today": "satte det i dag", "Held by {0} players": "Hållet av {0} spelare", "{0} day": "{0} dag", "{0} days": "{0} dagar", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -410,6 +410,7 @@
     metric: "dmg",
     perHour: false,
     raceMode: "date",
+    fameCat: "all",
     momMode: "dmg",
     spellWho: null,
     sort: { k: "dmg", dir: -1 },
@@ -1745,48 +1746,46 @@
     { t: "Frequent Flyer", i: "wing", pts: 10, k: s => s.taxi, v: s => tr("{0} on flight paths", dur(s.taxi)) },
     { t: "Professional AFK", i: "zzz", pts: 10, k: s => s.afk, v: s => tr("{0} away from keyboard", dur(s.afk)), shame: true },
   ];
-  // Each achievement shows its icon in a frame coloured by how big it is: gold, silver or copper (red for shame).
+  // Each achievement's badge is coloured by how big it is: gold, silver or copper (red for shame).
   const TIER = { 50: "gold", 25: "silver", 10: "copper" };
-  const achIcon = a => `<div class="achic ${a.shame ? "shame" : TIER[a.pts]}">${icon(a.i, 2)}</div>`;
-  // On the overview the frame shows the winner's face instead (their class icon until it loads, or without one).
-  function achFace(a, p) {
-    const ch = (state.allChars || []).find(c => c.key === p.id);
-    if (!ch || (!ch.avatar && !CLASS[ch.class])) return achIcon(a);
-    const alt = CLASS[ch.class] ? classIcon(ch, 2) : icon(a.i, 2);
-    const face = ch.avatar ? `<canvas class="face" width="32" height="32" data-src="${esc(ch.avatar)}" role="img" aria-label="${esc(ch.name)}"></canvas><span class="alt" hidden>${alt}</span>` : alt;
-    const tier = a.shame ? "shame" : TIER[a.pts];
-    return `<div class="achwrap"><div class="achic ${tier}">${face}</div><span class="achbadge ${tier}">${icon(a.i, 1)}</span></div>`;
+
+  // A badge: a round medal whose ring is coloured by tier (gold, silver, copper; red for shame) and filled to `fill` percent.
+  // Locked badges are grey, their ring showing how far along the way the character is.
+  const badgeHTML = (a, { fill = 100, who = "", d = "", locked = false }) =>
+    `<div class="abadge ${locked ? "locked" : a.shame ? "shame" : TIER[a.pts]}" title="${esc(tr("{0} points", a.pts))}">`
+    + `<div class="medal" style="--fill:${Math.round(Math.max(0, Math.min(100, fill)))}">${icon(a.i, 2)}</div>`
+    + `<div class="t">${tr(a.t)}</div>${who ? `<div class="who">${who}</div>` : ""}<div class="d">${d}</div></div>`;
+  // The leader of an achievement's stat, and everyone tied with them.
+  function achLeaders(a, rows) {
+    let best = 0, winners = [];
+    for (const r of rows) {
+      const v = a.k(r.s) || 0;
+      if (v > best) { best = v; winners = [r]; } else if (v === best && v > 0) winners.push(r);
+    }
+    return { best, winners };
   }
 
+  // The realm's collection: every achievement, claimed ones by their holder, the rest locked as empty slots.
   function renderAchievements(rows) {
-    const cards = [];
+    const claimed = [], open = [];
     for (const a of ACH) {
-      let best = 0, winners = [];
-      for (const r of rows) {
-        const v = a.k(r.s) || 0;
-        if (v > best) { best = v; winners = [r]; } else if (v === best && v > 0) winners.push(r);
-      }
-      if (!best) continue;
-      const w = winners[0];
-      cards.push(`<div data-pts="${a.pts}" class="ach${a.shame ? " shame" : ""}">${achFace(a, w.p)}
-        <div><div class="t">${tr(a.t)}</div><div class="who">${nameHTML(w.p)}${winners.length > 1 ? `<span class="muted" style="font-weight:400;font-size:13px">${tr("+{0} tied", winners.length - 1)}</span>` : ""}</div><div class="d">${a.v(w.s)}</div></div></div>`);
+      const { best, winners } = achLeaders(a, rows), w = winners[0];
+      if (!best) { open.push(badgeHTML(a, { fill: 0, locked: true, d: tr("Unclaimed") })); continue; }
+      claimed.push({ pts: a.pts, html: badgeHTML(a, { who: nameHTML(w.p) + (winners.length > 1 ? `<span class="muted">${tr("+{0} tied", winners.length - 1)}</span>` : ""), d: a.v(w.s) }) });
     }
     const played = rows.filter(r => (r.s.played || 0) >= 3600);
     if (played.length > 1) {
       const min = Math.min(...played.map(r => r.s.deaths || 0));
       const w = played.find(r => (r.s.deaths || 0) === min);
-      cards.splice(1, 0, `<div data-pts="50" class="ach">${achFace({ i: "paladin", pts: 50 }, w.p)}<div><div class="t">${tr("Unkillable")}</div><div class="who">${nameHTML(w.p)}</div>
-        <div class="d">${tr("{0} in {1}", min ? tr("Only {0} deaths", num(min)) : tr("Didn't die once"), dur(w.s.played))}</div></div></div>`);
+      claimed.splice(1, 0, { pts: 50, html: badgeHTML({ t: "Unkillable", i: "paladin", pts: 50 }, { who: nameHTML(w.p),
+        d: tr("{0} in {1}", min ? tr("Only {0} deaths", num(min)) : tr("Didn't die once"), dur(w.s.played)) }) });
     }
     // Biggest achievements first (the sort keeps the list order among equals).
-    const pts = c => +c.match(/data-pts="(\d+)"/)[1];
-    cards.sort((a, b) => pts(b) - pts(a));
+    claimed.sort((a, b) => b.pts - a.pts);
     const none = `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
-    $("achievements").innerHTML = cards.slice(0, OVERVIEW_CARDS).join("") || none;
-    $("achAll").innerHTML = cards.join("") || none;
-    drawFaces($("achievements"));
-    drawFaces($("achAll"));
-    carUpdateAll();
+    $("achievements").innerHTML = claimed.slice(0, OVERVIEW_BADGES).map(c => c.html).join("") || none;
+    $("achAll").innerHTML = claimed.length ? claimed.map(c => c.html).concat(open).join("") : none;
+    $("achCount").textContent = claimed.length ? tr("{0} of {1} claimed", claimed.length, claimed.length + open.length) : "";
   }
   document.addEventListener("click", e => {
     const j = e.target.closest("[data-jump]");
@@ -2497,7 +2496,9 @@
     }).join("") || `<p class="empty">${tr("Nobody has been healed by a friend yet.")}</p>`;
   }
 
-  const OVERVIEW_CARDS = 6; // Hall of Fame and achievement cards on the overview
+  const OVERVIEW_CARDS = 6; // Hall of Fame cards on the overview
+  const OVERVIEW_BADGES = 8; // achievement badges on the overview
+  const FAME_CATS = [["all", "All"], ["combat", "Combat"], ["adventure", "Adventure"], ["loot", "Loot"], ["shame", "Shame"]];
   function renderFame(people) {
     const recs = fameRecords(people).sort((a, b) => !!b.fresh - !!a.fresh); // new records first
     const fresh = recs.filter(r => r.fresh);
@@ -2509,32 +2510,39 @@
     const none = `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
     // The overview shows a handful; the Hall of Fame page has them all, each with the runners-up.
     $("fame").innerHTML = recordsHTML(recs.slice(0, OVERVIEW_CARDS)) || none;
-    $("fameAll").innerHTML = recordsHTML(recs, true) || none;
+    // The Hall of Fame page can be narrowed to one category; only categories with records get a chip.
+    const cats = FAME_CATS.filter(([c]) => c === "all" || recs.some(r => r.cat === c));
+    if (!cats.some(([c]) => c === state.fameCat)) state.fameCat = "all";
+    $("fameCats").innerHTML = cats.length > 2 ? cats.map(([c, label]) => `<button type="button" class="chip" data-cat="${c}" aria-pressed="${c === state.fameCat}">${tr(label)}</button>`).join("") : "";
+    $("fameAll").innerHTML = recordsHTML(recs.filter(r => state.fameCat === "all" || r.cat === state.fameCat), true) || none;
     carUpdateAll();
   }
   // A short "when" (a date) sits after the name; a long one (a spell and its target) gets its own line.
   const longWhen = r => String(r.when || "").replace(/<[^>]+>/g, "").length > 14;
-  const recordsHTML = (recs, podium) => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}">${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}<span class="t">${r.t}</span>`
+  const recordsHTML = (recs, podium) => recs.map(r => `<div class="rec ${r.cat || ""}${r.fresh ? " fresh" : ""}">${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}${r.i ? `<span class="emblem" aria-hidden="true">${icon(r.i, 2)}</span>` : ""}<span class="t">${r.t}</span>`
     + `<span class="v">${r.v}</span>`
     + `<span class="w">${nameHTML(r.p)}${r.when && !longWhen(r) ? `<span class="muted">· ${r.when}</span>` : ""}</span>`
     + (r.when && longWhen(r) ? `<span class="when">${r.when}</span>` : "")
-    + (r.climb ? climbHTML(r) : "")
+    + (r.climb ? reignHTML(r) : "")
     + (r.fresh ? `<span class="beat">${beatText(r)}</span>` : "")
     + (podium && r.top && r.top.length > 1 ? `<ol class="podium">${r.top.map((x, i) => `<li><span class="rk">${i + 1}</span><span class="nm">${nameHTML(x.p)}</span><span class="pv">${x.v}</span></li>`).join("")}</ol>` : "")
     + `</div>`).join("");
-  // The record climb: a step up each time the record was broken, a dot in the colour of who broke it,
-  // and a flat line from the last break to today while it still stands.
-  function climbHTML(r) {
-    const W = 240, H = 40, h = r.climb, day = k => parseDay(k).getTime();
-    const t0 = day(h[0].k), t1 = Math.max(day(todayKey()), day(h[h.length - 1].k) + 864e5), max = h[h.length - 1].v;
-    const x = k => 6 + (day(k) - t0) / (t1 - t0) * (W - 12), y = v => H - 5 - (v / max) * (H - 12);
-    let d = `M${x(h[0].k).toFixed(1)} ${y(h[0].v).toFixed(1)}`;
-    for (const s of h.slice(1)) d += ` H${x(s.k).toFixed(1)} V${y(s.v).toFixed(1)}`;
-    d += ` H${W - 6}`;
-    const dots = h.map((s, i) => `<circle cx="${x(s.k).toFixed(1)}" cy="${y(s.v).toFixed(1)}" r="${i === h.length - 1 ? 4.5 : 3}" fill="${s.p.color}"><title>${esc(s.p.name)} · ${String(r.fmt(s.v)).replace(/<[^>]+>/g, "")} · ${shortDate(s.k)}</title></circle>`).join("");
-    const names = [...new Set(h.slice(1).map(s => s.p.name))];
-    return `<div class="climb"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(tr("Broken {0} times", h.length - 1))}"><path d="${d}"/>${dots}</svg>`
-      + `<span>${names.length > 1 ? tr("Broken {0} times by {1} players", num(h.length - 1), names.length) : tr(h.length === 2 ? "Broken once" : "Broken {0} times", num(h.length - 1))}</span></div>`;
+  // The record's reign: one bar split into a stretch per holder, as wide as they held it; the current holder is the
+  // bright stretch on the right. A holder who kept topping their own record keeps one stretch.
+  function reignHTML(r) {
+    const h = r.climb, day = k => parseDay(k).getTime(), now = Math.max(day(todayKey()), day(h[h.length - 1].k));
+    const reigns = [];
+    h.forEach((s, i) => {
+      const last = reigns[reigns.length - 1], until = i + 1 < h.length ? day(h[i + 1].k) : now;
+      if (last && last.p === s.p) { last.until = until; last.v = s.v; } else reigns.push({ p: s.p, from: day(s.k), until, v: s.v });
+    });
+    const days = x => Math.round((x.until - x.from) / 864e5);
+    const plain = v => String(r.fmt(v)).replace(/<[^>]+>/g, "");
+    const bar = reigns.map(x => `<i style="flex-grow:${Math.max(1, days(x))};--c:${x.p.color}" title="${esc(x.p.name)} · ${esc(tr(days(x) === 1 ? "{0} day" : "{0} days", num(days(x))))} · ${esc(plain(x.v))}"></i>`).join("");
+    const cur = reigns[reigns.length - 1], held = days(cur);
+    return `<div class="reign"><div class="rbar" role="img" aria-label="${esc(tr("Held by {0} players", reigns.length))}">${bar}</div>`
+      + `<span><b style="color:${cur.p.color}">${esc(cur.p.name)}</b> ${held ? tr(held === 1 ? "has held it {0} day" : "has held it {0} days", num(held)) : tr("set it today")}`
+      + ` · ${tr(h.length === 2 ? "broken once" : "broken {0} times", num(h.length - 1))}</span></div>`;
   }
   const beatText = r => r.beat.p === r.p
     ? tr("Topped their own {0} from {1}", r.beat.v, shortDate(r.beat.k))
@@ -2562,31 +2570,34 @@
   const bestDay = (p, f) => Math.max(0, ...Object.values(p.days).map(d => d[f] || 0));
 
   function fameRecords(people) {
+    // [stat, title, format, category, icon]
     const DAY = [
-      ["dmg", "Most damage in one day", num], ["heal", "Most healing in one day", num], ["deaths", "Most deaths in one day", num],
-      ["kb", "Most killing blows in one day", num], ["quests", "Most quests in one day", num], ["xp", "Most XP in one day", num],
-      ["played", "Longest day of play", dur], ["jumps", "Most jumps in one day", num], ["dist", "Longest journey in one day", yards],
-      ["goldIn", "Biggest haul in one day", goldHTML], ["levels", "Most levels in one day", num],
+      ["dmg", "Most damage in one day", num, "combat", "sword"], ["heal", "Most healing in one day", num, "combat", "heart"],
+      ["deaths", "Most deaths in one day", num, "shame", "skull"], ["kb", "Most killing blows in one day", num, "combat", "axe"],
+      ["quests", "Most quests in one day", num, "adventure", "scroll"], ["xp", "Most XP in one day", num, "adventure", "spring"],
+      ["played", "Longest day of play", dur, "adventure", "clock"], ["jumps", "Most jumps in one day", num, "adventure", "bunny"],
+      ["dist", "Longest journey in one day", yards, "adventure", "map"], ["goldIn", "Biggest haul in one day", goldHTML, "loot", "coin"],
+      ["levels", "Most levels in one day", num, "adventure", "ashbringer"],
     ];
     const recs = [];
-    DAY.forEach(([f, t, fmt]) => {
+    DAY.forEach(([f, t, fmt, cat, i]) => {
       const hist = recordHistory(people, f), best = hist[hist.length - 1];
-      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), climb: hist.length > 1 ? hist : null, fmt, top: podiumOf(people, p => bestDay(p, f), fmt).sort((a, b) => (b.p === best.p) - (a.p === best.p)), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
+      if (best) recs.push({ cat, i, t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), climb: hist.length > 1 ? hist : null, fmt, top: podiumOf(people, p => bestDay(p, f), fmt).sort((a, b) => (b.p === best.p) - (a.p === best.p)), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
     });
     // Only each character's best hit is kept, so the hit it beat is the biggest one landed before it.
     const hits = people.map(p => ({ p, h: p.bestHit })).filter(x => x.h).sort((a, b) => b.h.amt - a.h.amt), hit = hits[0];
     if (hit) {
       const before = hit.h.t && hits.find(x => x.h.t && x.h.t < hit.h.t);
-      recs.unshift({ t: tr("Hardest hit ever"), v: num(hit.h.amt), p: hit.p, top: hits.slice(0, 3).map(x => ({ p: x.p, v: num(x.h.amt) })), when: esc(hit.h.spell || "") + (hit.h.target ? tr(" on {0}", esc(hit.h.target)) : ""),
+      recs.unshift({ cat: "combat", i: "crit", t: tr("Hardest hit ever"), v: num(hit.h.amt), p: hit.p, top: hits.slice(0, 3).map(x => ({ p: x.p, v: num(x.h.amt) })), when: esc(hit.h.spell || "") + (hit.h.target ? tr(" on {0}", esc(hit.h.target)) : ""),
         ...newRecord(hit.h.t && localKey(hit.h.t), before && { p: before.p, v: num(before.h.amt), k: localKey(before.h.t) }) });
     }
     const rich = people.filter(p => p.peakGold).sort((a, b) => b.peakGold - a.peakGold)[0];
-    if (rich) recs.push({ t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, top: podiumOf(people, p => p.peakGold, goldHTML), when: tr("most gold held at once") });
+    if (rich) recs.push({ cat: "loot", i: "loot", t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, top: podiumOf(people, p => p.peakGold, goldHTML), when: tr("most gold held at once") });
     // Lucky looters: bind-on-equip drops anywhere, and rare or better loot in dungeons and raids (recorded from FunStats 1.5).
     const drops = n => tr(n === 1 ? "{0} drop" : "{0} drops", num(n));
-    [["Luckiest looter", n => n.boe, "bind-on-equip drops"], ["Dungeon loot", n => n.inst, "rare or better in dungeons"]].forEach(([t, ok, when]) => {
+    [["Luckiest looter", n => n.boe, "bind-on-equip drops", "dice"], ["Dungeon loot", n => n.inst, "rare or better in dungeons", "gate"]].forEach(([t, ok, when, i]) => {
       const top = podiumOf(people, p => p.notable.filter(n => n.q >= 3 && ok(n)).length, drops);
-      if (top.length) recs.push({ t: tr(t), v: top[0].v, p: top[0].p, top, when: tr(when) });
+      if (top.length) recs.push({ cat: "loot", i, t: tr(t), v: top[0].v, p: top[0].p, top, when: tr(when) });
     });
     let mob = null;
     people.forEach(p => Object.entries(p.kills).forEach(([m, c]) => { if (!mob || c > mob.c) mob = { p, m, c }; }));
@@ -2595,11 +2606,11 @@
       const fav = p => Object.entries(p.kills).sort((a, b) => b[1] - a[1])[0] || ["", 0];
       const top = people.map(p => ({ p, f: fav(p) })).filter(x => x.f[1] > 0).sort((a, b) => b.f[1] - a.f[1]).slice(0, 3)
         .map(x => ({ p: x.p, v: `${num(x.f[1])}× ${esc(x.f[0])}` }));
-      recs.push({ t: tr("Most hunted creature"), v: `${num(mob.c)}× ${esc(mob.m)}`, p: mob.p, when: tr("by one friend"), top });
+      recs.push({ cat: "combat", i: "meat", t: tr("Most hunted creature"), v: `${num(mob.c)}× ${esc(mob.m)}`, p: mob.p, when: tr("by one friend"), top });
     }
     const lvls = people.map(p => ({ p, ch: p.chars.slice().sort((a, b) => (b.level || 0) - (a.level || 0))[0] })).filter(x => x.ch).sort((a, b) => (b.ch.level || 0) - (a.ch.level || 0));
     const lvl = lvls[0];
-    if (lvl) recs.push({ t: tr("Highest level"), v: tr("Level {0}", lvl.ch.level || "?"), p: lvl.p, when: esc(lvl.ch.name),
+    if (lvl) recs.push({ cat: "adventure", i: "sulfuras", t: tr("Highest level"), v: tr("Level {0}", lvl.ch.level || "?"), p: lvl.p, when: esc(lvl.ch.name),
       top: lvls.slice(0, 3).map(x => ({ p: x.p, v: tr("Level {0}", x.ch.level || "?") })) });
     return recs;
   }
@@ -2728,20 +2739,6 @@
       out.push({ k, label: tr(label), value: fmt(v), tag: tr(tag), rank, total: vals.length, ratio, avg, score });
     }
     return out.sort((a, b) => b.score - a.score);
-  }
-
-  function achievementsHeld(p, rowsAll) {
-    const held = [];
-    for (const a of ACH) {
-      let best = 0, winners = [];
-      for (const r of rowsAll) {
-        const v = a.k(r.s) || 0;
-        if (v > best) { best = v; winners = [r]; } else if (v === best && v > 0) winners.push(r);
-      }
-      const w = winners.find(r => r.p === p);
-      if (best && w) held.push({ a, s: w.s, tied: winners.length > 1 });
-    }
-    return held;
   }
 
   const SLOT_NAMES = { 1: "Head", 2: "Neck", 3: "Shoulder", 4: "Shirt", 5: "Chest", 6: "Waist", 7: "Legs", 8: "Feet", 9: "Wrist", 10: "Hands",
@@ -2924,10 +2921,20 @@
     $("pSheet").innerHTML = ch ? sheetHTML(ch, p.color) : `<p class="empty">${tr("No characters yet.")}</p>`;
     drawFaces($("pSheet"));
 
-    const held = achievementsHeld(p, rowsAll);
-    $("pAch").innerHTML = held.map(({ a, s: hs, tied }) => `<div class="ach${a.shame ? " shame" : ""}">${achIcon(a)}
-      <div><div class="t">${tr(a.t)}${tied ? ` <span class="muted" style="font-size:12px">${tr("(tied)")}</span>` : ""}</div><div class="d">${a.v(hs)}</div></div></div>`).join("")
-      || `<p class="empty">${tr("No achievements held yet. Someone else is ahead on everything, for now.")}</p>`;
+    // Their collection: badges they hold first, then the rest locked, each ring showing how close they are to the holder.
+    const mine = rowsAll.find(r => r.p === p), held = [], chase = [];
+    for (const a of ACH) {
+      const { best, winners } = achLeaders(a, rowsAll);
+      if (!best) continue;
+      const w = winners.find(r => r.p === p);
+      if (w) { held.push(badgeHTML(a, { d: a.v(w.s) + (winners.length > 1 ? ` ${tr("(tied)")}` : "") })); continue; }
+      const v = (mine && a.k(mine.s)) || 0;
+      chase.push({ v: v / best, html: badgeHTML(a, { locked: true, fill: (v / best) * 100,
+        d: v ? tr("{0} of {1}'s", pct(v / best), esc(winners[0].p.name)) : tr("Not started") }) });
+    }
+    chase.sort((a, b) => b.v - a.v);
+    $("pAch").innerHTML = held.length || chase.length ? held.concat(chase.map(c => c.html)).join("")
+      : `<p class="empty">${tr("No achievements held yet. Someone else is ahead on everything, for now.")}</p>`;
 
     // daily damage & healing, last 30 days played
     const days = Object.keys(p.days).sort().slice(-30);
@@ -3085,7 +3092,7 @@
 
   // One-line card texts that are a little too long shrink to fit (down to 10.5px) instead of being cut off;
   // whatever still doesn't fit keeps its ellipsis and shows the full text on hover.
-  const FIT = ".tile .foot, .ach .t, .ach .d, .rec .t, .rec .w .muted, .rec .when, .rec .beat, .glead .lbl, .sigc .cmp, .sec-head p";
+  const FIT = ".tile .foot, .abadge .t, .rec .t, .rec .w .muted, .rec .when, .rec .beat, .glead .lbl, .sigc .cmp, .sec-head p";
   function fitText() {
     // Deed tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
     // still spans the full width, on a grid of lcm(cols, last) columns.
@@ -3855,6 +3862,7 @@
   $("prevWeek").addEventListener("click", () => step(1));
   $("nextWeek").addEventListener("click", () => step(-1));
   $("raceMode").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.raceMode = b.dataset.mode; render(); });
+  $("fameCats").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.fameCat = b.dataset.cat; render(); });
   $("momMode").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.momMode = b.dataset.mode; render(); });
   $("spellWho").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.spellWho = b.dataset.pid; render(); });
   // When Wowhead finds an item, move its icon into the slot's square, like the in-game character sheet.

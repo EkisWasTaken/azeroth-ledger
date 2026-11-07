@@ -484,8 +484,8 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
   html:not(.calm) .sprite .gl:nth-of-type(3n) { animation-delay: -.6s; }
   html:not(.calm) .sprite .gl:nth-of-type(3n+1) { animation-delay: -1.2s; }
   html:not(.calm) :is(.tile, .glead, .gfaces a, .pagetab):hover .sprite { animation: bob .5s steps(2, jump-none) infinite; }
-  html:not(.calm) :is(.tile, .ach, .rec, .gcard, .recchip) { transition: transform .12s steps(2); }
-  html:not(.calm) :is(.tile, .ach, .rec, .recchip):hover { transform: translateY(-2px); }
+  html:not(.calm) :is(.tile, .abadge, .rec, .gcard, .recchip) { transition: transform .12s steps(2); }
+  html:not(.calm) :is(.tile, .abadge, .rec, .recchip):hover { transform: translateY(-2px); }
 }
 
 /* ---------- Map of the Fallen ---------- */
@@ -544,15 +544,15 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 /* ---------- Achievements ---------- */
 .achievements { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
 /* paged carousels (achievements, Hall of Fame): three rows of cards, a page at a time */
-.achievements.pages, .fame.pages { --cols: 1; grid-template-columns: none; grid-template-rows: repeat(var(--rows, 3), auto); grid-auto-flow: column;
+.fame.pages { --cols: 1; grid-template-columns: none; grid-template-rows: repeat(var(--rows, 3), auto); grid-auto-flow: column;
   column-gap: var(--gap, 12px); grid-auto-columns: calc((100% - var(--gap, 12px) * (var(--cols) - 1)) / var(--cols));
   overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding: 2px; }
 /* new-record ribbons stick out above their cards: leave them room */
 .fame.pages { --gap: 16px; row-gap: 18px; padding: 12px 2px 2px; }
 .pages::-webkit-scrollbar { display: none; }
 .pages > * { scroll-snap-align: start; }
-@media (min-width: 640px) { .achievements.pages, .fame.pages { --cols: 2; } }
-@media (min-width: 1000px) and (max-width: 1199px) { .achievements.pages, .fame.pages { --cols: 3; } }
+@media (min-width: 640px) { .fame.pages { --cols: 2; } }
+@media (min-width: 1000px) and (max-width: 1199px) { .fame.pages { --cols: 3; } }
 .pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 @media (min-width: 1200px) { .pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .deeds-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -561,29 +561,26 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 #oLeads { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 28px; }
 .oleads { gap: 4px; padding: 12px 16px; }
 .oleads .glead { padding: 2px 0; }
-.ach {
-  display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: center; border-radius: 14px;
-  padding: 12px 14px 12px 12px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line);
-}
-.ach.shame { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 45%, var(--line)); }
-.achic { width: 36px; height: 36px; display: grid; place-items: center; background: var(--track); border-radius: 9px; box-shadow: inset 0 0 0 1px var(--tc); }
-.achic { position: relative; overflow: hidden; }
-.achic .face { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
-.achic:has(.face:not([hidden]))::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 2px var(--tc); pointer-events: none; }
-.achic.gold { --tc: #e8b440; }
-.achic.silver { --tc: #c3c7d3; }
-.achic.copper { --tc: #c0763a; }
-.achic.shame { --tc: var(--bad); }
-/* with a face in the frame, the achievement's own icon sits on its corner, so every card stays recognisable */
-.achwrap { position: relative; width: 36px; height: 36px; }
-.achbadge { position: absolute; right: -5px; bottom: -5px; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px;
-  background: var(--panel); box-shadow: inset 0 0 0 1px var(--tc); line-height: 0; }
-.achbadge.gold { --tc: #e8b440; } .achbadge.silver { --tc: #c3c7d3; } .achbadge.copper { --tc: #c0763a; } .achbadge.shame { --tc: var(--bad); }
-.ach .t { font: 400 18px/1.2 var(--sf); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ach.shame .t { color: var(--bad); }
-.ach .who { font-weight: 700; display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 2px; }
-.ach .d { color: color-mix(in srgb, var(--muted) 85%, var(--ink)); font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ach > div:last-child { min-width: 0; }
+/* achievement badges: a round medal, its ring coloured by tier and filled to --fill percent; locked ones are grey */
+.achievements.badges { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 20px 12px; padding-top: 4px; }
+.abadge { --tc: #e8b440; display: grid; justify-items: center; align-content: start; gap: 2px; min-width: 0; text-align: center; }
+.abadge.silver { --tc: #c3c7d3; } .abadge.copper { --tc: #c0763a; } .abadge.shame { --tc: var(--bad); } .abadge.locked { --tc: var(--good); }
+.abadge .medal { position: relative; display: grid; place-items: center; width: 68px; height: 68px; margin-bottom: 6px; border-radius: 50%;
+  background: conic-gradient(var(--tc) calc(var(--fill) * 1%), var(--track) 0); }
+.abadge .medal::before { content: ""; position: absolute; inset: 4px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tc) 30%, var(--panel2)), var(--panel) 72%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 55%, transparent); }
+.abadge .medal > * { position: relative; }
+.abadge .medal .wicon { width: 32px; height: 32px; border-radius: 4px; box-shadow: none; }
+.abadge.locked .medal::before { background: var(--track); box-shadow: inset 0 0 0 1px var(--line); }
+.abadge.locked .medal > * { filter: grayscale(1) brightness(.75); opacity: .55; }
+.abadge .t { max-width: 100%; font: 400 16px/1.2 var(--sf); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.abadge.shame .t { color: var(--bad); }
+.abadge.locked .t { color: var(--muted); }
+.abadge .who { display: flex; align-items: center; justify-content: center; gap: 5px; max-width: 100%; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; }
+.abadge .who .muted { font-weight: 400; font-size: 12px; }
+.abadge .d { max-width: 100%; font-size: 12px; line-height: 1.3; color: color-mix(in srgb, var(--muted) 85%, var(--ink));
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 .dot { width: 10px; height: 10px; flex: none; display: inline-block; box-shadow: none; border-radius: 0; }
 .cicon { display: inline-flex; flex: none; vertical-align: middle; }
@@ -730,12 +727,21 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .rec .v { font: 400 30px/1.1 var(--sf); color: #ffd36b; overflow-wrap: anywhere; letter-spacing: -.02em; }
 .rec .w { font-size: 14px; display: flex; gap: 4px 6px; align-items: center; min-width: 0; white-space: nowrap; }
 .rec .w .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* the record climb: how the record rose over time */
-.rec .climb { display: grid; gap: 2px; margin-top: 6px; }
-.rec .climb svg { display: block; width: 100%; height: auto; overflow: visible; }
-.rec .climb path { fill: none; stroke: color-mix(in srgb, var(--gild) 70%, transparent); stroke-width: 1.5; stroke-linejoin: round; }
-.rec .climb circle { stroke: var(--panel); stroke-width: 1.5; }
-.rec .climb span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* each record's icon in a ring coloured by category, so the cards can be told apart at a glance */
+.rec { --cat: #e8b440; }
+.rec.combat { --cat: #ff8a4c; } .rec.adventure { --cat: #4fd1c0; } .rec.loot { --cat: #ffd36b; } .rec.shame { --cat: var(--bad); }
+.rec .emblem { position: absolute; top: 12px; right: 14px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--cat) 30%, var(--panel2)), var(--panel) 75%);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cat) 75%, transparent); }
+.rec .emblem .wicon { width: 26px; height: 26px; border-radius: 4px; box-shadow: none; }
+.rec .emblem .sprite { width: 26px; height: 26px; }
+.rec:has(.emblem) .t, .rec:has(.emblem) .v { padding-right: 46px; }
+/* the record's reign: a stretch per holder, as wide as they held it; the current one is bright */
+.rec .reign { display: grid; gap: 5px; margin-top: 8px; }
+.rec .rbar { display: flex; gap: 2px; height: 10px; }
+.rec .rbar i { min-width: 5px; border-radius: 2px; background: color-mix(in srgb, var(--c) 45%, var(--track)); }
+.rec .rbar i:last-child { background: var(--c); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 60%, transparent), 0 0 8px color-mix(in srgb, var(--c) 45%, transparent); }
+.rec .reign span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Hall of Fame page: the top three under each record */
 .rec .podium { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed #9a6a1c80; display: grid; gap: 4px; font-size: 13px; }
 .rec .podium li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
@@ -1072,8 +1078,6 @@ body.loading .loader { display: flex; flex-direction: column; align-items: cente
 /* Game icons get the in-game look: a dark rim and slightly rounded corners. */
 .wicon { display: inline-block; flex: none; vertical-align: middle; border-radius: 4px; box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(255,255,255,.12); background: #000; }
 .ticon .wicon, .mw-icon .wicon { width: 38px; height: 38px; }
-.achic .wicon { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
-.achbadge .wicon { width: 16px; height: 16px; border-radius: 3px; }
 .glead .wicon { width: 18px; height: 18px; border-radius: 3px; }
 .cicon .wicon { border-radius: 3px; }
 
@@ -1206,11 +1210,10 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   box-shadow: 0 18px 34px rgba(0,0,0,.34);
 }
 :root[data-theme="forever"] #app[data-route="guild"] .frame { border-width: 9px; }
-:root[data-theme="forever"] :is(.tile, .ach, .rec, .realm-pick, .lvl, .pagetab, .subtab) { border-radius: 4px; }
-:root[data-theme="forever"] :is(.tile, .ach) {
+:root[data-theme="forever"] :is(.tile, .rec, .realm-pick, .lvl, .pagetab, .subtab) { border-radius: 4px; }
+:root[data-theme="forever"] .tile {
   box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(230,194,111,.22), 0 8px 18px rgba(0,0,0,.24);
 }
-:root[data-theme="forever"] .ach.shame { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 50%, var(--line)); }
 
 :root[data-theme="forever"] #pageTitle, :root[data-theme="forever"] .sec-head h2 {
   background: linear-gradient(180deg, #fff8e4 25%, #e6c26f 95%); -webkit-background-clip: text; background-clip: text; color: transparent;
