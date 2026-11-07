@@ -211,7 +211,10 @@
   <div class="grid-primary" data-pg="overview">
     <div class="frame card" id="s-momentum">
       <div class="card-head"><div><h2>Group momentum</h2></div>
-        <div class="legend"><span><i class="lg-dmg"></i><span>Damage</span></span><span><i class="lg-heal"></i><span>Healing</span></span></div></div>
+        <span class="chips" id="momMode">
+          <button type="button" class="chip" data-mode="dmg" aria-pressed="true">Damage</button>
+          <button type="button" class="chip" data-mode="heal" aria-pressed="false">Healing</button>
+        </span></div>
       <div class="chart"><canvas id="cMomentum"></canvas></div>
     </div>
     <div class="frame card" id="s-fatal">

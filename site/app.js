@@ -167,7 +167,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
+    "Grudge match": "Gammalt groll", "Broken once": "Slaget en gång", "Broken {0} times": "Slaget {0} gånger", "Broken {0} times by {1} players": "Slaget {0} gånger av {1} spelare", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -410,6 +410,7 @@
     metric: "dmg",
     perHour: false,
     raceMode: "date",
+    momMode: "dmg",
     spellWho: null,
     sort: { k: "dmg", dir: -1 },
     userPickedWeek: false,
@@ -1311,6 +1312,11 @@
       } else if (type === "line") {
         ds._c = ds.borderColor;
         const filled = sets.length === 1 || ds.area;
+        if (stacked) { // stacked bands: each fills down to the one below it
+          Object.assign(ds, { tension: .35, cubicInterpolationMode: "monotone", borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 10,
+            pointBackgroundColor: ds._c, pointBorderColor: css("--panel"), fill: sets.indexOf(ds) ? "-1" : "origin", backgroundColor: alpha(ds._c, "a6") });
+          continue;
+        }
         Object.assign(ds, {
           // a series with only a point or two shows its dots, or there would be nothing to see
           tension: .35, cubicInterpolationMode: "monotone", borderWidth: 2, pointRadius: ds.data.length < 3 ? 4 : 0, pointHoverRadius: 5, pointHitRadius: 10,
@@ -1327,7 +1333,8 @@
     }
     if (type === "radar" && o.scales && o.scales.r && o.scales.r.pointLabels) o.scales.r.pointLabels.color = css("--muted");
     if (type === "line") {
-      // One line at a time: the nearest line is highlighted and the others fade back.
+      // One line at a time: the nearest line is highlighted and the others fade back (stacked bands show the whole column instead).
+      if (stacked) return config;
       o.interaction = { mode: "nearest", intersect: false, axis: "xy" };
       o.plugins ||= {};
       o.plugins.tooltip = { ...(o.plugins.tooltip || {}), mode: "nearest", intersect: false };
@@ -1840,21 +1847,31 @@
     return { keys, labels: keys.map(([k]) => dow(parseDay(k).getUTCDay()) + " " + parseDay(k).getUTCDate()) };
   }
 
-  // Overview: everyone's damage (a filled line) and healing (dashed) across the time range.
+  // Overview: the group's damage or healing across the time range, stacked by character in their colours,
+  // biggest contributor at the bottom so the widest band is the one carrying the group.
   function renderMomentum(people) {
+    const f = state.momMode;
+    document.querySelectorAll("#momMode .chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === f)));
     const { labels, keys } = periodDays(people);
-    const sum = f => keys.map(ks => people.reduce((a, p) => a + ks.reduce((b, k) => b + ((p.days[k] && p.days[k][f]) || 0), 0), 0));
-    const dmg = sum("dmg"), heal = sum("heal");
+    const series = p => keys.map(ks => ks.reduce((a, k) => a + ((p.days[k] && p.days[k][f]) || 0), 0));
+    const total = p => series(p).reduce((a, b) => a + b, 0);
+    const group = people.reduce((a, p) => a + total(p), 0);
+    // Healing: only real healers. Everyone heals a little (potions, bandages, self-heals); under 5% of the group's healing is left out.
+    const pool = f === "heal" ? people.filter(p => total(p) >= group * .05) : people;
+    const { top, rest } = topSeries(pool, total);
+    const datasets = top.map(p => ({ label: nameTxt(p), data: series(p), borderColor: p.color, backgroundColor: p.color }));
+    if (rest.length) {
+      const sums = rest.map(series);
+      datasets.push({ label: tr("Others ({0})", rest.length), data: keys.map((_, i) => sums.reduce((a, s) => a + s[i], 0)), borderColor: OTHERS_COLOR, backgroundColor: OTHERS_COLOR });
+    }
     // With only a day or two of play a line is one cliff that reads as a crash; bars show the days as they are.
-    const played = dmg.filter((v, i) => v || heal[i]).length;
+    const played = keys.filter((_, i) => datasets.some(d => d.data[i])).length;
     drawChart("cMomentum", labels.length && played ? {
       type: played < 3 ? "bar" : "line",
-      data: { labels, datasets: [
-        { label: tr("Damage"), data: dmg, borderColor: css("--accent"), backgroundColor: css("--accent"), area: true },
-        { label: tr("Healing"), data: heal, borderColor: css("--good"), backgroundColor: css("--good"), borderDash: [5, 5] },
-      ] },
-      options: { scales: { x: gridX, y: { ...gridY, beginAtZero: true, ticks: { ...gridY.ticks, callback: v => compact(v) } } },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${num(c.raw)}` } } } },
+      data: { labels, datasets },
+      options: { interaction: { mode: "index", intersect: false },
+        scales: { x: { ...gridX, stacked: true }, y: { ...gridY, stacked: true, beginAtZero: true, ticks: { ...gridY.ticks, callback: v => compact(v) } } },
+        plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${num(c.raw)}` } } } },
     } : null);
   }
 
@@ -2501,9 +2518,24 @@
     + `<span class="v">${r.v}</span>`
     + `<span class="w">${nameHTML(r.p)}${r.when && !longWhen(r) ? `<span class="muted">· ${r.when}</span>` : ""}</span>`
     + (r.when && longWhen(r) ? `<span class="when">${r.when}</span>` : "")
+    + (r.climb ? climbHTML(r) : "")
     + (r.fresh ? `<span class="beat">${beatText(r)}</span>` : "")
     + (podium && r.top && r.top.length > 1 ? `<ol class="podium">${r.top.map((x, i) => `<li><span class="rk">${i + 1}</span><span class="nm">${nameHTML(x.p)}</span><span class="pv">${x.v}</span></li>`).join("")}</ol>` : "")
     + `</div>`).join("");
+  // The record climb: a step up each time the record was broken, a dot in the colour of who broke it,
+  // and a flat line from the last break to today while it still stands.
+  function climbHTML(r) {
+    const W = 240, H = 40, h = r.climb, day = k => parseDay(k).getTime();
+    const t0 = day(h[0].k), t1 = Math.max(day(todayKey()), day(h[h.length - 1].k) + 864e5), max = h[h.length - 1].v;
+    const x = k => 6 + (day(k) - t0) / (t1 - t0) * (W - 12), y = v => H - 5 - (v / max) * (H - 12);
+    let d = `M${x(h[0].k).toFixed(1)} ${y(h[0].v).toFixed(1)}`;
+    for (const s of h.slice(1)) d += ` H${x(s.k).toFixed(1)} V${y(s.v).toFixed(1)}`;
+    d += ` H${W - 6}`;
+    const dots = h.map((s, i) => `<circle cx="${x(s.k).toFixed(1)}" cy="${y(s.v).toFixed(1)}" r="${i === h.length - 1 ? 4.5 : 3}" fill="${s.p.color}"><title>${esc(s.p.name)} · ${String(r.fmt(s.v)).replace(/<[^>]+>/g, "")} · ${shortDate(s.k)}</title></circle>`).join("");
+    const names = [...new Set(h.slice(1).map(s => s.p.name))];
+    return `<div class="climb"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(tr("Broken {0} times", h.length - 1))}"><path d="${d}"/>${dots}</svg>`
+      + `<span>${names.length > 1 ? tr("Broken {0} times by {1} players", num(h.length - 1), names.length) : tr(h.length === 2 ? "Broken once" : "Broken {0} times", num(h.length - 1))}</span></div>`;
+  }
   const beatText = r => r.beat.p === r.p
     ? tr("Topped their own {0} from {1}", r.beat.v, shortDate(r.beat.k))
     : tr("Beat {0}'s {1} from {2}", esc(r.beat.p.name) + ripHTML(r.beat.p), r.beat.v, shortDate(r.beat.k));
@@ -2539,7 +2571,7 @@
     const recs = [];
     DAY.forEach(([f, t, fmt]) => {
       const hist = recordHistory(people, f), best = hist[hist.length - 1];
-      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), top: podiumOf(people, p => bestDay(p, f), fmt).sort((a, b) => (b.p === best.p) - (a.p === best.p)), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
+      if (best) recs.push({ t: tr(t), v: fmt(best.v), p: best.p, when: shortDate(best.k), climb: hist.length > 1 ? hist : null, fmt, top: podiumOf(people, p => bestDay(p, f), fmt).sort((a, b) => (b.p === best.p) - (a.p === best.p)), ...newRecord(best.k, best.prev && { p: best.prev.p, v: fmt(best.prev.v), k: best.prev.k }) });
     });
     // Only each character's best hit is kept, so the hit it beat is the biggest one landed before it.
     const hits = people.map(p => ({ p, h: p.bestHit })).filter(x => x.h).sort((a, b) => b.h.amt - a.h.amt), hit = hits[0];
@@ -3823,6 +3855,7 @@
   $("prevWeek").addEventListener("click", () => step(1));
   $("nextWeek").addEventListener("click", () => step(-1));
   $("raceMode").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.raceMode = b.dataset.mode; render(); });
+  $("momMode").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.momMode = b.dataset.mode; render(); });
   $("spellWho").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.spellWho = b.dataset.pid; render(); });
   // When Wowhead finds an item, move its icon into the slot's square, like the in-game character sheet.
   new MutationObserver(() => {

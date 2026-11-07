@@ -716,7 +716,7 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 /* ---------- Hall of fame ---------- */
 .fame { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px 16px; padding: 12px 0 0; }
 /* Hall of Fame: a gilded plaque (gold rim, pixel corner brackets, a sheen across the top) so records read as trophies */
-.rec { --gild: #e8b440; display: grid; gap: 1px; padding: 14px 18px; border-radius: 6px;
+.rec { --gild: #e8b440; display: grid; align-content: start; gap: 1px; padding: 14px 18px; border-radius: 6px;
   background: linear-gradient(180deg, color-mix(in srgb, #e8b440 10%, var(--panel)), var(--panel) 75%);
   box-shadow: inset 0 0 0 1px #9a6a1c, inset 0 0 0 3px #ffd36b1a, var(--shadow); }
 .rec::after { content: ""; position: absolute; inset: 5px; pointer-events: none; --g: linear-gradient(var(--gild), var(--gild));
@@ -730,6 +730,12 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .rec .v { font: 400 30px/1.1 var(--sf); color: #ffd36b; overflow-wrap: anywhere; letter-spacing: -.02em; }
 .rec .w { font-size: 14px; display: flex; gap: 4px 6px; align-items: center; min-width: 0; white-space: nowrap; }
 .rec .w .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* the record climb: how the record rose over time */
+.rec .climb { display: grid; gap: 2px; margin-top: 6px; }
+.rec .climb svg { display: block; width: 100%; height: auto; overflow: visible; }
+.rec .climb path { fill: none; stroke: color-mix(in srgb, var(--gild) 70%, transparent); stroke-width: 1.5; stroke-linejoin: round; }
+.rec .climb circle { stroke: var(--panel); stroke-width: 1.5; }
+.rec .climb span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Hall of Fame page: the top three under each record */
 .rec .podium { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed #9a6a1c80; display: grid; gap: 4px; font-size: 13px; }
 .rec .podium li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
@@ -963,8 +969,6 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; }
 .legend > span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 .legend i { width: 18px; height: 0; border-top: 2.5px solid; border-radius: 2px; }
-.legend .lg-dmg { color: var(--accent); }
-.legend .lg-heal { color: var(--good); border-top-style: dashed; }
 .grid-primary, .grid-secondary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 1000px) {
   .grid-primary { grid-template-columns: minmax(0, 1.55fr) minmax(0, .85fr); }
