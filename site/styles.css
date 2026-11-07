@@ -462,11 +462,16 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .recchip { display: flex; align-items: center; gap: 6px; padding: 8px 10px; text-align: left; font: 400 14px var(--body); color: var(--ink); background: var(--panel2); border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px var(--line); border-radius: 9px; }
 .recchip:hover { box-shadow: inset 0 0 0 1px #ff8000; }
 .recchip b { color: #ffb347; }
-.rec.fresh { box-shadow: inset 0 0 0 1px #ff8000, inset 0 0 0 2px #ffb34744, var(--shadow); }
-.newrec { display: inline-block; vertical-align: 6px; margin-left: 10px; font: 700 10px/1 var(--pf); letter-spacing: .04em; color: #1a0c00; background: #ff8000; padding: 4px 7px; box-shadow: none; border-radius: 999px; }
+/* a new record turns the plaque legendary: orange rim and corners, a warm glow, and a ribbon pinned to the top edge */
+.rec.fresh { --gild: #ff9a2e; background: linear-gradient(180deg, color-mix(in srgb, #ff8000 16%, var(--panel)), var(--panel) 70%);
+  box-shadow: inset 0 0 0 1px #ff8000, inset 0 0 0 3px #ff800022, 0 0 0 1px #ff800055, 0 0 24px #ff800038, var(--shadow); }
+.rec.fresh .v { color: #ffb347; }
+.newrec { position: absolute; top: -10px; right: 14px; z-index: 1; padding: 4px 14px 4px 12px; font: 800 10px/1 var(--pf); letter-spacing: .08em; text-transform: uppercase;
+  color: #1a0c00; background: linear-gradient(180deg, #ffc266, #ff8000); box-shadow: 0 3px 8px rgba(0,0,0,.45);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 50%, 100% 100%, 0 100%, 6px 50%); }
+.newrec::before { content: "\2605"; margin-right: 5px; }
 .rec { position: relative; }
 .rec :is(.when, .beat) { font-size: 13px; color: color-mix(in srgb, var(--muted) 85%, var(--ink)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (prefers-reduced-motion: no-preference) { html:not(.calm) .newrec { animation: recblink 1.6s steps(2) infinite; } }
 
 /* ---------- Motion: off with the system's reduced-motion setting or Settings > Animations ---------- */
 #ambient { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
@@ -482,7 +487,6 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
   html:not(.calm) :is(.tile, .ach, .rec, .gcard, .recchip) { transition: transform .12s steps(2); }
   html:not(.calm) :is(.tile, .ach, .rec, .recchip):hover { transform: translateY(-2px); }
 }
-@keyframes recblink { 50% { background: #ffd27a; } }
 
 /* ---------- Map of the Fallen ---------- */
 #app > section.nosec { display: none !important; }
@@ -543,8 +547,8 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .achievements.pages, .fame.pages { --cols: 1; grid-template-columns: none; grid-template-rows: repeat(var(--rows, 3), auto); grid-auto-flow: column;
   column-gap: var(--gap, 12px); grid-auto-columns: calc((100% - var(--gap, 12px) * (var(--cols) - 1)) / var(--cols));
   overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding: 2px; }
-/* Hall of Fame dragons hang past the top and right of their cards: leave them room */
-.fame.pages { --gap: 20px; row-gap: 12px; padding: 8px 16px 2px 2px; }
+/* new-record ribbons stick out above their cards: leave them room */
+.fame.pages { --gap: 16px; row-gap: 18px; padding: 12px 2px 2px; }
 .pages::-webkit-scrollbar { display: none; }
 .pages > * { scroll-snap-align: start; }
 @media (min-width: 640px) { .achievements.pages, .fame.pages { --cols: 2; } }
@@ -710,14 +714,18 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .heat-legend .ramp { width: 120px; height: 10px; box-shadow: none; border-radius: 99px; background: linear-gradient(90deg, var(--track), var(--accent)); }
 
 /* ---------- Hall of fame ---------- */
-.fame { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px 20px; padding: 8px 16px 0 0; }
-/* Hall of Fame: a gold elite frame (double gold rim, pixel rivets in the corners, a dragon wing) so records read as trophies */
-.rec { display: grid; gap: 1px; padding: 12px 16px; border-radius: 14px;
+.fame { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px 16px; padding: 12px 0 0; }
+/* Hall of Fame: a gilded plaque (gold rim, pixel corner brackets, a sheen across the top) so records read as trophies */
+.rec { --gild: #e8b440; display: grid; gap: 1px; padding: 14px 18px; border-radius: 6px;
   background: linear-gradient(180deg, color-mix(in srgb, #e8b440 10%, var(--panel)), var(--panel) 75%);
-  box-shadow: inset 0 0 0 1px #9a6a1c, inset 0 0 0 2px #ffd36b33, var(--shadow); }
-
-.rec .elite { position: absolute; top: -5px; right: -13px; z-index: 1; line-height: 0; pointer-events: none; }
-.rec .t { padding-right: 24px; }
+  box-shadow: inset 0 0 0 1px #9a6a1c, inset 0 0 0 3px #ffd36b1a, var(--shadow); }
+.rec::after { content: ""; position: absolute; inset: 5px; pointer-events: none; --g: linear-gradient(var(--gild), var(--gild));
+  background: var(--g) 0 0 / 12px 2px, var(--g) 0 0 / 2px 12px, var(--g) 100% 0 / 12px 2px, var(--g) 100% 0 / 2px 12px,
+    var(--g) 0 100% / 12px 2px, var(--g) 0 100% / 2px 12px, var(--g) 100% 100% / 12px 2px, var(--g) 100% 100% / 2px 12px,
+    var(--g) 4px 4px / 2px 2px, var(--g) calc(100% - 4px) 4px / 2px 2px, var(--g) 4px calc(100% - 4px) / 2px 2px, var(--g) calc(100% - 4px) calc(100% - 4px) / 2px 2px;
+  background-repeat: no-repeat; }
+.rec > * { position: relative; }
+.rec > .newrec { position: absolute; }
 .rec .t { font: 600 14px var(--lf); color: color-mix(in srgb, var(--ink) 82%, var(--muted)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rec .v { font: 400 30px/1.1 var(--sf); color: #ffd36b; overflow-wrap: anywhere; letter-spacing: -.02em; }
 .rec .w { font-size: 14px; display: flex; gap: 4px 6px; align-items: center; min-width: 0; white-space: nowrap; }
@@ -1195,7 +1203,7 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 }
 :root[data-theme="forever"] #app[data-route="guild"] .frame { border-width: 9px; }
 :root[data-theme="forever"] :is(.tile, .ach, .rec, .realm-pick, .lvl, .pagetab, .subtab) { border-radius: 4px; }
-:root[data-theme="forever"] :is(.tile, .ach, .rec) {
+:root[data-theme="forever"] :is(.tile, .ach) {
   box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(230,194,111,.22), 0 8px 18px rgba(0,0,0,.24);
 }
 :root[data-theme="forever"] .ach.shame { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 50%, var(--line)); }

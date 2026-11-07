@@ -167,7 +167,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
+    "Grudge match": "Gammalt groll", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -1465,9 +1465,6 @@
     warlock: [["........#.......",".......#P#......","...f..#0P#...f..","..f..#0pP0#.....","....#0ppPp0#....","....#PPpPPPP#...","....#0PPPP1#....","....#0ccPp1#.f..","....#0ccPp1#....","....#0ppPp1#....","....#0ppPp1#.f..","..f..#0pP1#.....",".....#0pP1#.....",".....#01P1#.....","......####......","................"],{"p":"#7a3ad0","P":"#4a1a8a","c":"#c58cff","f":"#8cff4a","0":"#ad85e2","1":"#4c2481","#":"#120c08"},"cf"],
     druid: [["................","....###..###....","...#000##000#...","...#0b1##0b1#...",".###011##011###.","#000###..###000#","#0b1#......#0b1#","#011########011#",".####000000####.","...#0bbbbbb0#...","...#0bbbbbb1#...","...#0bbbbbb1#...","...#0bbbbbb1#...","....#011111#....",".....######.....","................"],{"b":"#b8662a","0":"#d3a07b","1":"#723f1a","#":"#120c08"}],
     crest: [["......#yy#......", ".######hh######.", ".#gggg#hh#gggg#.", ".#gr#yyyyyy#rg#.", ".#gr###ss###rg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", ".#grrr#sw#rrrg#.", "..#grr#sw#rrg#..", "..#ggr#sw#rgg#..", "...#gg#sw#gg#...", "....#g#ss#g#....", ".....##ss##.....", ".......##......."], { "#": "#000", g: "#ffb02e", r: "#8c1c10", y: "#ffd27a", h: "#6b3e1d", s: "#b8c4cc", w: "#fff" }],
-    // the gold dragon sitting on the top-right border of Hall of Fame cards (drawn for this site, after the elite frame).
-    // Its body's centre row is 6 sprite pixels from the top and 14 from the right: .rec .elite lines that up with the rim.
-    elite: [[".............#........................................", "............#y######.#.##.##.#.##.....................", "...........#yd#yyyyy#y#yy#yy#y#yy#....############....", "..........#yggygggggygyggyd#ygybd#...#yyyyyyyyyyyy#...", ".#########yggggggggggggggggyggggby####yggggggddd##....", "#yyyyyyyyrggggggggggggggggggggggggyyyygggggbdbd#......", ".#ydddgggggggggggggggggggggggggggggggggggggggyyy###...", "..####yggggbggbbbbbbbbbbbbbbbbbbbbbbgggggggggddbyyy##.", "....##ybbbbdbbggddddddddddddddddddddbbgggggbddbydddyy#", "...#yyddddd#ydbd####################ybbgggggbydb###y#.", "....#######.##yd#...................#ybgggggdbyy#..#..", "..............##....................#ybgggbddybby#....", "....................................#ybgggbbydybby#...", ".....................................#bgggdbdbdydby#..", ".....................................#bgbdbybybd#yby#.", ".....................................#bgbddybbyb##ydy#", ".....................................#bggbydybd#..##yy", ".....................................#bggbdbdyby#...##", ".....................................#ybgbddbdyd#.....", ".....................................#ybgbd###yby#....", ".....................................#ybgbd#..#yd#....", ".....................................#ybggby#..#yy#...", ".....................................#ybggbd#..#yby#..", ".....................................#ybggbd#...#yd#..", ".....................................#ygggdd#....#yy#.", ".....................................#ygbd#yy#...#yd#.", ".....................................#ygbd#yd#....##..", ".....................................#ygggydd#........", ".....................................#ygbd##y#........", ".....................................#ygbd#.#.........", ".....................................#yggby#..........", ".....................................#ygbd#...........", ".....................................#ygbd#...........", ".....................................#yggdy#..........", ".....................................#ybd##...........", ".....................................#ybd#............", ".....................................#ybd#............", ".....................................#ybd#............", ".....................................#ybd#............", ".....................................#ybd#............", ".....................................#ybd#............", "......................................#y#.............", "......................................#y#.............", ".......................................#.............."], { "#": "#2a1800", y: "#ffe58a", g: "#e8b440", b: "#c08a28", d: "#8a5810", r: "#ff3b1f" }, "r"],
     // Coins for gold, silver and copper (hand-drawn, 8x8).
     coinG: [["..####..",".#hlll#.","#hllmmd#","#llmmmd#","#lmmmmd#","#mmmmdd#",".#dddd#.","..####.."],{"#":"#5a3a00","h":"#fff6c8","l":"#ffe27a","m":"#ffc72e","d":"#c8901a"}],
     coinS: [["..####..",".#hlll#.","#hllmmd#","#llmmmd#","#lmmmmd#","#mmmmdd#",".#dddd#.","..####.."],{"#":"#33363e","h":"#ffffff","l":"#e8ebf2","m":"#c3c7d3","d":"#8a90a0"}],
@@ -1615,8 +1612,42 @@
       const by = {};
       p.deaths.forEach(d => { if (d.by && d.t && inRange(localKey(d.t))) by[d.by] = (by[d.by] || 0) + 1; });
       const [mob, n] = Object.entries(by).sort((a, b) => b[1] - a[1])[0] || [];
-      if (n >= 2) cands.push({ s: 60 + n, icon: "skull", label: tr("Grudge match"), p, line: tr("was slain by {0} {1} times", `<span class="mob">${esc(mob)}</span>`, num(n)), chips: [tr("Most Wanted")] });
+      // dying twice to the same mob happens every week; it takes a real feud to be the story
+      if (n >= 3) cands.push({ s: 40 + n * 3, icon: "skull", label: tr("Grudge match"), p, line: tr("was slain by {0} {1} times", `<span class="mob">${esc(mob)}</span>`, num(n)), chips: [tr("Most Wanted")] });
+      const capT = (p.chars[0] && p.chars[0].levels || {})[state.cap];
+      if (capT && inRange(localKey(capT))) cands.push({ s: 80, icon: "sulfuras", label: tr("Max level"), p, tone: "epic", line: tr("reached level {0}", state.cap),
+        chips: [p.chars[0].levelPlayed && p.chars[0].levelPlayed[state.cap] && tr("{0} played", dur(p.chars[0].levelPlayed[state.cap])), fullDate(capT)] });
+      // PvP: getting ganked over and over
+      const pk = p.deaths.filter(d => d.cause === "player" && d.t && inRange(localKey(d.t)));
+      if (pk.length >= 3) {
+        const by = {}; pk.forEach(d => { if (d.by) by[d.by] = (by[d.by] || 0) + 1; });
+        const [foe, fn] = Object.entries(by).sort((a, b) => b[1] - a[1])[0] || [];
+        cands.push({ s: 45 + pk.length * 3, icon: "flag", label: tr("Ganked"), p, tone: "dead", line: tr("was killed by other players {0} times", num(pk.length)),
+          chips: [fn >= 2 && tr("{0} got them {1} times", esc(foe), num(fn)), fullDate(pk[pk.length - 1].t)] });
+      }
     });
+    // PvP: the most players killed
+    const hunter = rows.slice().sort((a, b) => (b.s.hk || 0) - (a.s.hk || 0))[0];
+    if (hunter && hunter.s.hk >= 5) cands.push({ s: 45 + Math.min(40, hunter.s.hk), icon: "axe", label: tr("Bloodthirsty"), p: hunter.p, line: tr("killed {0} players", num(hunter.s.hk)), chips: [tr("PvP")] });
+    // The first on the realm to reach max level: everyone starts levelling together, so this is the race.
+    const racer = people.map(p => ({ p, t: (p.chars[0] && p.chars[0].levels || {})[state.cap] })).filter(x => x.t).sort((a, b) => a.t - b.t)[0];
+    if (racer && inRange(localKey(racer.t))) cands.push({ s: 90, icon: "sulfuras", label: tr("First to {0}", state.cap), p: racer.p, tone: "legendary",
+      line: tr("was first on the realm to reach level {0}", state.cap), chips: [fullDate(racer.t)] });
+    // The realm's first run of each dungeon (and difficulty), with whoever was in the group.
+    const firstRun = {};
+    people.forEach(p => p.runs.forEach(r => { const k = `${r.inst}|${r.d || 0}`, f = firstRun[k]; if (!f || r.t < f.r.t) firstRun[k] = { p, r }; }));
+    Object.values(firstRun).forEach(({ p, r }) => { if (inRange(localKey(r.t))) cands.push({ s: 75 + r.t / 1e10, icon: "gate", label: tr("Realm first"), p, tone: "epic",
+      line: tr("ran the realm's first {0}", `<span class="mob">${esc(r.inst)}${r.dn ? ` (${esc(r.dn)})` : ""}</span>`),
+      chips: [asArr(r.with).length && tr("with {0}", asArr(r.with).map(n => esc(bareName(n))).join(", ")), fullDate(r.t)] }); });
+    // A broken record, best when it was taken from someone else.
+    fameRecords(people).filter(r => r.fresh).forEach(r => cands.push({ s: r.beat.p === r.p ? 45 : 65, icon: "shield", label: tr("New record"), p: r.p,
+      line: `${esc(r.t)}: <b>${r.v}</b>`, chips: [beatText(r)] }));
+    // A boss that made the group wipe again and again.
+    const tries = {};
+    groupFights(people).forEach(g => { const x = tries[g.key] ||= { g, wipes: 0, kill: false }; if (g.ok) x.kill = true; else x.wipes++; });
+    Object.values(tries).forEach(({ g, wipes, kill }) => { if (wipes >= 3) cands.push({ s: 50 + wipes * 2, icon: "tomb", label: tr("Wipe fest"), p: g.seen[0],
+      line: tr(kill ? "and the group wiped {0} times on {1}, then killed it" : "and the group wiped {0} times on {1}", num(wipes), `<span class="mob">${esc(g.boss)}</span>`),
+      chips: [g.inst && esc(g.inst), [...new Set(g.seen.map(x => x.name))].join(", ")] }); });
     const top = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0))[0];
     const groupDmg = rows.reduce((a, r) => a + (r.s.dmg || 0), 0);
     if (top && top.s.dmg) cands.push({ s: 10, icon: "sword", label: tr("Big Pumper"), p: top.p, line: tr("dealt {0} damage", compact(top.s.dmg)), chips: [
@@ -2176,16 +2207,15 @@
     // Per character (or per guild, on the realm page): bosses killed, kills, wipes and dungeon runs in this range.
     const { runs, all } = groupRuns(people);
     const runLabel = instLabeler(runs);
+    // Counts the grouped fights and runs, so guild mates who were there together count one kill or run, not one each.
     const hunt = list => {
-      const t = { bosses: new Set(), kills: 0, wipes: 0, runs: 0, dps: 0, members: list.length };
-      for (const p of list) {
-        for (const f of p.fights) if (inRange(localKey(f.t))) {
-          if (!f.ok) { t.wipes++; continue; }
-          t.kills++; t.bosses.add(bossKey(f));
-          if (f.dur > 0) t.dps = Math.max(t.dps, (+f.dmg || 0) / f.dur);
-        }
-        t.runs += all.filter(x => x.p === p).length;
+      const mine = new Set(list), had = g => (g.seen || g.people).some(p => mine.has(p));
+      const t = { bosses: new Set(), kills: 0, wipes: 0, runs: runs.filter(had).length, dps: 0, members: list.length };
+      for (const g of fights) if (had(g)) {
+        if (!g.ok) { t.wipes++; continue; }
+        t.kills++; t.bosses.add(g.key);
       }
+      for (const p of list) for (const f of p.fights) if (f.ok && f.dur > 0 && inRange(localKey(f.t))) t.dps = Math.max(t.dps, (+f.dmg || 0) / f.dur);
       return t;
     };
     const huntRows = (groups, first) => groups.map(([head, list]) => [head, hunt(list)]).filter(([, t]) => t.kills || t.wipes || t.runs)
@@ -2467,8 +2497,8 @@
   }
   // A short "when" (a date) sits after the name; a long one (a spell and its target) gets its own line.
   const longWhen = r => String(r.when || "").replace(/<[^>]+>/g, "").length > 14;
-  const recordsHTML = (recs, podium) => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}"><span class="elite">${sprite("elite", 1)}</span><span class="t">${r.t}</span>`
-    + `<span class="v">${r.v}${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}</span>`
+  const recordsHTML = (recs, podium) => recs.map(r => `<div class="rec${r.fresh ? " fresh" : ""}">${r.fresh ? `<span class="newrec">${tr("New record")}</span>` : ""}<span class="t">${r.t}</span>`
+    + `<span class="v">${r.v}</span>`
     + `<span class="w">${nameHTML(r.p)}${r.when && !longWhen(r) ? `<span class="muted">· ${r.when}</span>` : ""}</span>`
     + (r.when && longWhen(r) ? `<span class="when">${r.when}</span>` : "")
     + (r.fresh ? `<span class="beat">${beatText(r)}</span>` : "")
