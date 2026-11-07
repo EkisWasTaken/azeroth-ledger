@@ -167,7 +167,7 @@
     "Chat messages": "Chattmeddelanden", "Never stops talking": "Slutar aldrig prata", "Always apologizing": "Ber alltid om ursäkt",
     "Laughs at everything": "Skrattar åt allt", "Emotes constantly": "Emotar hela tiden", "Hearths home a lot": "Hearthar hem ofta",
     "Story of the week": "Veckans händelse", "Story of all time": "Största händelsen", "Best drop": "Bästa droppet", "looted {0}": "lootade {0}",
-    "Grudge match": "Gammalt groll", "Boss Slayer": "Bossdräparen", "Gankmaster": "Gankmästaren", "Spell Slinger": "Besvärjaren", "Battle Hardened": "Stridshärdad", "Natural 100": "Perfekt 100", "Snake Eyes": "Ormögon", "Hearth Hugger": "Hemmakär", "Fish Out of Water": "Som en fisk i vattnet", "Drama Queen": "Dramadrottning", "Big Spender": "Slösaren", "Overhealer": "Överhealaren", "Wipe Lord": "Wipe-lorden", "Swing and a Miss": "Bom igen", "Sore Loser": "Dålig förlorare", "Glug Glug": "Blubb blubb", "Kill the most bosses": "Döda flest bossar", "Kill the most enemy players": "Döda flest fiendespelare", "Cast the most spells": "Kasta flest spells", "Spend the most time in combat": "Var i strid längst", "Roll a perfect 100 the most times": "Slå 100 flest gånger", "Roll a 1 the most times": "Slå 1 flest gånger", "Use your Hearthstone the most": "Använd Hearthstone flest gånger", "Spend the most time swimming": "Simma längst", "Use the most emotes": "Använd flest emotes", "Spend the most gold": "Spendera mest guld", "Overheal the most": "Överheala mest", "Be in the most boss wipes": "Var med i flest boss-wipes", "Miss the most attacks": "Missa flest attacker", "Lose the most duels": "Förlora flest dueller", "Drown the most": "Drunkna flest gånger", "{0} boss kills": "{0} boss-kills", "Killed {0} players": "Dödade {0} spelare", "Cast {0} spells": "Kastade {0} spells", "{0} in combat": "{0} i strid", "Rolled 100 {0} times": "Slog 100 {0} gånger", "Rolled a 1 {0} times": "Slog 1 {0} gånger", "Hearthed {0} times": "Hearthade {0} gånger", "Swam for {0}": "Simmade i {0}", "{0} emotes": "{0} emotes", "Spent {0}": "Spenderade {0}", "{0} healing wasted": "{0} healing i onödan", "Wiped {0} times": "Wipade {0} gånger", "Missed {0} times": "Missade {0} gånger", "Lost {0} duels": "Förlorade {0} dueller", "Drowned {0} times": "Drunknade {0} gånger", "Most spells cast in one day": "Flest spells på en dag", "Most boss kills in one day": "Flest boss-kills på en dag", "Most players killed in one day": "Flest dödade spelare på en dag", "Longest time in combat in one day": "Längst tid i strid på en dag", "Most hearthstones in one day": "Flest hearthstones på en dag", "Longest swim in one day": "Längsta simturen på en dag", "Chattiest day": "Pratigaste dagen", "Biggest spending spree in one day": "Största shoppingrundan på en dag", "Longest time dead in one day": "Längst tid död på en dag", "Most falls to death in one day": "Flest dödsfall av fall på en dag", "Most wipes in one day": "Flest wipes på en dag", "Biggest repair bill in one day": "Största reparationsnotan på en dag", "Longest AFK in one day": "Längst AFK på en dag", "Most apologies in one day": "Flest förlåt på en dag", "Die the most": "Dö flest gånger", "Deal the most damage": "Gör mest damage", "Heal the most": "Heala mest", "Land the most killing blows": "Ta flest killing blows", "Land the single biggest hit": "Gör den största träffen", "Have the highest crit rate (100+ hits)": "Ha högst crit-andel (100+ träffar)", "Deal the most damage past a kill": "Gör mest damage efter att målet dött", "Fall to your death the most": "Fall ihjäl flest gånger", "Spend the most time dead": "Var död längst", "Take the most damage": "Ta mest damage", "Dodge, parry or block the most attacks": "Dodga, parrya eller blocka flest attacker", "Need the most healing from friends": "Behöv mest healing från vänner", "Turn in the most quests": "Lämna in flest quests", "Jump the most": "Hoppa mest", "Travel the farthest on foot": "Gå längst", "Loot the most gold": "Loota mest guld", "Pay the most for repairs": "Betala mest för reparationer", "Say sorry the most in chat": "Säg förlåt flest gånger i chatten", "Send the most chat messages": "Skicka flest chattmeddelanden", "Loot the most rare or better items": "Loota flest rare eller bättre", "Loot the most grey items": "Loota flest gråa saker", "Have the best average /roll (3+ rolls)": "Ha bäst snitt på /roll (3+ rolls)", "Win the most duels": "Vinn flest dueller", "Run the most dungeons": "Kör flest dungeons", "Spend the most time on flight paths": "Flyg längst med flight paths", "Spend the most time AFK": "Var AFK längst", "Adventure": "Äventyr", "Shame": "Skam", "{0} points": "{0} poäng", "{0} of {1} claimed": "{0} av {1} tagna", "{0} of {1}'s": "{0} av {1}s", "broken once": "slaget en gång", "broken {0} times": "slaget {0} gånger", "has held it {0} day": "har hållit det {0} dag", "has held it {0} days": "har hållit det {0} dagar", "set it today": "satte det i dag", "Held by {0} players": "Hållet av {0} spelare", "{0} day": "{0} dag", "{0} days": "{0} dagar", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
+    "Grudge match": "Gammalt groll", "Silver": "Silver", "Copper": "Koppar", "Hall of Shame": "Skammens hall", "Best: {0}": "Bästa: {0}", "Boss Slayer": "Bossdräparen", "Gankmaster": "Gankmästaren", "Spell Slinger": "Besvärjaren", "Battle Hardened": "Stridshärdad", "Natural 100": "Perfekt 100", "Snake Eyes": "Ormögon", "Hearth Hugger": "Hemmakär", "Fish Out of Water": "Som en fisk i vattnet", "Drama Queen": "Dramadrottning", "Big Spender": "Slösaren", "Overhealer": "Överhealaren", "Wipe Lord": "Wipe-lorden", "Swing and a Miss": "Bom igen", "Sore Loser": "Dålig förlorare", "Glug Glug": "Blubb blubb", "Kill the most bosses": "Döda flest bossar", "Kill the most enemy players": "Döda flest fiendespelare", "Cast the most spells": "Kasta flest spells", "Spend the most time in combat": "Var i strid längst", "Roll a perfect 100 the most times": "Slå 100 flest gånger", "Roll a 1 the most times": "Slå 1 flest gånger", "Use your Hearthstone the most": "Använd Hearthstone flest gånger", "Spend the most time swimming": "Simma längst", "Use the most emotes": "Använd flest emotes", "Spend the most gold": "Spendera mest guld", "Overheal the most": "Överheala mest", "Be in the most boss wipes": "Var med i flest boss-wipes", "Miss the most attacks": "Missa flest attacker", "Lose the most duels": "Förlora flest dueller", "Drown the most": "Drunkna flest gånger", "{0} boss kills": "{0} boss-kills", "Killed {0} players": "Dödade {0} spelare", "Cast {0} spells": "Kastade {0} spells", "{0} in combat": "{0} i strid", "Rolled 100 {0} times": "Slog 100 {0} gånger", "Rolled a 1 {0} times": "Slog 1 {0} gånger", "Hearthed {0} times": "Hearthade {0} gånger", "Swam for {0}": "Simmade i {0}", "{0} emotes": "{0} emotes", "Spent {0}": "Spenderade {0}", "{0} healing wasted": "{0} healing i onödan", "Wiped {0} times": "Wipade {0} gånger", "Missed {0} times": "Missade {0} gånger", "Lost {0} duels": "Förlorade {0} dueller", "Drowned {0} times": "Drunknade {0} gånger", "Most spells cast in one day": "Flest spells på en dag", "Most boss kills in one day": "Flest boss-kills på en dag", "Most players killed in one day": "Flest dödade spelare på en dag", "Longest time in combat in one day": "Längst tid i strid på en dag", "Most hearthstones in one day": "Flest hearthstones på en dag", "Longest swim in one day": "Längsta simturen på en dag", "Chattiest day": "Pratigaste dagen", "Biggest spending spree in one day": "Största shoppingrundan på en dag", "Longest time dead in one day": "Längst tid död på en dag", "Most falls to death in one day": "Flest dödsfall av fall på en dag", "Most wipes in one day": "Flest wipes på en dag", "Biggest repair bill in one day": "Största reparationsnotan på en dag", "Longest AFK in one day": "Längst AFK på en dag", "Most apologies in one day": "Flest förlåt på en dag", "Die the most": "Dö flest gånger", "Deal the most damage": "Gör mest damage", "Heal the most": "Heala mest", "Land the most killing blows": "Ta flest killing blows", "Land the single biggest hit": "Gör den största träffen", "Have the highest crit rate (100+ hits)": "Ha högst crit-andel (100+ träffar)", "Deal the most damage past a kill": "Gör mest damage efter att målet dött", "Fall to your death the most": "Fall ihjäl flest gånger", "Spend the most time dead": "Var död längst", "Take the most damage": "Ta mest damage", "Dodge, parry or block the most attacks": "Dodga, parrya eller blocka flest attacker", "Need the most healing from friends": "Behöv mest healing från vänner", "Turn in the most quests": "Lämna in flest quests", "Jump the most": "Hoppa mest", "Travel the farthest on foot": "Gå längst", "Loot the most gold": "Loota mest guld", "Pay the most for repairs": "Betala mest för reparationer", "Say sorry the most in chat": "Säg förlåt flest gånger i chatten", "Send the most chat messages": "Skicka flest chattmeddelanden", "Loot the most rare or better items": "Loota flest rare eller bättre", "Loot the most grey items": "Loota flest gråa saker", "Have the best average /roll (3+ rolls)": "Ha bäst snitt på /roll (3+ rolls)", "Win the most duels": "Vinn flest dueller", "Run the most dungeons": "Kör flest dungeons", "Spend the most time on flight paths": "Flyg längst med flight paths", "Spend the most time AFK": "Var AFK längst", "Adventure": "Äventyr", "Shame": "Skam", "{0} points": "{0} poäng", "{0} of {1} claimed": "{0} av {1} tagna", "{0} of {1}'s": "{0} av {1}s", "broken once": "slaget en gång", "broken {0} times": "slaget {0} gånger", "has held it {0} day": "har hållit det {0} dag", "has held it {0} days": "har hållit det {0} dagar", "set it today": "satte det i dag", "Held by {0} players": "Hållet av {0} spelare", "{0} day": "{0} dag", "{0} days": "{0} dagar", "Max level": "Maxlevel", "Realm first": "Realmens första", "ran the realm's first {0}": "körde realmens första {0}", "First to {0}": "Först till {0}", "was first on the realm to reach level {0}": "var först på realmen att nå level {0}", "Ganked": "Gankad", "was killed by other players {0} times": "dödades av andra spelare {0} gånger", "{0} got them {1} times": "{0} tog dem {1} gånger", "Bloodthirsty": "Blodtörstig", "with {0}": "med {0}", "killed {0} players": "dödade {0} spelare", "Wipe fest": "Wipefest", "and the group wiped {0} times on {1}, then killed it": "och gruppen wipade {0} gånger på {1}, sen dog den", "and the group wiped {0} times on {1}": "och gruppen wipade {0} gånger på {1}", "World drop": "Världsdrop", "Luckiest looter": "Turligaste loot", "bind-on-equip drops": "BoE-drops", "Dungeon loot": "Dungeon-loot", "rare or better in dungeons": "rare eller bättre i dungeons", "BoE": "BoE", "looted {0} out in the world": "lootade {0} ute i världen", "was slain by {0} {1} times": "dödades av {0} {1} gånger", "dealt {0} damage": "gjorde {0} damage", "{0} of the group's damage": "{0} av gruppens damage",
     "Epic drops": "Epic drops","Purple luck": "Lila tur", "Grey items looted": "Grå items lootade", "Hoards vendor trash": "Samlar på skräp",
     "Repair bills": "Reparationer", "Breaks all the gear": "Har sönder all utrustning", "Duel champion": "Duellmästare", "Spells cast": "Castade spells",
     "Button masher": "Knappdängare", "Gravity's best friend": "Gravitationens bästa vän", "Crits like crazy": "Critar som en galning",
@@ -1313,9 +1313,17 @@
       } else if (type === "line") {
         ds._c = ds.borderColor;
         const filled = sets.length === 1 || ds.area;
-        if (stacked) { // stacked bands: each fills down to the one below it
-          Object.assign(ds, { tension: .35, cubicInterpolationMode: "monotone", borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4, pointHitRadius: 10,
-            pointBackgroundColor: ds._c, pointBorderColor: css("--panel"), fill: sets.indexOf(ds) ? "-1" : "origin", backgroundColor: alpha(ds._c, "a6") });
+        if (stacked) { // stacked bands: each fills down to the one below it, no outlines, so they flow into each other
+          const c = ds._c;
+          Object.assign(ds, { tension: .4, cubicInterpolationMode: "monotone", borderWidth: 0, pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 10,
+            pointHoverBackgroundColor: c, pointHoverBorderColor: css("--panel"), pointHoverBorderWidth: 2, fill: sets.indexOf(ds) ? "-1" : "origin",
+            backgroundColor: ({ chart }) => {
+              const a = chart.chartArea;
+              if (!a) return alpha(c, "cc");
+              const g = chart.ctx.createLinearGradient(0, a.top, 0, a.bottom);
+              g.addColorStop(0, alpha(c, "f2")); g.addColorStop(1, alpha(c, "8c"));
+              return g;
+            } });
           continue;
         }
         Object.assign(ds, {
@@ -1763,11 +1771,15 @@
   ];
   // Each achievement's badge is coloured by how big it is: gold, silver or copper (red for shame).
   const TIER = { 50: "gold", 25: "silver", 10: "copper" };
+  const TIER_COLOR = { 50: "#ffd36b", 25: "#d6d9e2", 10: "#e3955a" }, TIER_NAME = { 50: "Gold", 25: "Silver", 10: "Copper" };
+  // Text for a data-tip: no markup, and none of the characters that split its rows and columns.
+  const tipTxt = v => String(v).replace(/<[^>]+>/g, "").replace(/[;|]/g, ",");
 
   // A badge: a round medal whose ring is coloured by tier (gold, silver, copper; red for shame) and filled to `fill` percent.
   // Locked badges are grey, their ring showing how far along the way the character is.
   const badgeHTML = (a, { fill = 100, who = "", d = "", locked = false }) =>
-    `<div class="abadge ${locked ? "locked" : a.shame ? "shame" : TIER[a.pts]}" title="${esc(tr("{0} points", a.pts))}">`
+    `<div class="abadge ${locked ? "locked" : a.shame ? "shame" : TIER[a.pts]}" data-tip-c="${a.shame ? "#ff7a66" : TIER_COLOR[a.pts]}"`
+    + ` data-tip="${esc(tipTxt(tr(a.t)))}|${esc(tr("{0} points", a.pts))}${a.h ? ";" + esc(tipTxt(tr(a.h))) : ""};${esc(tr(a.shame ? "Hall of Shame" : TIER_NAME[a.pts]))}">`
     + `<div class="medal" style="--fill:${Math.round(Math.max(0, Math.min(100, fill)))}">${icon(a.i, 2)}</div>`
     + `<div class="t">${tr(a.t)}</div>${who ? `<div class="who">${who}</div>` : ""}<div class="d">${d}</div></div>`;
   // The leader of an achievement's stat, and everyone tied with them.
@@ -1885,9 +1897,36 @@
       data: { labels, datasets },
       options: { interaction: { mode: "index", intersect: false },
         scales: { x: { ...gridX, stacked: true }, y: { ...gridY, stacked: true, beginAtZero: true, ticks: { ...gridY.ticks, callback: v => compact(v) } } },
-        plugins: { tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${num(c.raw)}` } } } },
+        plugins: { tooltip: { enabled: false, external: groupTip } } },
+      plugins: [guideLine],
     } : null);
   }
+  // The hover menu for stacked charts, in the site's tooltip: the day and the group's total, then each character
+  // biggest first with their colour, amount and share.
+  function groupTip({ chart, tooltip }) {
+    if (!tooltip.opacity || !tooltip.dataPoints || !tooltip.dataPoints.length) { delete tip.dataset.chart; tip.hidden = true; return; }
+    const pts = tooltip.dataPoints.filter(d => d.raw > 0).sort((a, b) => b.raw - a.raw);
+    const sum = pts.reduce((a, d) => a + d.raw, 0);
+    tip.innerHTML = `<div class="row"><span>${esc(tooltip.dataPoints[0].label)}</span><span>${esc(compact(sum))}</span></div>`
+      + (pts.map(d => `<div class="row who"><span><i class="sw" style="background:${d.dataset._c || d.dataset.borderColor}"></i>${esc(d.dataset.label)}</span>`
+        + `<span>${esc(num(d.raw))} <small>${esc(pct(d.raw / sum))}</small></span></div>`).join("") || `<div class="desc">${esc(tr("Nothing recorded yet."))}</div>`);
+    tip.style.setProperty("--tc", "");
+    tip.dataset.chart = "1";
+    tip.hidden = false;
+    const box = chart.canvas.getBoundingClientRect(), r = tip.getBoundingClientRect();
+    let x = box.left + tooltip.caretX + 16;
+    if (x + r.width > innerWidth - 8) x = box.left + tooltip.caretX - r.width - 16;
+    tip.style.left = Math.max(8, x) + "px";
+    tip.style.top = Math.max(8, Math.min(innerHeight - r.height - 8, box.top + tooltip.caretY - r.height / 2)) + "px";
+  }
+  // A faint vertical line at the hovered column.
+  const guideLine = { id: "guide", afterDatasetsDraw(chart) {
+    const a = chart.getActiveElements()[0];
+    if (!a) return;
+    const { ctx, chartArea } = chart;
+    ctx.save(); ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(a.element.x, chartArea.top); ctx.lineTo(a.element.x, chartArea.bottom); ctx.stroke(); ctx.restore();
+  } };
 
   // Overview: the characters ranked by damage, with level and deaths, each row opening the character.
   function renderStandings(rows) {
@@ -2553,7 +2592,7 @@
     });
     const days = x => Math.round((x.until - x.from) / 864e5);
     const plain = v => String(r.fmt(v)).replace(/<[^>]+>/g, "");
-    const bar = reigns.map(x => `<i style="flex-grow:${Math.max(1, days(x))};--c:${x.p.color}" title="${esc(x.p.name)} · ${esc(tr(days(x) === 1 ? "{0} day" : "{0} days", num(days(x))))} · ${esc(plain(x.v))}"></i>`).join("");
+    const bar = reigns.map(x => `<i style="flex-grow:${Math.max(1, days(x))};--c:${x.p.color}" data-tip-c="${x.p.color}" data-tip="${esc(tipTxt(x.p.name))}|${esc(tr(days(x) === 1 ? "{0} day" : "{0} days", num(days(x))))};${esc(tipTxt(tr("Best: {0}", plain(x.v))))};${esc(shortDate(localKey(x.from / 1000)))} – ${esc(shortDate(localKey(x.until / 1000)))}"></i>`).join("");
     const cur = reigns[reigns.length - 1], held = days(cur);
     return `<div class="reign"><div class="rbar" role="img" aria-label="${esc(tr("Held by {0} players", reigns.length))}">${bar}</div>`
       + `<span><b style="color:${cur.p.color}">${esc(cur.p.name)}</b> ${held ? tr(held === 1 ? "has held it {0} day" : "has held it {0} days", num(held)) : tr("set it today")}`
@@ -3998,9 +4037,11 @@
   const tip = $("tip");
   document.addEventListener("pointermove", e => {
     const el = e.target.closest("[data-tip]");
-    if (!el) { tip.hidden = true; return; }
+    if (!el) { if (!tip.dataset.chart) tip.hidden = true; return; }
+    delete tip.dataset.chart;
     const rows = el.dataset.tip.split(";").map(r => r.split("|"));
-    tip.innerHTML = rows.map(([a, b]) => `<div class="row"><span>${esc(a)}</span><span>${esc(b || "")}</span></div>`).join("");
+    tip.innerHTML = rows.map(([a, b], i) => i && b === undefined ? `<div class="desc">${esc(a)}</div>` : `<div class="row"><span>${esc(a)}</span><span>${esc(b || "")}</span></div>`).join("");
+    tip.style.setProperty("--tc", el.dataset.tipC || "");
     tip.hidden = false;
     const r = tip.getBoundingClientRect();
     let x = e.clientX + 14, y = e.clientY + 14;
