@@ -725,8 +725,10 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .rec > .newrec { position: absolute; }
 .rec .t { font: 600 14px/1.3 var(--lf); color: color-mix(in srgb, var(--ink) 82%, var(--muted)); text-wrap: balance; }
 .rec .v { font: 400 30px/1.1 var(--sf); color: #ffd36b; overflow-wrap: anywhere; letter-spacing: -.02em; }
-.rec .w { font-size: 14px; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; min-width: 0; }
-.rec .w .muted { white-space: nowrap; }
+/* the holder's line: the name is never cut or wrapped; the date beside it gives way first */
+.rec .w { font-size: 14px; display: flex; gap: 6px; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden; }
+.rec .w > .plink, .rec .w > .cname { flex: none; }
+.rec .w .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* each record's icon in a ring coloured by category, so the cards can be told apart at a glance */
 .rec { --cat: #e8b440; }
 .rec.combat { --cat: #ff8a4c; } .rec.adventure { --cat: #4fd1c0; } .rec.loot { --cat: #ffd36b; } .rec.shame { --cat: var(--bad); }

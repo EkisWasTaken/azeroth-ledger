@@ -3153,7 +3153,8 @@
 
   // One-line card texts that are a little too long shrink to fit (down to 10.5px) instead of being cut off;
   // whatever still doesn't fit keeps its ellipsis and shows the full text on hover.
-  const FIT = ".tile .foot, .glead .lbl, .sigc .cmp, .sec-head p"; // Hall of Fame cards and badges wrap instead
+  // Hall of Fame card texts and badges wrap instead; only the lines with a character's name shrink, so a name stays whole on one line.
+  const FIT = ".tile .foot, .glead .lbl, .sigc .cmp, .sec-head p, .rec .w, .rec .podium .nm";
   function fitText() {
     // Deed tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
     // still spans the full width, on a grid of lcm(cols, last) columns.
