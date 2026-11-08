@@ -253,7 +253,7 @@
     "Click a zone to open its map. Scroll to zoom, drag to move, right-click or scroll out to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka eller scrolla ut för att gå tillbaka.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
     "Die 50 times": "Dö 50 gånger", "Deal 1,000,000 damage": "Gör 1 000 000 damage", "Heal 1,000,000": "Heala 1 000 000", "Land 1,000 killing blows": "Ta 1 000 killing blows", "Land a single hit of 1,000 or more": "Gör en träff på 1 000 eller mer", "Crit on 20% of your hits (100+ hits)": "Gör crit på 20 % av dina träffar (100+ träffar)", "Deal 50,000 damage past a kill": "Gör 50 000 damage efter att målet dött", "Fall to your death 5 times": "Fall ihjäl 5 gånger", "Spend an hour dead": "Var död i en timme", "Take 1,000,000 damage": "Ta 1 000 000 damage", "Dodge, parry or block 1,000 attacks": "Dodga, parrya eller blocka 1 000 attacker", "Get 250,000 healing from friends": "Få 250 000 healing från vänner", "Turn in 250 quests": "Lämna in 250 quests", "Jump 5,000 times": "Hoppa 5 000 gånger", "Travel 500,000 yards on foot": "Gå 500 000 yards", "Loot 1,000 gold": "Loota 1 000 guld", "Pay 100 gold for repairs": "Betala 100 guld för reparationer", "Say sorry 25 times in chat": "Säg förlåt 25 gånger i chatten", "Send 1,000 chat messages": "Skicka 1 000 chattmeddelanden", "Loot 50 rare or better items": "Loota 50 rare eller bättre", "Loot 1,000 grey items": "Loota 1 000 gråa saker", "Average 60 or more on /roll (10+ rolls)": "Ha 60 eller mer i snitt på /roll (10+ rolls)", "Win 25 duels": "Vinn 25 dueller", "Run 25 dungeons": "Kör 25 dungeons", "Spend 3 hours on flight paths": "Flyg 3 timmar med flight paths", "Spend 5 hours AFK": "Var AFK i 5 timmar", "Kill 50 bosses": "Döda 50 bossar", "Kill 100 enemy players": "Döda 100 fiendespelare", "Cast 10,000 spells": "Kasta 10 000 spells", "Spend a full day in combat": "Var i strid ett helt dygn", "Roll a perfect 100": "Slå 100", "Roll a 1": "Slå 1", "Use your Hearthstone 100 times": "Använd Hearthstone 100 gånger", "Swim for an hour": "Simma i en timme", "Use 250 emotes": "Använd 250 emotes", "Spend 500 gold": "Spendera 500 guld", "Overheal 250,000": "Överheala 250 000", "Be in 10 boss wipes": "Var med i 10 boss-wipes", "Miss 1,000 attacks": "Missa 1 000 attacker", "Lose 10 duels": "Förlora 10 dueller", "Drown": "Drunkna", "Play 10 hours without dying": "Spela 10 timmar utan att dö",
-    "{0} of {1}": "{0} av {1}",
+    "{0} of {1}": "{0} av {1}", "+{0} more": "+{0} till",
     "Achievements": "Achievements", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
     "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Spellbook", "Bonds": "Band", "Full Ledger": "Hela liggaren",
     "Roster": "Roster", "Join": "Gå med", "Signature": "Signatur", "Character": "Karaktär", "Charts": "Diagram", "Bests": "Rekord",
@@ -1780,9 +1780,9 @@
 
   // A badge: a round medal whose ring is coloured by tier (gold, silver, copper; red for shame) and filled to `fill` percent.
   // Locked badges are grey, their ring showing how far along the way the character is.
-  const badgeHTML = (a, { fill = 100, who = "", d = "", locked = false }) =>
+  const badgeHTML = (a, { fill = 100, who = "", d = "", locked = false, tip = "" }) =>
     `<div class="abadge ${locked ? "locked" : a.shame ? "shame" : TIER[a.pts]}" data-tip-c="${a.shame ? "#ff7a66" : TIER_COLOR[a.pts]}"`
-    + ` data-tip="${esc(tipTxt(tr(a.t)))}|${esc(tr("{0} points", a.pts))}${a.h ? ";" + esc(tipTxt(tr(a.h))) : ""};${esc(tr(a.shame ? "Hall of Shame" : TIER_NAME[a.pts]))}">`
+    + ` data-tip="${esc(tipTxt(tr(a.t)))}|${esc(tr("{0} points", a.pts))}${a.h ? ";" + esc(tipTxt(tr(a.h))) : ""};${esc(tr(a.shame ? "Hall of Shame" : TIER_NAME[a.pts]))}${tip}">`
     + `<div class="medal" style="--fill:${Math.round(Math.max(0, Math.min(100, fill)))}">${icon(a.i, 2)}</div>`
     + `<div class="t">${tr(a.t)}</div>${who ? `<div class="who">${who}</div>` : ""}<div class="d">${d}</div></div>`;
   // How far a character is toward an achievement's goal, 0 to 1 (1 = unlocked).
@@ -1790,11 +1790,13 @@
 
   // The realm's collection: every achievement with how many characters have unlocked it, all-time.
   function renderAchievements(people) {
-    const rows = people.map(p => sumFor(p, true)), claimed = [], open = [];
+    const rows = people.map(p => ({ p, s: sumFor(p, true) })), claimed = [], open = [];
     for (const a of ACH) {
-      const n = rows.filter(s => achProg(a, s) >= 1).length;
+      const has = rows.filter(r => achProg(a, r.s) >= 1).sort((x, y) => a.k(y.s) - a.k(x.s)), n = has.length;
       if (!n) { open.push(badgeHTML(a, { fill: 0, locked: true, d: tr(a.h) })); continue; }
-      claimed.push({ pts: a.pts, n, html: badgeHTML(a, { fill: n / rows.length * 100, who: tr(n === 1 ? "{0} character" : "{0} characters", num(n)), d: tr(a.h) }) });
+      // who has it, in the tooltip (shown on hover or tap), best first
+      const tip = has.slice(0, 15).map(r => `;${esc(tipTxt(r.p.name))}|`).join("") + (n > 15 ? `;${esc(tr("+{0} more", n - 15))}|` : "");
+      claimed.push({ pts: a.pts, n, html: badgeHTML(a, { fill: n / rows.length * 100, who: tr(n === 1 ? "{0} character" : "{0} characters", num(n)), d: tr(a.h), tip }) });
     }
     // Biggest achievements first, then the most unlocked (the sort keeps the list order among equals).
     claimed.sort((a, b) => b.pts - a.pts || b.n - a.n);
@@ -4021,7 +4023,8 @@
 
   // WoW-style tooltip for HTML bars and the heatmap
   const tip = $("tip");
-  document.addEventListener("pointermove", e => {
+  // pointerdown too, so a tap opens it on touch screens
+  const showTip = e => {
     const el = e.target.closest("[data-tip]");
     if (!el) { if (!tip.dataset.chart) tip.hidden = true; return; }
     delete tip.dataset.chart;
@@ -4034,7 +4037,9 @@
     if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
     if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
     tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
-  });
+  };
+  document.addEventListener("pointermove", showTip);
+  document.addEventListener("pointerdown", showTip);
 
   render();
   loadLedger();
