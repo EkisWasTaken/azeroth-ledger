@@ -510,6 +510,20 @@
   }
   // Lua lists can arrive as objects ({"1": …}) after a round trip through the save file.
   const asArr = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
+  // One character's runs of the same dungeon less than 10 minutes apart are one run: addon 1.7.4 and older split a run
+  // whenever WoW Forever's difficulty id flickered, and after a release and a corpse run.
+  function joinRuns(runs) {
+    const out = [];
+    for (const r of runs.slice().sort((a, b) => a.t - b.t)) {
+      const prev = out[out.length - 1];
+      if (prev && prev.inst === r.inst && r.t - (prev.t + (+prev.dur || 0)) < 600) {
+        Object.assign(prev, { dur: r.t + (+r.dur || 0) - prev.t, bosses: (+prev.bosses || 0) + (+r.bosses || 0), wipes: (+prev.wipes || 0) + (+r.wipes || 0),
+          deaths: (+prev.deaths || 0) + (+r.deaths || 0), lastBoss: r.lastBoss || prev.lastBoss, d: prev.d || r.d, dn: prev.dn || r.dn,
+          with: [...new Set(asArr(prev.with).concat(asArr(r.with)))] });
+      } else out.push({ ...r });
+    }
+    return out;
+  }
   const mergeMaps = (chars, field) => {
     const out = {};
     for (const ch of chars) for (const [k, v] of Object.entries(ch[field] || {})) if (typeof v === "number") out[k] = (out[k] || 0) + v;
@@ -546,7 +560,7 @@
         zones: mergeMaps(owned, "zones"), healers: mergeMaps(owned, "healers"), kills: mergeMaps(owned, "kills"), duels,
         notable: owned.flatMap(ch => (ch.notable || []).filter(Boolean).map(n => ({ ...n, _char: ch.name }))),
         fights: owned.flatMap(ch => asArr(ch.fights).filter(f => f && f.t && f.boss)),
-        runs: owned.flatMap(ch => asArr(ch.runs).filter(r => r && r.t && r.inst)),
+        runs: owned.flatMap(ch => joinRuns(asArr(ch.runs).filter(r => r && r.t && r.inst))),
         bosses: owned.flatMap(ch => Object.values(ch.bosses && typeof ch.bosses === "object" ? ch.bosses : {}).filter(b => b && b.n)),
         peakGold: Math.max(0, ...owned.map(ch => ch.peakGold || 0)),
         bestHit: owned.map(ch => ch.best && ch.best.hit).filter(Boolean).sort((a, b) => b.amt - a.amt)[0],

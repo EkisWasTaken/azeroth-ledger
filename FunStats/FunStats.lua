@@ -544,6 +544,7 @@ local MAX_RUNS = 150
 local RUN_GRACE = 600            -- seconds outside the instance before the run is over
 local GROUP = 0x00000007         -- combat log affiliation: mine, party or raid
 local fight                      -- the boss fight in progress
+local OnEncounterStart, OnEncounterEnd -- defined below; OnZone counts a wipe when leaving mid-fight
 local petOwner = {}              -- pet guid -> owner guid, so pets count for their owner
 
 local function MapPets()
@@ -645,8 +646,10 @@ local function OnZone()
   if inInstance and (kind == "party" or kind == "raid") then
     local name, _, diffID, diffName = GetInstanceInfo()
     if not name then return end
-    if r and r.inst == name and r.d == diffID then
+    -- Same dungeon is the same run: Forever's difficulty id flickers between zone events (0, then 1), which split runs.
+    if r and r.inst == name then
       r.left = nil -- back inside: a ghost run back, or a reload
+      if (r.d or 0) == 0 and diffID ~= 0 then r.d, r.dn = diffID, diffName ~= "" and diffName or nil end
       return
     end
     EndRun()
@@ -658,9 +661,13 @@ local function OnZone()
     C.run = r
     Add("dungeons")
     C.instances[name] = (C.instances[name] or 0) + 1
-  elseif r and not r.left then
-    -- After logging out inside, the run ended when we were last seen there.
-    r.left = math.min(time(), r.last or time())
+  else
+    -- Released and left mid-boss-fight: the game's ENCOUNTER_END never reaches us outside, so that pull was a wipe.
+    if fight then OnEncounterEnd(fight.id, fight.name, fight.d, fight.size, 0) end
+    if r and not r.left then
+      -- After logging out inside, the run ended when we were last seen there.
+      r.left = math.min(time(), r.last or time())
+    end
   end
 end
 
@@ -681,12 +688,14 @@ local function NewestSession()
   return newest
 end
 
-local function OnEncounterStart(id, name, diffID, size)
+function OnEncounterStart(id, name, diffID, size)
   MapPets()
-  fight = { id = id, start = GetTime(), t = time(), dmg = {}, heal = {}, deaths = 0 }
+  local inst, _, _, diffName = GetInstanceInfo()
+  fight = { id = id, name = name, d = diffID, size = size, inst = inst, dn = diffName ~= "" and diffName or nil,
+    start = GetTime(), t = time(), dmg = {}, heal = {}, deaths = 0 }
 end
 
-local function OnEncounterEnd(id, name, diffID, size, success)
+function OnEncounterEnd(id, name, diffID, size, success)
   local f = fight
   fight = nil
   if f and f.id ~= id then f = nil end
@@ -696,8 +705,13 @@ local function OnEncounterEnd(id, name, diffID, size, success)
   if not won and secs and secs < 8 then return end
   local mine = f and math.floor(f.dmg[playerGUID] or 0) or 0
   local myHeal = f and math.floor(f.heal[playerGUID] or 0) or 0
-  local inst, _, _, diffName = GetInstanceInfo()
-  diffName = diffName ~= "" and diffName or nil
+  -- The instance the pull started in: a wipe can be counted after leaving it.
+  local inst, diffName = f and f.inst, f and f.dn
+  if not f then
+    local _, _, _, dn
+    inst, _, _, dn = GetInstanceInfo()
+    diffName = dn ~= "" and dn or nil
+  end
 
   local key = tostring(id) .. ":" .. tostring(diffID or 0)
   local b = C.bosses[key]
