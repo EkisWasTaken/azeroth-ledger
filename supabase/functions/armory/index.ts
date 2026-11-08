@@ -8,7 +8,7 @@
 // of kind 'api', which the website merges in.
 //
 // Secrets (Supabase > Edge Functions > Secrets): BLIZZARD_CLIENT_ID, BLIZZARD_CLIENT_SECRET.
-// Optional: FOREVER_NAMESPACE (e.g. "profile-forever"), once Blizzard publishes WoW Forever's API.
+// Optional: FOREVER_NAMESPACE (e.g. "profile-forever") for WoW Forever; find the right one with ?check=Name-PvP-EU&ns=profile-forever.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY") ?? "";
@@ -20,7 +20,7 @@ const PER_RUN = 150;            // characters looked up per run (up to 3 API cal
 const REFRESH_HOURS = 12;       // look a character up again after this long
 const MISSING_HOURS = 72;       // ...or this long if Blizzard didn't know them
 const MIN_GAP_MINUTES = 20;     // ignore calls that come sooner than this after the last run
-const VERSION = 3;              // saved with each lookup; older rows are looked up again (2 added face renders, 3 full-body renders)
+const VERSION = 4;              // saved with each lookup; older rows are looked up again (2 face renders, 3 full-body renders, 4 appearance)
 const GUILDS_PER_RUN = 40;      // guild crests looked up per run (up to 3 API calls each)
 const GUILD_HOURS = 72;         // look a guild's crest up again after this long
 const JOURNAL_DAYS = 7;         // refresh the dungeon journal (instance art, boss portraits) this often
@@ -69,6 +69,12 @@ function namespaceFor(game: Json | undefined): string | null {
   return null;
 }
 
+// WoW Forever has no named realms: the game calls one "PvP-EU", Blizzard's API wants realm "pvp" in region "eu".
+function realmFor(realm: string, ns: string): { realm: string; region?: string } {
+  const m = ns === FOREVER_NS ? String(realm).match(/^(.+)-(eu|us)$/i) : null;
+  return m ? { realm: m[1], region: m[2].toLowerCase() } : { realm };
+}
+
 const slug = (realm: string) => realm.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, "-");
 
 async function token(): Promise<string> {
@@ -99,6 +105,7 @@ async function lookUp(tok: string, name: string, realm: string, ns: string, regi
     }
   }
   const media: any = await lookUpMedia(tok, name, realm, ns, region);
+  const look = await lookUpLook(tok, name, realm, ns, region);
   return {
     status: 200,
     data: {
@@ -106,7 +113,7 @@ async function lookUp(tok: string, name: string, realm: string, ns: string, regi
       class: CLASS[p.character_class?.id] ?? undefined, race: RACE[p.race?.id] ?? undefined,
       guild: p.guild?.name ?? null, faction: p.faction?.type, ilvl: p.equipped_item_level ?? p.average_item_level,
       lastLogin: p.last_login_timestamp ? Math.floor(p.last_login_timestamp / 1000) : undefined,
-      gear, avatar: media.assets?.avatar, render: renderOf(media.assets), v: VERSION, fetched: Math.floor(Date.now() / 1000),
+      gear, look, avatar: media.assets?.avatar, render: renderOf(media.assets), v: VERSION, fetched: Math.floor(Date.now() / 1000),
     },
   };
 }
@@ -115,7 +122,8 @@ async function lookUp(tok: string, name: string, realm: string, ns: string, regi
 async function lookUpFace(tok: string, name: string, realm: string, ns: string, region: string) {
   const media: any = await lookUpMedia(tok, name, realm, ns, region);
   if (media.status !== 200 || !media.assets?.avatar) return { status: media.status === 200 ? 404 : media.status };
-  return { status: 200, data: { name, realm, region, avatar: media.assets.avatar, render: renderOf(media.assets), faceOnly: true, v: VERSION, fetched: Math.floor(Date.now() / 1000) } };
+  const look = await lookUpLook(tok, name, realm, ns, region);
+  return { status: 200, data: { name, realm, region, avatar: media.assets.avatar, render: renderOf(media.assets), look, faceOnly: true, v: VERSION, fetched: Math.floor(Date.now() / 1000) } };
 }
 
 // Rendered images of a character (face avatar, bust, full body), if Blizzard has them for this game.
@@ -129,6 +137,17 @@ async function lookUpMedia(tok: string, name: string, realm: string, ns: string,
   for (const a of m.assets ?? []) assets[a.key] = a.value;
   for (const k of ["avatar_url", "bust_url", "render_url"]) if (m[k]) assets[k] = m[k];
   return { status: 200, assets };
+}
+
+// Race, gender and look (skin, face, hair...) for the 3D model viewer: customizations as [option id, choice id].
+async function lookUpLook(tok: string, name: string, realm: string, ns: string, region: string) {
+  const url = `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(slug(realm))}/${encodeURIComponent(name.toLowerCase())}/appearance?namespace=${ns}-${region}&locale=en_US`;
+  const res = await fetch(url, { headers: { Authorization: "Bearer " + tok } });
+  if (!res.ok) return undefined;
+  const a = await res.json();
+  if (!a.playable_race?.id) return undefined;
+  const cust = (a.customizations ?? []).map((c: any) => [c.option?.id, c.choice?.id]).filter((c: any[]) => c[0] && c[1]);
+  return { race: a.playable_race.id, gender: a.gender?.type === "FEMALE" ? 1 : 0, cust };
 }
 
 // The full-body render: "main-raw" has a transparent background; older responses only have render_url.
@@ -210,17 +229,21 @@ Deno.serve(async (req) => {
     if (!CLIENT_ID || !CLIENT_SECRET) return Response.json({ error: "Set BLIZZARD_CLIENT_ID and BLIZZARD_CLIENT_SECRET under Edge Functions > Secrets." }, { status: 500 });
 
     // Test mode: ?check=Name-Realm looks one character up and shows what Blizzard returns, including any
-    // rendered images under "media" (nothing is saved).
-    const check = new URL(req.url).searchParams.get("check");
+    // rendered images under "media" and the appearance under "look" (nothing is saved).
+    // &ns=profile-forever tries a namespace of your choice, e.g. to find WoW Forever's.
+    const params = new URL(req.url).searchParams, check = params.get("check");
     if (check && check.includes("-")) {
-      const name = check.slice(0, check.indexOf("-")), realm = check.slice(check.indexOf("-") + 1);
+      const name = check.slice(0, check.indexOf("-")), given = check.slice(check.indexOf("-") + 1);
       const tok = await token();
       const tried: Json[] = [];
-      for (const ns of ["profile-classicann", "profile-classic1x"]) {
-        for (const region of REALM_REGION[realm.toLowerCase()] ? [REALM_REGION[realm.toLowerCase()]] : ["eu", "us"]) {
+      for (const ns of params.get("ns") ? [params.get("ns")!] : ["profile-classicann", "profile-classic1x", ...(FOREVER_NS ? [FOREVER_NS] : [])]) {
+        // A namespace given in the URL is treated like Forever's, so "PvP-EU" becomes realm "pvp" in "eu".
+        const at = params.get("ns") ? (given.match(/^(.+)-(eu|us)$/i) ? { realm: given.replace(/-(eu|us)$/i, ""), region: given.slice(-2).toLowerCase() } : { realm: given }) : realmFor(given, ns);
+        const realm = at.realm;
+        for (const region of at.region ? [at.region] : REALM_REGION[realm.toLowerCase()] ? [REALM_REGION[realm.toLowerCase()]] : ["eu", "us"]) {
           const r: any = await lookUp(tok, name, realm, ns, region);
-          tried.push({ namespace: `${ns}-${region}`, status: r.status, level: r.data?.level, guild: r.data?.guild, gear: r.data ? Object.keys(r.data.gear).length : undefined });
-          if (r.status === 200) return Response.json({ login: "ok", tried, media: await lookUpMedia(tok, name, realm, ns, region) });
+          tried.push({ namespace: `${ns}-${region}`, realm: slug(realm), status: r.status, level: r.data?.level, guild: r.data?.guild, gear: r.data ? Object.keys(r.data.gear).length : undefined });
+          if (r.status === 200) return Response.json({ login: "ok", tried, look: r.data.look ?? null, media: await lookUpMedia(tok, name, realm, ns, region) });
         }
       }
       return Response.json({ login: "ok", tried });
@@ -284,13 +307,15 @@ Deno.serve(async (req) => {
     for (const p of due) {
       const ns = namespaceFor(p.game);
       if (!ns) continue; // e.g. WoW Forever before its API exists
-      const home = REALM_REGION[String(p.realm).toLowerCase()] ?? done.get(p.key)?.region;
+      const at = realmFor(p.realm, ns);
+      const home = at.region ?? REALM_REGION[String(at.realm).toLowerCase()] ?? done.get(p.key)?.region;
       let result: any = null;
       for (const region of home ? [home] : ["eu", "us"]) {
-        result = await (p.own ? lookUpFace : lookUp)(tok, p.name, p.realm, ns, region);
+        result = await (p.own ? lookUpFace : lookUp)(tok, p.name, at.realm, ns, region);
         if (result.status === 200) break;
       }
-      const data = result?.status === 200 ? result.data : { name: p.name, realm: p.realm, missing: true, fetched: Math.floor(now) };
+      // Saved under the realm the game uses, so the site matches it to the character.
+      const data = result?.status === 200 ? { ...result.data, realm: p.realm } : { name: p.name, realm: p.realm, missing: true, fetched: Math.floor(now) };
       if (result?.status === 200) found++; else missing++;
       out.push({ id: "a:" + p.key, kind: "api", char_key: p.key, data, updated_at: new Date().toISOString() });
     }

@@ -475,6 +475,7 @@
       if (!ch) continue;
       if (a.avatar) ch.avatar = a.avatar; // Blizzard's face render, addon users included
       if (a.render) ch.render = a.render; // and the full-body one
+      if (a.look && a.look.race) ch.look = a.look; // race, gender and customizations for the 3D model
       if (ch.self || a.faceOnly) continue;
       if (a.gear && Object.keys(a.gear).length && !(ch.gear && Object.keys(ch.gear).length)) { ch.gear = a.gear; ch.armory = true; ch.ilvl = a.ilvl; }
       ch.class ||= a.class;
@@ -2832,6 +2833,40 @@
     return `<div class="slot" style="--qc:${qc}"><span class="ic">${slotName.slice(0, 2)}</span><span class="it">${name}<small>${slotName}${it.il ? " · " + tr("item level {0}", esc(it.il)) : ""}</small></span></div>`;
   }
 
+  // ---------- 3D model: Wowhead's viewer, its files through our worker (proxy/modelviewer-worker.js) ----------
+  const MV = String((window.LEDGER_CONFIG || {}).modelViewer || "").replace(/\/$/, "");
+  let modelEl = null, viewerReady = null;
+  const loadScript = src => new Promise((ok, fail) => document.head.append(Object.assign(document.createElement("script"), { src, onload: ok, onerror: fail })));
+  // The viewer expects jQuery and a few of Wowhead's own globals.
+  const loadViewer = env => viewerReady ||= (async () => {
+    if (!window.jQuery) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js");
+    const WH = (window.WH ||= {});
+    WH.debug ||= () => {}; WH.defaultAnimation ||= "Stand"; WH.WebP ||= { getImageExtension: () => ".webp" };
+    await loadScript(`${MV}/modelviewer/${env}/viewer/viewer.min.js`);
+  })();
+  // Gear as [slot, display id], looked up on Wowhead by the worker; neck, rings and trinkets have no model.
+  const displays = {};
+  const modelItems = (ch, wh) => Promise.all(Object.entries(ch.gear || {})
+    .filter(([k, g]) => g && +g.id && ![2, 11, 12, 13, 14].includes(+k.slice(1)))
+    .map(([, g]) => displays[wh + g.id] ||= fetch(`${MV}/display/${wh}/${+g.id}`).then(r => r.ok ? r.json() : {}).catch(() => ({}))))
+    .then(list => list.filter(d => d.display).map(d => [d.slot, d.display]));
+  async function showModel(el, ch) {
+    const wh = { forever: "forever", tbc: "tbc", classic: "classic" }[whDomain()] || "live";
+    const env = wh === "forever" || wh === "live" ? "live" : "classic"; // Forever runs the modern client's models
+    const [items] = await Promise.all([modelItems(ch, wh), loadViewer(env)]);
+    // The viewer styles the element it's given, so it gets an inner one; .pmodel keeps the position on the page.
+    const box = el.appendChild(document.createElement("div"));
+    const viewer = new window.ZamModelViewer({
+      type: 2, contentPath: `${MV}/modelviewer/${env}/`, container: window.jQuery(box), aspect: el.clientWidth / el.clientHeight, hd: false, items,
+      models: { id: ch.look.race * 2 - 1 + ch.look.gender, type: 16 }, // Wowhead's character models: two per race, male then female
+      charCustomization: { options: (ch.look.cust || []).map(([optionId, choiceId]) => ({ optionId, choiceId })) },
+    });
+    // Once the viewer is drawing, back the camera off so the whole body fits the short hero box.
+    const fit = (tries = 0) => viewer.renderer ? (viewer.renderer.zoom.target = -1) : tries < 300 && requestAnimationFrame(() => fit(tries + 1));
+    fit();
+    el.addEventListener("wheel", e => e.stopPropagation(), { capture: true }); // the wheel scrolls the page, not the zoom
+  }
+
   // Blizzard's face render, pixelated to match the site (drawn by drawFaces); the class icon when there is none.
   function portraitHTML(ch) {
     const lvl = `<b class="lvl">${esc(ch.level || "?")}</b>`;
@@ -2965,7 +3000,8 @@
     $("pHero").style.setProperty("--c", p.color);
     $("profile").classList.toggle("fallen", !!p.fallen);
     const render = main && blizzImg(main.render);
-    $("pHero").classList.toggle("has-render", !!render);
+    const model = MV && main && main.look ? main : null;
+    $("pHero").classList.toggle("has-render", !!render && !model);
     $("pHero").style.setProperty("--render", render ? `url('${render}')` : "none");
     // "Same player" uses the addon's public account id; it never links accounts the addon didn't see.
     const otherChars = (state.allChars || []).filter(c => main && main.owner && !String(main.owner).startsWith("char:") && c.owner === main.owner && c.key !== main.key);
@@ -2983,6 +3019,19 @@
         ${state.hc ? `<div${p.fallen ? ` class="dead"` : ""}><b>${tr(p.fallen ? "Fallen" : "Alive")}</b><span>${tr("Hardcore")}</span></div>` : `<div><b>${num(p.deaths.length || s.deaths)}</b><span>${tr("deaths")}</span></div>`}
       </div>
       ${otherChars.length ? `<div style="display:grid;gap:6px"><span class="eyebrow">${tr("Other characters by this player")}</span><div class="chips">${otherChars.map(c => `<a class="chip" href="${charHref(c.key)}">${classIcon(c)}${esc(c.name)} <span class="muted">${tr("Lvl {0}", esc(c.level || "?"))} · ${esc(c.realm || "")}</span></a>`).join("")}</div></div>` : ""}`;
+    if (model) {
+      // The same viewer is kept across re-renders of the same character; a new one only for another character.
+      if (!modelEl || modelEl.dataset.key !== model.key) {
+        modelEl = Object.assign(document.createElement("div"), { className: "pmodel" });
+        modelEl.dataset.key = model.key;
+        showModel(modelEl, model).catch(e => {
+          console.warn("3D model unavailable", e);
+          modelEl.remove(); modelEl = null;
+          $("pHero").classList.toggle("has-render", !!render);
+        });
+      }
+      $("pHero").append(modelEl);
+    }
     renderCompare(p, people);
 
     $("pSig").innerHTML = sig.slice(0, 6).map(x => `<div class="frame sigc" style="--c:${p.color}">
@@ -3164,7 +3213,7 @@
   // One-line card texts that are a little too long shrink to fit (down to 10.5px) instead of being cut off;
   // whatever still doesn't fit keeps its ellipsis and shows the full text on hover.
   // Hall of Fame card texts and badges wrap instead; only the lines with a character's name shrink, so a name stays whole on one line.
-  const FIT = ".tile .foot, .glead .lbl, .sigc .cmp, .sec-head p, .rec .w, .rec .podium .nm";
+  const FIT = ".tile .foot, .glead .lbl, .sigc .cmp, .sec-head p, .rec .w, .rec .podium .nm, #pName";
   function fitText() {
     // Deed tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
     // still spans the full width, on a grid of lcm(cols, last) columns.
@@ -3377,6 +3426,8 @@
     const pages = max > 2 ? Math.ceil(max / step - .05) + 1 : 1;
     const at = list.scrollLeft >= max - 2 ? pages - 1 : Math.min(pages - 1, Math.round(list.scrollLeft / step));
     dots.hidden = pages < 2;
+    const count = dots.previousElementSibling;
+    if (count && count.classList.contains("car-count")) { count.hidden = pages < 2; count.textContent = `${at + 1} / ${pages}`; }
     if (dots.children.length !== (pages < 2 ? 0 : pages))
       dots.innerHTML = pages < 2 ? "" : [...Array(pages)].map((_, i) => `<button type="button" data-page="${i}" aria-label="${i + 1} / ${pages}"></button>`).join("");
     [...dots.children].forEach((b, i) => b.setAttribute("aria-current", String(i === at)));
@@ -3387,6 +3438,7 @@
   const carUpdateAll = () => document.querySelectorAll(".car-dots[data-for]").forEach(carUpdate);
   document.querySelectorAll(".car-dots[data-for]").forEach(dots => {
     const list = $(dots.dataset.for), car = list.parentElement;
+    dots.insertAdjacentHTML("beforebegin", `<span class="car-count" hidden></span>`); // "2 / 5" beside the dots
     car.insertAdjacentHTML("beforeend", `<button type="button" class="car-arrow prev" data-car="-1" aria-label="Previous page">‹</button><button type="button" class="car-arrow next" data-car="1" aria-label="Next page">›</button>`);
     car.addEventListener("click", e => {
       const b = e.target.closest(".car-arrow");

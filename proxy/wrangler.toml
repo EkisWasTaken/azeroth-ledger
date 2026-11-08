@@ -1,0 +1,4 @@
+# Deploys the 3D model proxy: `npx wrangler deploy` in this folder.
+name = "ledger-models"
+main = "modelviewer-worker.js"
+compatibility_date = "2026-10-01"

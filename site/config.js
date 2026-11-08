@@ -28,4 +28,7 @@ window.LEDGER_CONFIG = {
     { version: "12.", name: "Retail" },
   ],
   defaultGame: "WoW Forever",
+  // The Cloudflare Worker that serves Wowhead's 3D model viewer (proxy/modelviewer-worker.js), e.g. "https://ledger-models.you.workers.dev".
+  // Empty: character pages show Blizzard's 2D render instead.
+  modelViewer: "https://ledger-models.eliaspown.workers.dev",
 };

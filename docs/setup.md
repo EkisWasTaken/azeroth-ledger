@@ -77,7 +77,15 @@ Besides characters, the function looks up each guild's crest (the in-game tabard
 
 Which API it asks depends on the client version the addon recorded: 1.x uses Classic Era (`profile-classic1x`), 2.x uses TBC Anniversary (`profile-classicann`). Blizzard's realm lists confirm it: Thunderstrike, Spineshatter, Dreamscythe and Nightslayer are TBC Anniversary realms, while the hardcore realm Soulseeker is listed under Classic Era. Blizzard only has profiles for characters from about level 10.
 
-To test one character without saving anything, open `https://nznnybzrqplsqyhotlnd.supabase.co/functions/v1/armory?check=Name-Realm`. Blizzard hasn't published an API for WoW Forever yet. Once they do, set the secret `FOREVER_NAMESPACE` to its profile namespace. Known realms have their region set in the function; other realms are tried in EU, then US.
+To test one character without saving anything, open `https://nznnybzrqplsqyhotlnd.supabase.co/functions/v1/armory?check=Name-Realm`. The answer includes the character's appearance (`look`), which the 3D model needs. For WoW Forever, try a namespace with `&ns=`, e.g. `?check=Marrolock Fear-PvP-EU&ns=profile-forever`: realms like "PvP-EU" are asked for as realm `pvp` in region `eu`. When one answers 200, set the secret `FOREVER_NAMESPACE` to it. Known realms have their region set in the function; other realms are tried in EU, then US.
+
+### 4. 3D character models (optional)
+Character pages can show a 3D model you can turn with the mouse, using Wowhead's model viewer. Wowhead's file server refuses requests from other sites, so a small Cloudflare Worker passes the files through and caches them for a month.
+1. At [dash.cloudflare.com](https://dash.cloudflare.com) (free account), open **Workers & Pages → Create → Worker**, paste `proxy/modelviewer-worker.js`, add the site's own address to `ALLOWED_ORIGINS` at the top, and deploy.
+2. Put the worker's address in `site/config.js` as `modelViewer`.
+3. The armory function fills in each character's appearance on its next lookup (rows from before are looked up again automatically).
+
+Characters without an appearance, or any page while `modelViewer` is empty, show Blizzard's 2D render as before. Wowhead blocks other sites on purpose, so this goes against their wishes and can stop working if they change things. Some WoW Forever items have no model on Wowhead and don't show.
 
 ## For players
 
