@@ -252,7 +252,7 @@
     "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
     "Click a zone to open its map. Scroll to zoom, drag to move, right-click or scroll out to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka eller scrolla ut för att gå tillbaka.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
-    "Die 50 times": "Dö 50 gånger", "Deal 1,000,000 damage": "Gör 1 000 000 damage", "Heal 1,000,000": "Heala 1 000 000", "Land 1,000 killing blows": "Ta 1 000 killing blows", "Land a single hit of 1,000 or more": "Gör en träff på 1 000 eller mer", "Crit on 20% of your hits (100+ hits)": "Gör crit på 20 % av dina träffar (100+ träffar)", "Deal 50,000 damage past a kill": "Gör 50 000 damage efter att målet dött", "Fall to your death 5 times": "Fall ihjäl 5 gånger", "Spend an hour dead": "Var död i en timme", "Take 1,000,000 damage": "Ta 1 000 000 damage", "Dodge, parry or block 1,000 attacks": "Dodga, parrya eller blocka 1 000 attacker", "Get 250,000 healing from friends": "Få 250 000 healing från vänner", "Turn in 250 quests": "Lämna in 250 quests", "Jump 5,000 times": "Hoppa 5 000 gånger", "Travel 500,000 yards on foot": "Gå 500 000 yards", "Loot 1,000 gold": "Loota 1 000 guld", "Pay 100 gold for repairs": "Betala 100 guld för reparationer", "Say sorry 25 times in chat": "Säg förlåt 25 gånger i chatten", "Send 1,000 chat messages": "Skicka 1 000 chattmeddelanden", "Loot 50 rare or better items": "Loota 50 rare eller bättre", "Loot 1,000 grey items": "Loota 1 000 gråa saker", "Average 60 or more on /roll (10+ rolls)": "Ha 60 eller mer i snitt på /roll (10+ rolls)", "Win 25 duels": "Vinn 25 dueller", "Run 25 dungeons": "Kör 25 dungeons", "Spend 3 hours on flight paths": "Flyg 3 timmar med flight paths", "Spend 5 hours AFK": "Var AFK i 5 timmar", "Kill 50 bosses": "Döda 50 bossar", "Kill 100 enemy players": "Döda 100 fiendespelare", "Cast 10,000 spells": "Kasta 10 000 spells", "Spend a full day in combat": "Var i strid ett helt dygn", "Roll a perfect 100": "Slå 100", "Roll a 1": "Slå 1", "Use your Hearthstone 100 times": "Använd Hearthstone 100 gånger", "Swim for an hour": "Simma i en timme", "Use 250 emotes": "Använd 250 emotes", "Spend 500 gold": "Spendera 500 guld", "Overheal 250,000": "Överheala 250 000", "Be in 10 boss wipes": "Var med i 10 boss-wipes", "Miss 1,000 attacks": "Missa 1 000 attacker", "Lose 10 duels": "Förlora 10 dueller", "Drown": "Drunkna", "Play 10 hours without dying": "Spela 10 timmar utan att dö",
+    "Die {0} times": "Dö {0} gånger", "Play {0} without dying": "Spela {0} utan att dö", "Deal {0} damage": "Gör {0} damage", "Heal {0}": "Heala {0}", "Land {0} killing blows": "Ta {0} killing blows", "Land a single hit of {0} or more": "Gör en träff på {0} eller mer", "Crit on {0} of your hits (100+ hits)": "Gör crit på {0} av dina träffar (100+ träffar)", "Deal {0} damage past a kill": "Gör {0} damage efter att målet dött", "Fall to your death {0} times": "Fall ihjäl {0} gånger", "Spend {0} dead": "Var död i {0}", "Take {0} damage": "Ta {0} damage", "Dodge, parry or block {0} attacks": "Dodga, parrya eller blocka {0} attacker", "Get {0} healing from friends": "Få {0} healing från vänner", "Turn in {0} quests": "Lämna in {0} quests", "Jump {0} times": "Hoppa {0} gånger", "Travel {0} yards on foot": "Gå {0} yards", "Loot {0} gold": "Loota {0} guld", "Pay {0} gold for repairs": "Betala {0} guld för reparationer", "Say sorry {0} times in chat": "Säg förlåt {0} gånger i chatten", "Send {0} chat messages": "Skicka {0} chattmeddelanden", "Loot {0} rare or better items": "Loota {0} rare eller bättre", "Loot {0} grey items": "Loota {0} gråa saker", "Average {0} or more on /roll (10+ rolls)": "Ha {0} eller mer i snitt på /roll (10+ rolls)", "Win {0} duels": "Vinn {0} dueller", "Run {0} dungeons": "Kör {0} dungeons", "Spend {0} on flight paths": "Flyg {0} med flight paths", "Spend {0} AFK": "Var AFK i {0}", "Kill {0} bosses": "Döda {0} bossar", "Kill {0} enemy players": "Döda {0} fiendespelare", "Cast {0} spells": "Kasta {0} spells", "Spend {0} in combat": "Var i strid i {0}", "Roll a perfect 100 {0} times": "Slå 100 {0} gånger", "Roll a 1 {0} times": "Slå 1 {0} gånger", "Use your Hearthstone {0} times": "Använd Hearthstone {0} gånger", "Swim for {0}": "Simma i {0}", "Use {0} emotes": "Använd {0} emotes", "Spend {0} gold": "Spendera {0} guld", "Overheal {0}": "Överheala {0}", "Be in {0} boss wipes": "Var med i {0} boss-wipes", "Miss {0} attacks": "Missa {0} attacker", "Lose {0} duels": "Förlora {0} dueller", "Drown {0} times": "Drunkna {0} gånger", "Diamond": "Diamant",
     "{0} of {1}": "{0} av {1}", "+{0} more": "+{0} till",
     "Achievements": "Achievements", "Meters": "Mätare", "Race to 60": "Racet till 60", "Combat": "Strid", "Loot": "Loot",
     "Treasury": "Skattkammaren", "Atlas": "Atlas", "Spellbook": "Spellbook", "Bonds": "Band", "Full Ledger": "Hela liggaren",
@@ -1729,77 +1729,88 @@
   }
 
   const ACH = [
-    { t: "Spirit Healer's Regular", h: "Die 50 times", i: "skull", pts: 10, k: s => s.deaths, g: 50, v: s => tr("Died {0} times", num(s.deaths)), shame: true },
-    { t: "Unkillable", h: "Play 10 hours without dying", i: "paladin", pts: 50, k: s => s.deaths ? 0 : s.played, g: 36000, v: s => tr("{0} in {1}", tr("Didn't die once"), dur(s.played)) },
-    { t: "Big Pumper", h: "Deal 1,000,000 damage", i: "sword", pts: 50, k: s => s.dmg, g: 1000000, v: s => tr("Dealt {0} damage", num(s.dmg)) },
-    { t: "Lifebinder", h: "Heal 1,000,000", i: "heart", pts: 50, k: s => s.heal, g: 1000000, v: s => tr("Healed {0}", num(s.heal)) },
-    { t: "Executioner", h: "Land 1,000 killing blows", i: "axe", pts: 25, k: s => s.kb, g: 1000, v: s => tr("{0} killing blows", num(s.kb)) },
-    { t: "One-Hit Wonder", h: "Land a single hit of 1,000 or more", i: "sulfuras", pts: 25, k: s => s.maxHit, g: 1000, v: s => tr("Hit for {0} with {1}", num(s.maxHit), esc(s.maxHitSpell || tr("something"))) }, // the target is on the Hardest hit card
-    { t: "Critical Mass", h: "Crit on 20% of your hits (100+ hits)", i: "crit", pts: 25, k: s => s.hits >= 100 ? s.critRate : 0, g: 0.2, v: s => tr("{0} of hits were crits", pct(s.critRate)) },
-    { t: "Overkill", h: "Deal 50,000 damage past a kill", i: "tomb", pts: 10, k: s => s.overkill, g: 50000, v: s => tr("{0} damage past dead", num(s.overkill)) },
-    { t: "Gravity's Favorite", h: "Fall to your death 5 times", i: "feather", pts: 10, k: s => s.deaths_fall, g: 5, v: s => s.deaths_fall ? tr("{0} deaths from falling", num(s.deaths_fall)) : tr("Took {0} fall damage", num(s.fallDmg)), shame: true },
-    { t: "Professional Ghost", h: "Spend an hour dead", i: "ghost", pts: 10, k: s => s.ghost, g: 3600, v: s => tr("Spent {0} dead", dur(s.ghost)), shame: true },
-    { t: "Meat Shield", h: "Take 1,000,000 damage", i: "meat", pts: 25, k: s => s.taken, g: 1000000, v: s => tr("Took {0} damage", num(s.taken)) },
-    { t: "Untouchable", h: "Dodge, parry or block 1,000 attacks", i: "rogue", pts: 25, k: s => (s.dodges || 0) + (s.parries || 0) + (s.blocks || 0), g: 1000, v: s => tr("Dodged, parried or blocked {0} attacks", num((s.dodges || 0) + (s.parries || 0) + (s.blocks || 0))) },
-    { t: "Life Support", h: "Get 250,000 healing from friends", i: "bandage", pts: 10, k: s => s.healedBy, g: 250000, v: s => tr("Needed {0} healing from friends", num(s.healedBy)), shame: true },
-    { t: "Loremaster", h: "Turn in 250 quests", i: "scroll", pts: 25, k: s => s.quests, g: 250, v: s => tr("{0} quests turned in", num(s.quests)) },
-    { t: "Bunny Hopper", h: "Jump 5,000 times", i: "bunny", pts: 10, k: s => s.jumps, g: 5000, v: s => tr("{0} jumps", num(s.jumps)) },
-    { t: "Explorer", h: "Travel 500,000 yards on foot", i: "map", pts: 25, k: s => s.dist, g: 500000, v: s => tr("{0} yards on foot", num(s.dist)) },
-    { t: "Goblin Tycoon", h: "Loot 1,000 gold", i: "coin", pts: 25, k: s => s.goldIn, g: 10000000, v: s => tr("Looted {0}", goldHTML(s.goldIn)) },
-    { t: "Repair Bill", h: "Pay 100 gold for repairs", i: "anvil", pts: 10, k: s => s.repair, g: 1000000, v: s => tr("Paid {0} in repairs", goldHTML(s.repair)), shame: true },
-    { t: "Apology Tour", h: "Say sorry 25 times in chat", i: "flag", pts: 10, k: s => s.sorry, g: 25, v: s => tr("Said sorry {0} times", num(s.sorry)), shame: true },
-    { t: "Chatterbox", h: "Send 1,000 chat messages", i: "speech", pts: 10, k: s => s.msgs, g: 1000, v: s => tr("{0} chat messages", num(s.msgs)) },
-    { t: "Loot Goblin", h: "Loot 50 rare or better items", i: "lotus", pts: 25, k: s => s.loot, g: 50, v: s => tr("{0} rare or better drops", num(s.loot)) },
-    { t: "Vendor Trash Collector", h: "Loot 1,000 grey items", i: "loot", pts: 10, k: s => s.q0, g: 1000, v: s => tr("{0} grey items looted", num(s.q0)) },
-    { t: "Lucky Roller", h: "Average 60 or more on /roll (10+ rolls)", i: "dice", pts: 10, k: s => s.rolls >= 10 ? s.avgRoll : 0, g: 60, v: s => tr("Averaged {0} over {1} rolls", dec(s.avgRoll, 1), s.rolls) },
-    { t: "Duelist", h: "Win 25 duels", i: "warrior", pts: 25, k: s => s.duelsWon, g: 25, v: s => tr("Won {0} duels", num(s.duelsWon)) },
-    { t: "Dungeon Crawler", h: "Run 25 dungeons", i: "gate", pts: 25, k: s => s.dungeons, g: 25, v: s => tr("{0} dungeon runs", num(s.dungeons)) },
-    { t: "Frequent Flyer", h: "Spend 3 hours on flight paths", i: "wing", pts: 10, k: s => s.taxi, g: 10800, v: s => tr("{0} on flight paths", dur(s.taxi)) },
-    { t: "Professional AFK", h: "Spend 5 hours AFK", i: "zzz", pts: 10, k: s => s.afk, g: 18000, v: s => tr("{0} away from keyboard", dur(s.afk)), shame: true },
-    { t: "Boss Slayer", h: "Kill 50 bosses", i: "onyxia", pts: 50, k: s => s.bossKills, g: 50, v: s => tr("{0} boss kills", num(s.bossKills)) },
-    { t: "Gankmaster", h: "Kill 100 enemy players", i: "crest", pts: 50, k: s => s.hk, g: 100, v: s => tr("Killed {0} players", num(s.hk)) },
-    { t: "Spell Slinger", h: "Cast 10,000 spells", i: "mage", pts: 25, k: s => s.casts, g: 10000, v: s => tr("Cast {0} spells", num(s.casts)) },
-    { t: "Battle Hardened", h: "Spend a full day in combat", i: "shield", pts: 25, k: s => s.combat, g: 86400, v: s => tr("{0} in combat", dur(s.combat)) },
-    { t: "Natural 100", h: "Roll a perfect 100", i: "atiesh", pts: 25, k: s => s.roll100, g: 1, v: s => tr("Rolled 100 {0} times", num(s.roll100)) },
-    { t: "Snake Eyes", h: "Roll a 1", i: "dice", pts: 10, k: s => s.roll1, g: 1, v: s => tr("Rolled a 1 {0} times", num(s.roll1)), shame: true },
-    { t: "Hearth Hugger", h: "Use your Hearthstone 100 times", i: "hearth", pts: 10, k: s => s.hearth, g: 100, v: s => tr("Hearthed {0} times", num(s.hearth)) },
-    { t: "Fish Out of Water", h: "Swim for an hour", i: "spring", pts: 10, k: s => s.swim, g: 3600, v: s => tr("Swam for {0}", dur(s.swim)) },
-    { t: "Drama Queen", h: "Use 250 emotes", i: "speech", pts: 10, k: s => s.emotes, g: 250, v: s => tr("{0} emotes", num(s.emotes)) },
-    { t: "Big Spender", h: "Spend 500 gold", i: "coin", pts: 10, k: s => s.goldOut, g: 5000000, v: s => tr("Spent {0}", goldHTML(s.goldOut)) },
-    { t: "Overhealer", h: "Overheal 250,000", i: "heart", pts: 10, k: s => s.overheal, g: 250000, v: s => tr("{0} healing wasted", num(s.overheal)), shame: true },
-    { t: "Wipe Lord", h: "Be in 10 boss wipes", i: "shieldBad", pts: 10, k: s => s.wipes, g: 10, v: s => tr("Wiped {0} times", num(s.wipes)), shame: true },
-    { t: "Swing and a Miss", h: "Miss 1,000 attacks", i: "boot", pts: 10, k: s => s.whiffs, g: 1000, v: s => tr("Missed {0} times", num(s.whiffs)), shame: true },
-    { t: "Sore Loser", h: "Lose 10 duels", i: "flag", pts: 10, k: s => s.duelsLost, g: 10, v: s => tr("Lost {0} duels", num(s.duelsLost)), shame: true },
-    { t: "Glug Glug", h: "Drown", i: "tomb", pts: 10, k: s => s.deaths_drown, g: 1, v: s => tr("Drowned {0} times", num(s.deaths_drown)), shame: true },
+    { t: "Spirit Healer's Regular", h: "Die {0} times", i: "skull", k: s => s.deaths, g: [10, 25, 50, 100], v: s => tr("Died {0} times", num(s.deaths)), shame: true },
+    { t: "Unkillable", h: "Play {0} without dying", i: "paladin", k: s => s.deaths ? 0 : s.played, g: [3600, 18000, 36000, 180000], f: "t", v: s => tr("{0} in {1}", tr("Didn't die once"), dur(s.played)) },
+    { t: "Big Pumper", h: "Deal {0} damage", i: "sword", k: s => s.dmg, g: [100000, 500000, 1000000, 5000000], v: s => tr("Dealt {0} damage", num(s.dmg)) },
+    { t: "Lifebinder", h: "Heal {0}", i: "heart", k: s => s.heal, g: [100000, 500000, 1000000, 5000000], v: s => tr("Healed {0}", num(s.heal)) },
+    { t: "Executioner", h: "Land {0} killing blows", i: "axe", k: s => s.kb, g: [100, 500, 1000, 5000], v: s => tr("{0} killing blows", num(s.kb)) },
+    { t: "One-Hit Wonder", h: "Land a single hit of {0} or more", i: "sulfuras", k: s => s.maxHit, g: [250, 500, 1000, 2000], v: s => tr("Hit for {0} with {1}", num(s.maxHit), esc(s.maxHitSpell || tr("something"))) }, // the target is on the Hardest hit card
+    { t: "Critical Mass", h: "Crit on {0} of your hits (100+ hits)", i: "crit", k: s => s.hits >= 100 ? s.critRate : 0, g: [0.1, 0.15, 0.2, 0.3], f: "p", v: s => tr("{0} of hits were crits", pct(s.critRate)) },
+    { t: "Overkill", h: "Deal {0} damage past a kill", i: "tomb", k: s => s.overkill, g: [5000, 20000, 50000, 200000], v: s => tr("{0} damage past dead", num(s.overkill)) },
+    { t: "Gravity's Favorite", h: "Fall to your death {0} times", i: "feather", k: s => s.deaths_fall, g: [2, 5, 10, 25], v: s => s.deaths_fall ? tr("{0} deaths from falling", num(s.deaths_fall)) : tr("Took {0} fall damage", num(s.fallDmg)), shame: true },
+    { t: "Professional Ghost", h: "Spend {0} dead", i: "ghost", k: s => s.ghost, g: [600, 1800, 3600, 14400], f: "t", v: s => tr("Spent {0} dead", dur(s.ghost)), shame: true },
+    { t: "Meat Shield", h: "Take {0} damage", i: "meat", k: s => s.taken, g: [100000, 500000, 1000000, 5000000], v: s => tr("Took {0} damage", num(s.taken)) },
+    { t: "Untouchable", h: "Dodge, parry or block {0} attacks", i: "rogue", k: s => (s.dodges || 0) + (s.parries || 0) + (s.blocks || 0), g: [100, 500, 1000, 5000], v: s => tr("Dodged, parried or blocked {0} attacks", num((s.dodges || 0) + (s.parries || 0) + (s.blocks || 0))) },
+    { t: "Life Support", h: "Get {0} healing from friends", i: "bandage", k: s => s.healedBy, g: [25000, 100000, 250000, 1000000], v: s => tr("Needed {0} healing from friends", num(s.healedBy)), shame: true },
+    { t: "Loremaster", h: "Turn in {0} quests", i: "scroll", k: s => s.quests, g: [50, 100, 250, 500], v: s => tr("{0} quests turned in", num(s.quests)) },
+    { t: "Bunny Hopper", h: "Jump {0} times", i: "bunny", k: s => s.jumps, g: [500, 2000, 5000, 20000], v: s => tr("{0} jumps", num(s.jumps)) },
+    { t: "Explorer", h: "Travel {0} yards on foot", i: "map", k: s => s.dist, g: [50000, 200000, 500000, 2000000], v: s => tr("{0} yards on foot", num(s.dist)) },
+    { t: "Goblin Tycoon", h: "Loot {0} gold", i: "coin", k: s => s.goldIn, g: [1000000, 5000000, 10000000, 50000000], f: "g", v: s => tr("Looted {0}", goldHTML(s.goldIn)) },
+    { t: "Repair Bill", h: "Pay {0} gold for repairs", i: "anvil", k: s => s.repair, g: [100000, 500000, 1000000, 5000000], f: "g", v: s => tr("Paid {0} in repairs", goldHTML(s.repair)), shame: true },
+    { t: "Apology Tour", h: "Say sorry {0} times in chat", i: "flag", k: s => s.sorry, g: [5, 10, 25, 100], v: s => tr("Said sorry {0} times", num(s.sorry)), shame: true },
+    { t: "Chatterbox", h: "Send {0} chat messages", i: "speech", k: s => s.msgs, g: [100, 500, 1000, 5000], v: s => tr("{0} chat messages", num(s.msgs)) },
+    { t: "Loot Goblin", h: "Loot {0} rare or better items", i: "lotus", k: s => s.loot, g: [5, 20, 50, 200], v: s => tr("{0} rare or better drops", num(s.loot)) },
+    { t: "Vendor Trash Collector", h: "Loot {0} grey items", i: "loot", k: s => s.q0, g: [100, 500, 1000, 5000], v: s => tr("{0} grey items looted", num(s.q0)) },
+    { t: "Lucky Roller", h: "Average {0} or more on /roll (10+ rolls)", i: "dice", k: s => s.rolls >= 10 ? s.avgRoll : 0, g: [50, 55, 60, 70], f: "d", v: s => tr("Averaged {0} over {1} rolls", dec(s.avgRoll, 1), s.rolls) },
+    { t: "Duelist", h: "Win {0} duels", i: "warrior", k: s => s.duelsWon, g: [5, 10, 25, 100], v: s => tr("Won {0} duels", num(s.duelsWon)) },
+    { t: "Dungeon Crawler", h: "Run {0} dungeons", i: "gate", k: s => s.dungeons, g: [5, 10, 25, 100], v: s => tr("{0} dungeon runs", num(s.dungeons)) },
+    { t: "Frequent Flyer", h: "Spend {0} on flight paths", i: "wing", k: s => s.taxi, g: [1800, 3600, 10800, 36000], f: "t", v: s => tr("{0} on flight paths", dur(s.taxi)) },
+    { t: "Professional AFK", h: "Spend {0} AFK", i: "zzz", k: s => s.afk, g: [1800, 7200, 18000, 72000], f: "t", v: s => tr("{0} away from keyboard", dur(s.afk)), shame: true },
+    { t: "Boss Slayer", h: "Kill {0} bosses", i: "onyxia", k: s => s.bossKills, g: [5, 20, 50, 200], v: s => tr("{0} boss kills", num(s.bossKills)) },
+    { t: "Gankmaster", h: "Kill {0} enemy players", i: "crest", k: s => s.hk, g: [10, 50, 100, 500], v: s => tr("Killed {0} players", num(s.hk)) },
+    { t: "Spell Slinger", h: "Cast {0} spells", i: "mage", k: s => s.casts, g: [1000, 5000, 10000, 50000], v: s => tr("Cast {0} spells", num(s.casts)) },
+    { t: "Battle Hardened", h: "Spend {0} in combat", i: "shield", k: s => s.combat, g: [10800, 36000, 86400, 360000], f: "t", v: s => tr("{0} in combat", dur(s.combat)) },
+    { t: "Natural 100", h: "Roll a perfect 100 {0} times", i: "atiesh", k: s => s.roll100, g: [2, 5, 10, 25], v: s => tr("Rolled 100 {0} times", num(s.roll100)) },
+    { t: "Snake Eyes", h: "Roll a 1 {0} times", i: "dice", k: s => s.roll1, g: [2, 5, 10, 25], v: s => tr("Rolled a 1 {0} times", num(s.roll1)), shame: true },
+    { t: "Hearth Hugger", h: "Use your Hearthstone {0} times", i: "hearth", k: s => s.hearth, g: [10, 50, 100, 500], v: s => tr("Hearthed {0} times", num(s.hearth)) },
+    { t: "Fish Out of Water", h: "Swim for {0}", i: "spring", k: s => s.swim, g: [600, 1800, 3600, 14400], f: "t", v: s => tr("Swam for {0}", dur(s.swim)) },
+    { t: "Drama Queen", h: "Use {0} emotes", i: "speech", k: s => s.emotes, g: [25, 100, 250, 1000], v: s => tr("{0} emotes", num(s.emotes)) },
+    { t: "Big Spender", h: "Spend {0} gold", i: "coin", k: s => s.goldOut, g: [500000, 2000000, 5000000, 20000000], f: "g", v: s => tr("Spent {0}", goldHTML(s.goldOut)) },
+    { t: "Overhealer", h: "Overheal {0}", i: "heart", k: s => s.overheal, g: [25000, 100000, 250000, 1000000], v: s => tr("{0} healing wasted", num(s.overheal)), shame: true },
+    { t: "Wipe Lord", h: "Be in {0} boss wipes", i: "shieldBad", k: s => s.wipes, g: [2, 5, 10, 25], v: s => tr("Wiped {0} times", num(s.wipes)), shame: true },
+    { t: "Swing and a Miss", h: "Miss {0} attacks", i: "boot", k: s => s.whiffs, g: [100, 500, 1000, 5000], v: s => tr("Missed {0} times", num(s.whiffs)), shame: true },
+    { t: "Sore Loser", h: "Lose {0} duels", i: "flag", k: s => s.duelsLost, g: [2, 5, 10, 25], v: s => tr("Lost {0} duels", num(s.duelsLost)), shame: true },
+    { t: "Glug Glug", h: "Drown {0} times", i: "tomb", k: s => s.deaths_drown, g: [2, 5, 10, 25], v: s => tr("Drowned {0} times", num(s.deaths_drown)), shame: true },
   ];
-  // Each achievement's badge is coloured by how big it is: gold, silver or copper (red for shame).
-  const TIER = { 50: "gold", 25: "silver", 10: "copper" };
-  const TIER_COLOR = { 50: "#ffd36b", 25: "#d6d9e2", 10: "#e3955a" }, TIER_NAME = { 50: "Gold", 25: "Silver", 10: "Copper" };
+  // Every achievement has four tiers, each with its own goal in `g`: copper, silver, gold and diamond.
+  const TIERS = [["copper", "Copper", "#e3955a"], ["silver", "Silver", "#d6d9e2"], ["gold", "Gold", "#ffd36b"], ["diamond", "Diamond", "#7fe3ff"]];
+  // Goals as text: numbers, time, gold (stored in copper), a share or a plain number.
+  const ACH_FMT = { n: num, t: v => dur(v).replace(/ 0 ?(m|min|h)$/, ""), g: c => num(c / 10000), p: pct, d: v => dec(v, 0) };
+  const achGoal = (a, i) => tr(a.h, ACH_FMT[a.f || "n"](a.g[i]));
+  // The tier a character has reached: 0 (none yet) to 4 (diamond).
+  const achLvl = (a, s) => a.g.filter(g => (a.k(s) || 0) >= g).length;
+  // Counts per tier, diamond first: pairs of [tier, count].
+  const tierCounts = lvls => TIERS.map((t, i) => [t, lvls.filter(l => l === i + 1).length]).reverse().filter(x => x[1])
+    .map(([t, c]) => `<span class="tc" style="--pc:${t[2]}" title="${esc(tr(t[1]))}">${num(c)}</span>`).join("");
   // Text for a data-tip: no markup, and none of the characters that split its rows and columns.
   const tipTxt = v => String(v).replace(/<[^>]+>/g, "").replace(/[;|]/g, ",");
 
-  // A badge: a round medal whose ring is coloured by tier (gold, silver, copper; red for shame) and filled to `fill` percent.
-  // Locked badges are grey, their ring showing how far along the way the character is.
-  const badgeHTML = (a, { fill = 100, who = "", d = "", locked = false, tip = "" }) =>
-    `<div class="abadge ${locked ? "locked" : a.shame ? "shame" : TIER[a.pts]}" data-tip-c="${a.shame ? "#ff7a66" : TIER_COLOR[a.pts]}"`
-    + ` data-tip="${esc(tipTxt(tr(a.t)))}|${esc(tr("{0} points", a.pts))}${a.h ? ";" + esc(tipTxt(tr(a.h))) : ""};${esc(tr(a.shame ? "Hall of Shame" : TIER_NAME[a.pts]))}${tip}">`
-    + `<div class="medal" style="--fill:${Math.round(Math.max(0, Math.min(100, fill)))}">${icon(a.i, 2)}</div>`
-    + `<div class="t">${tr(a.t)}</div>${who ? `<div class="who">${who}</div>` : ""}<div class="d">${d}</div></div>`;
-  // How far a character is toward an achievement's goal, 0 to 1 (1 = unlocked).
-  const achProg = (a, s) => Math.min(1, (a.k(s) || 0) / a.g);
+  // A badge: a round medal ringed in its tier's colour and filled to `fill` percent, with four pips for the tiers reached.
+  // The tooltip lists every tier's goal, ticking the ones reached, then anything in `tip`.
+  const badgeHTML = (a, { lvl = 0, fill = 100, who = "", d = "", tip = "" }) => {
+    const t = TIERS[lvl - 1];
+    return `<div class="abadge ${t ? t[0] : "locked"}${a.shame ? " shame" : ""}" data-tip-c="${t ? t[2] : ""}"`
+      + ` data-tip="${esc(tipTxt(tr(a.t)))}|${t ? esc(tr(t[1])) : ""}${a.shame ? ";" + esc(tr("Hall of Shame")) : ""}`
+      + TIERS.map((x, i) => `;${i < lvl ? "✓ " : ""}${esc(tr(x[1]))}|${esc(tipTxt(achGoal(a, i)))}`).join("") + `${tip}">`
+      + `<div class="medal" style="--fill:${Math.round(Math.max(0, Math.min(100, fill)))}">${icon(a.i, 2)}</div>`
+      + `<div class="pips">${TIERS.map((x, i) => `<i${i < lvl ? ` style="--pc:${x[2]}"` : ""}></i>`).join("")}</div>`
+      + `<div class="t">${tr(a.t)}</div>${t ? `<div class="tier">${tr(t[1])}</div>` : ""}${who ? `<div class="who">${who}</div>` : ""}<div class="d">${d}</div></div>`;
+  };
 
-  // The realm's collection: every achievement with how many characters have unlocked it, all-time.
+  // The realm's collection: every achievement with how many characters reached each tier, all-time.
   function renderAchievements(people) {
     const rows = people.map(p => ({ p, s: sumFor(p, true) })), claimed = [], open = [];
     for (const a of ACH) {
-      const has = rows.filter(r => achProg(a, r.s) >= 1).sort((x, y) => a.k(y.s) - a.k(x.s)), n = has.length;
-      if (!n) { open.push(badgeHTML(a, { fill: 0, locked: true, d: tr(a.h) })); continue; }
-      // who has it, in the tooltip (shown on hover or tap), best first
-      const tip = has.slice(0, 15).map(r => `;${esc(tipTxt(r.p.name))}|`).join("") + (n > 15 ? `;${esc(tr("+{0} more", n - 15))}|` : "");
-      claimed.push({ pts: a.pts, n, html: badgeHTML(a, { fill: n / rows.length * 100, who: tr(n === 1 ? "{0} character" : "{0} characters", num(n)), d: tr(a.h), tip }) });
+      const has = rows.map(r => ({ ...r, lvl: achLvl(a, r.s) })).filter(r => r.lvl)
+        .sort((x, y) => y.lvl - x.lvl || a.k(y.s) - a.k(x.s)), n = has.length;
+      if (!n) { open.push(badgeHTML(a, { fill: 0, d: `${tr("Copper")}: ${achGoal(a, 0)}` })); continue; }
+      // who has it and on what tier, in the tooltip (shown on hover or tap), best first
+      const tip = has.slice(0, 15).map(r => `;${esc(tipTxt(r.p.name))}|${esc(tr(TIERS[r.lvl - 1][1]))}`).join("") + (n > 15 ? `;${esc(tr("+{0} more", n - 15))}|` : "");
+      claimed.push({ lvl: has[0].lvl, n, html: badgeHTML(a, { lvl: has[0].lvl, fill: n / rows.length * 100, who: tierCounts(has.map(r => r.lvl)),
+        d: tr(n === 1 ? "{0} character" : "{0} characters", num(n)), tip }) });
     }
-    // Biggest achievements first, then the most unlocked (the sort keeps the list order among equals).
-    claimed.sort((a, b) => b.pts - a.pts || b.n - a.n);
+    // Highest tier reached first, then the most characters (the sort keeps the list order among equals).
+    claimed.sort((a, b) => b.lvl - a.lvl || b.n - a.n);
     const none = `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
     $("achievements").innerHTML = claimed.slice(0, OVERVIEW_BADGES).map(c => c.html).join("") || none;
     $("achAll").innerHTML = claimed.length ? claimed.map(c => c.html).concat(open).join("") : none;
@@ -2973,16 +2984,14 @@
     $("pSheet").innerHTML = ch ? sheetHTML(ch, p.color) : `<p class="empty">${tr("No characters yet.")}</p>`;
     drawFaces($("pSheet"));
 
-    // Their collection: unlocked badges first, then the rest locked, each ring showing how close they are to the goal.
-    const held = [], chase = [];
-    for (const a of ACH) {
-      const f = achProg(a, s);
-      if (f >= 1) held.push(badgeHTML(a, { d: a.v(s) }));
-      else chase.push({ f, html: badgeHTML(a, { locked: true, fill: f * 100, d: f ? `${pct(f)} · ${tr(a.h)}` : tr(a.h) }) });
-    }
-    chase.sort((a, b) => b.f - a.f);
-    $("pAch").innerHTML = held.concat(chase.map(c => c.html)).join("");
-    $("pAchCount").textContent = tr("{0} of {1}", held.length, ACH.length);
+    // Their collection: highest tiers first, then the rest by how close they are to their next tier.
+    const mine = ACH.map(a => {
+      const lvl = achLvl(a, s), f = lvl < 4 ? Math.min(1, (a.k(s) || 0) / a.g[lvl]) : 1;
+      return { lvl, f, html: badgeHTML(a, { lvl, fill: f * 100, who: lvl ? a.v(s) : "",
+        d: lvl < 4 ? `${tr(TIERS[lvl][1])}: ${achGoal(a, lvl)}${lvl || !f ? "" : ` · ${pct(f)}`}` : "" }) };
+    }).sort((x, y) => y.lvl - x.lvl || y.f - x.f);
+    $("pAch").innerHTML = mine.map(m => m.html).join("");
+    $("pAchCount").innerHTML = tierCounts(mine.map(m => m.lvl));
 
     // daily damage & healing, last 30 days played
     const days = Object.keys(p.days).sort().slice(-30);
