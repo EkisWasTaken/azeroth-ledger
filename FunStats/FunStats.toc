@@ -2,7 +2,7 @@
 ## Title: FunStats
 ## Notes: Tracks fun group stats (deaths, damage, jumps, loot...) for your friends' leaderboard site.
 ## Author: eliaspown
-## Version: 1.7.5
+## Version: 1.7.6
 ## SavedVariables: FunStatsDB
 
 FunStats.lua
