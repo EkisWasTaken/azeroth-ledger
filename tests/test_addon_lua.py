@@ -549,9 +549,16 @@ class Addon(unittest.TestCase):
         p = self.char()[1].pvp
         self.assertEqual((p.hk, p.dk, p.weekHK, p.weekHonor), (120, 3, 14, 900))
         self.assertEqual((p.rankName, p.bestName), ("Corporal", "Sergeant"))
+        self.assertEqual(self.today("honorKills"), 0)  # the first count is only where counting starts
+        self.lua.execute("function GetPVPLifetimeStats() return 123, 3, 8 end")
+        self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.assertEqual(self.today("honorKills"), 3)
         self.lua.execute("function GetPVPLifetimeStats() return secretMark, 3, 8 end")
         self.fire("PLAYER_PVP_KILLS_CHANGED")
-        self.assertIsNone(self.char()[1].pvp.hk)
+        self.assertEqual(self.char()[1].pvp.hk, 123)
+        self.lua.execute("function GetPVPLifetimeStats() return 124, 3, 8 end")
+        self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.assertEqual(self.today("honorKills"), 4)
 
     def test_no_honor_calls_no_pvp_record(self):
         self.start(FOREVER)

@@ -275,6 +275,11 @@ local function UpdatePvP()
   p.rank = PvPNum(PvPCall(UnitPVPRank, "player"))
   p.rankName, p.bestName = PvPRankName(p.rank), PvPRankName(p.best)
   p.honor = PvPNum(PvPCall(GetHonorCurrency)) or PvPNum(PvPCall(UnitHonor, "player"))
+  -- Honorable kills per day: what the game's lifetime count went up by. A secret or missing count keeps the last one.
+  local old = C.pvp and C.pvp.hk
+  if not p.hk then p.hk = old end
+  -- shortcut: kills made while the addon was off land on the day it next sees the count; fine, it's rare
+  if p.hk and old and p.hk > old then Add("honorKills", p.hk - old) end
   if next(p) then p.t = time(); C.pvp = p end
 end
 

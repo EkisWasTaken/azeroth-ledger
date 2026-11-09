@@ -34,7 +34,7 @@
     "Playstyle": "Spelstil", "each stat scaled to the group's best": "varje värde jämfört med gruppens bästa",
     "Crit rate": "Crit rate", "Damage taken vs healing received": "Tagen damage mot mottagen healing", "Combat sheet": "Stridsblad",
     "PvP Battlefield": "PvP-slagfältet", "Players killed": "Dödade spelare", "PvP deaths": "PvP-dödsfall", "K/D": "K/D", "kills per death": "kills per dödsfall",
-    "Duels": "Dueller", "Honorable kills": "Honorable kills", "Dishonorable kills": "Dishonorable kills", "civilians slain": "dödade civila", "PvP rank": "PvP-rank", "Rank {0}": "Rank {0}", "Highest rank": "Högsta rank", "Honor this week": "Honor denna vecka", "{0} to spend": "{0} att spendera", "{0} this week": "{0} denna vecka", "all time": "totalt", "killing blows": "killing blows", "Best day": "Bästa dagen", "Hardest hit taken": "Hårdaste träffen", "by {0}": "av {0}", "HKs": "HKs", "Killing spells": "Dödande spells", "what players finished us with": "vad spelare dödade oss med", "Rare drops": "Rare drops", "Levels": "Levels", "{0} won, {1} lost": "{0} vunna, {1} förlorade", "PvP standings": "PvP-ställning", "Kills": "Kills", "Nemeses": "Ärkefiender", "the players who killed us most": "spelarna som dödat oss mest",
+    "Duels": "Dueller", "Honorable kills": "Honorable kills", "Dishonorable kills": "Dishonorable kills", "civilians slain": "dödade civila", "PvP rank": "PvP-rank", "Rank {0}": "Rank {0}", "Highest rank": "Högsta rank", "Honor this week": "Honor denna vecka", "{0} to spend": "{0} att spendera", "{0} this week": "{0} denna vecka", "{0} all time": "{0} totalt", "all time": "totalt", "killing blows": "killing blows", "Best day": "Bästa dagen", "Hardest hit taken": "Hårdaste träffen", "by {0}": "av {0}", "HKs": "HKs", "Killing spells": "Dödande spells", "what players finished us with": "vad spelare dödade oss med", "Rare drops": "Rare drops", "Levels": "Levels", "{0} won, {1} lost": "{0} vunna, {1} förlorade", "PvP standings": "PvP-ställning", "Kills": "Kills", "Nemeses": "Ärkefiender", "the players who killed us most": "spelarna som dödat oss mest",
     "Gank zones": "Gank-zoner", "where players killed us": "där spelare dödat oss", "Duel record": "Duellfacit", "by opponent": "per motståndare", "Opponent": "Motståndare",
     "Won": "Vunna", "Lost": "Förlorade", "No player has killed anyone here yet.": "Ingen spelare har dödat någon här än.", "No duels yet.": "Inga dueller än.", "Nobody to compare yet.": "Ingen att jämföra med än.",
     "Loot Council": "Lootrådet", "Mostly grey, occasionally purple": "Mest grått, ibland lila", "Loot by quality": "Loot per kvalitet",
@@ -698,7 +698,7 @@
           taken: Math.round(dmg * (cls === "WARRIOR" ? 1.1 : 0.55)), healedBy: Math.round(dmg * (cls === "WARRIOR" ? 0.7 : 0.2)),
           dodges: ri(10, 40) * hours, parries: cls === "WARRIOR" ? ri(10, 30) * hours : 0, blocks: cls === "WARRIOR" || cls === "SHAMAN" ? ri(5, 25) * hours : 0,
           msgs: ri(10, 60), sorry: ri(0, pi === 1 ? 7 : 2), lol: ri(0, 14), emotes: ri(0, 8), hearth: ri(0, 2),
-          q0, q1, q2, q3, q4, rolls: ri(0, 4), duelsWon: rnd() < 0.2 ? 1 : 0, levels: gain,
+          q0, q1, q2, q3, q4, rolls: ri(0, 4), duelsWon: rnd() < 0.2 ? 1 : 0, levels: gain, honorKills: pi < 4 && rnd() < 0.3 ? ri(1, 6) : 0,
           maxHit: Math.round(ri(150, 400) * scale), maxHitSpell: Object.keys(spells)[0], maxHitTarget: pickOne(mobs),
         };
         d.rollSum = d.rolls * ri(25, 75);
@@ -2119,10 +2119,10 @@
     const rows = people.map(p => {
       const s = sumFor(p, allTime), deaths = p.deaths.filter(inR);
       let day = null;
-      for (const [k, d] of Object.entries(p.days)) if ((allTime || inRange(k)) && (d.hk || 0) > ((day && day.n) || 0)) day = { k, n: d.hk };
-      return { p, hk: s.hk || 0, dd: deaths.length, deaths, w: s.duelsWon || 0, l: s.duelsLost || 0, g: honorOf(p), day };
+      for (const [k, d] of Object.entries(p.days)) { const n = (d.honorKills || 0) + (d.hk || 0) * !d.honorKills; if ((allTime || inRange(k)) && n > ((day && day.n) || 0)) day = { k, n }; }
+      return { p, hk: s.hk || 0, hon: s.honorKills || 0, dd: deaths.length, deaths, w: s.duelsWon || 0, l: s.duelsLost || 0, g: honorOf(p), day };
     });
-    const t = rows.reduce((a, r) => ({ hk: a.hk + r.hk, dd: a.dd + r.dd, w: a.w + r.w, l: a.l + r.l }), { hk: 0, dd: 0, w: 0, l: 0 });
+    const t = rows.reduce((a, r) => ({ hk: a.hk + r.hk, hon: a.hon + r.hon, dd: a.dd + r.dd, w: a.w + r.w, l: a.l + r.l }), { hk: 0, hon: 0, dd: 0, w: 0, l: 0 });
     const G = {};
     rows.forEach(r => ["hk", "dk", "weekHK", "weekHonor", "honor"].forEach(k => { if (r.g[k]) G[k] = (G[k] || 0) + r.g[k]; }));
     const many = people.length > 1, who = r => many ? esc(nameTxt(r.p)) : "";
@@ -2144,10 +2144,10 @@
     const dl = Object.entries(duels).sort((a, b) => (b[1].w + b[1].l) - (a[1].w + a[1].l)).slice(0, 12);
     const frame = (title, small, body) => `<div class="frame"><div class="frame-title"><span>${tr(title)}</span>${small ? `<small>${tr(small)}</small>` : ""}</div>${body}</div>`;
     const empty = m => `<p class="empty">${tr(m)}</p>`;
-    const anyHonor = rows.some(r => r.g.hk || r.g.rank), anyRank = rows.some(r => r.g.rank || r.g.best);
-    const board = rows.filter(r => r.hk || r.dd || r.w || r.l || r.g.hk).sort((a, b) => (b.g.hk || 0) - (a.g.hk || 0) || b.hk - a.hk || a.dd - b.dd);
+    const hkOf = r => allTime ? r.g.hk || r.hon : r.hon, anyHonor = rows.some(r => r.g.hk || r.hon), anyRank = rows.some(r => r.g.rank || r.g.best);
+    const board = rows.filter(r => r.hk || r.dd || r.w || r.l || r.g.hk || r.hon).sort((a, b) => hkOf(b) - hkOf(a) || b.hk - a.hk || a.dd - b.dd);
     const tiles = [
-      G.hk && ["crest", tr("Honorable kills"), num(G.hk), G.weekHK ? tr("{0} this week", num(G.weekHK)) : tr("all time")],
+      (G.hk || t.hon) && ["crest", tr("Honorable kills"), num(allTime ? G.hk || t.hon : t.hon), allTime ? (G.weekHK ? tr("{0} this week", num(G.weekHK)) : tr("all time")) : G.hk ? tr("{0} all time", num(G.hk)) : ""],
       G.dk && ["skull", tr("Dishonorable kills"), num(G.dk), tr("civilians slain")],
       ranked && ["shield", tr("PvP rank"), esc(ranked.g.rankName || tr("Rank {0}", ranked.g.rank)), who(ranked)],
       best && best.g.best > ((ranked && ranked.g.rank) || 0) && ["sulfuras", tr("Highest rank"), esc(best.g.bestName || tr("Rank {0}", best.g.best)), who(best)],
@@ -2161,7 +2161,7 @@
     ].filter(Boolean);
     return `<div class="tiles">${tiles.map(tileHTML).join("")}</div>
     ${many ? frame("PvP standings", "", board.length ? `<div class="table-wrap"><table><thead><tr><th></th>${anyHonor ? `<th>${tr("HKs")}</th>` : ""}${anyRank ? `<th>${tr("PvP rank")}</th>` : ""}<th>${tr("Kills")}</th><th>${tr("PvP deaths")}</th><th>${tr("K/D")}</th><th>${tr("Duels")}</th></tr></thead><tbody>${
-      board.map(r => `<tr class="${fr(r.p)}"><td><span class="nm">${nameHTML(r.p)}</span></td>${anyHonor ? `<td>${num(r.g.hk || 0)}</td>` : ""}${anyRank ? `<td>${esc(r.g.rankName || r.g.bestName || "–")}</td>` : ""}<td>${num(r.hk)}</td><td>${num(r.dd)}</td><td>${kd(r.hk, r.dd)}</td><td>${num(r.w)}–${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("Nobody to compare yet.")) : ""}
+      board.map(r => `<tr class="${fr(r.p)}"><td><span class="nm">${nameHTML(r.p)}</span></td>${anyHonor ? `<td>${num(hkOf(r))}</td>` : ""}${anyRank ? `<td>${esc(r.g.rankName || r.g.bestName || "–")}</td>` : ""}<td>${num(r.hk)}</td><td>${num(r.dd)}</td><td>${kd(r.hk, r.dd)}</td><td>${num(r.w)}–${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("Nobody to compare yet.")) : ""}
     <div class="duo even">
       ${frame("Nemeses", "the players who killed us most", bars(count(d => d.by), "{0} deaths") || empty("No player has killed anyone here yet."))}
       ${frame("Gank zones", "where players killed us", bars(count(d => d.inst || d.zone), "{0} deaths") || empty("No player has killed anyone here yet."))}
