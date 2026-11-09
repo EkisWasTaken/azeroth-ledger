@@ -913,7 +913,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 @media (min-width: 1000px) {
   .pside { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: stretch; }
   .pside > .pside-main { align-self: start; }
-  .pside-stats { grid-template-rows: auto auto 1fr; }
+  .pside-stats { grid-template-rows: auto auto auto 1fr; } /* heading, medals, cards, then Lately takes the rest */
   /* size-contained: it takes only the height left beside the gear (at least 120px) and scrolls inside */
   .plately { display: block; contain: size; min-height: 120px; overflow-y: auto; }
   .pside .sig { grid-template-columns: repeat(2, minmax(0, 1fr)); }
