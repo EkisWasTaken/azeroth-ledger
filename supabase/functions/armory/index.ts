@@ -8,7 +8,7 @@
 // of kind 'api', which the website merges in.
 //
 // Secrets (Supabase > Edge Functions > Secrets): BLIZZARD_CLIENT_ID, BLIZZARD_CLIENT_SECRET.
-// Optional: FOREVER_NAMESPACE (e.g. "profile-forever") for WoW Forever; find the right one with ?check=Name-PvP-EU&ns=profile-forever.
+// FOREVER_NAMESPACE = "profile-forever" for WoW Forever (test with ?check=Name Surname-PvP-EU&ns=profile-forever).
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY") ?? "";
@@ -69,11 +69,16 @@ function namespaceFor(game: Json | undefined): string | null {
   return null;
 }
 
-// WoW Forever has no named realms: the game calls one "PvP-EU", Blizzard's API wants realm "pvp" in region "eu".
+// WoW Forever has no named realms: the game calls one "PvP-EU"; only its region ("eu") matters to Blizzard's API.
 function realmFor(realm: string, ns: string): { realm: string; region?: string } {
   const m = ns === FOREVER_NS ? String(realm).match(/^(.+)-(eu|us)$/i) : null;
   return m ? { realm: m[1], region: m[2].toLowerCase() } : { realm };
 }
+
+// A character's place in the profile API: realm/name, but WoW Forever has no realms there: {name}-{surname} in lowercase.
+const charPath = (name: string, realm: string, ns: string) => ns.includes("forever")
+  ? encodeURIComponent(name.toLowerCase().trim().replace(/\s+/g, "-"))
+  : `${encodeURIComponent(slug(realm))}/${encodeURIComponent(name.toLowerCase())}`;
 
 const slug = (realm: string) => realm.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, "-");
 
@@ -88,7 +93,7 @@ async function token(): Promise<string> {
 }
 
 async function lookUp(tok: string, name: string, realm: string, ns: string, region: string) {
-  const base = `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(slug(realm))}/${encodeURIComponent(name.toLowerCase())}`;
+  const base = `https://${region}.api.blizzard.com/profile/wow/character/${charPath(name, realm, ns)}`;
   const q = `?namespace=${ns}-${region}&locale=en_US`;
   const get = (path: string) => fetch(base + path + q, { headers: { Authorization: "Bearer " + tok } });
   const res = await get("");
@@ -128,7 +133,7 @@ async function lookUpFace(tok: string, name: string, realm: string, ns: string, 
 
 // Rendered images of a character (face avatar, bust, full body), if Blizzard has them for this game.
 async function lookUpMedia(tok: string, name: string, realm: string, ns: string, region: string) {
-  const url = `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(slug(realm))}/${encodeURIComponent(name.toLowerCase())}/character-media?namespace=${ns}-${region}&locale=en_US`;
+  const url = `https://${region}.api.blizzard.com/profile/wow/character/${charPath(name, realm, ns)}/character-media?namespace=${ns}-${region}&locale=en_US`;
   const res = await fetch(url, { headers: { Authorization: "Bearer " + tok } });
   if (!res.ok) return { status: res.status };
   const m = await res.json();
@@ -141,7 +146,7 @@ async function lookUpMedia(tok: string, name: string, realm: string, ns: string,
 
 // Race, gender and look (skin, face, hair...) for the 3D model viewer: customizations as [option id, choice id].
 async function lookUpLook(tok: string, name: string, realm: string, ns: string, region: string) {
-  const url = `https://${region}.api.blizzard.com/profile/wow/character/${encodeURIComponent(slug(realm))}/${encodeURIComponent(name.toLowerCase())}/appearance?namespace=${ns}-${region}&locale=en_US`;
+  const url = `https://${region}.api.blizzard.com/profile/wow/character/${charPath(name, realm, ns)}/appearance?namespace=${ns}-${region}&locale=en_US`;
   const res = await fetch(url, { headers: { Authorization: "Bearer " + tok } });
   if (!res.ok) return undefined;
   const a = await res.json();
