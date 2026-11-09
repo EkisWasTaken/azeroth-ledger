@@ -251,6 +251,33 @@ local function UpdateGuild(canClear)
   end
 end
 
+-- The game's own honor counts. Each client has its own set of these calls (some return other fields), so each one is optional.
+local function PvPNum(v) if type(v) == "number" and not (issecretvalue and issecretvalue(v)) then return v end end
+local function PvPCall(fn, ...)
+  if not fn then return end
+  local r = { pcall(fn, ...) }
+  if r[1] then return unpack(r, 2) end
+end
+local function PvPRankName(rank)
+  if not rank or rank < 1 then return end
+  local name = PvPCall(GetPVPRankInfo, rank)
+  if type(name) == "string" and not (issecretvalue and issecretvalue(name)) then return name end
+end
+local function UpdatePvP()
+  if not C then return end
+  local p = {}
+  local hk, dk, best = PvPCall(GetPVPLifetimeStats)
+  p.hk, p.dk, p.best = PvPNum(hk), PvPNum(dk), PvPNum(best)
+  local wk, wh = PvPCall(GetPVPThisWeekStats)
+  p.weekHK, p.weekHonor = PvPNum(wk), PvPNum(wh)
+  local th, tn = PvPCall(GetPVPSessionStats)
+  p.todayHK, p.todayHonor = PvPNum(th), PvPNum(tn)
+  p.rank = PvPNum(PvPCall(UnitPVPRank, "player"))
+  p.rankName, p.bestName = PvPRankName(p.rank), PvPRankName(p.best)
+  p.honor = PvPNum(PvPCall(GetHonorCurrency)) or PvPNum(PvPCall(UnitHonor, "player"))
+  if next(p) then p.t = time(); C.pvp = p end
+end
+
 local function UpdateProfile()
   C.game = GameInfo()
   C.guid = playerGUID -- how the Ledger app knows this character in the combat log files
@@ -266,6 +293,7 @@ local function UpdateProfile()
   local level = UnitLevel("player")
   if level and level > (C.level or 0) then C.level = level end
   UpdateGuild()
+  UpdatePvP()
   C.lastSeen = time()
   C.owner = FunStatsDB.id
 end
@@ -1420,6 +1448,9 @@ handlers.ZONE_CHANGED_NEW_AREA = OnZone
 handlers.PLAYER_ENTERING_WORLD = OnZone
 handlers.ENCOUNTER_START = OnEncounterStart
 handlers.ENCOUNTER_END = OnEncounterEnd
+handlers.PLAYER_PVP_KILLS_CHANGED = UpdatePvP
+handlers.PLAYER_PVP_RANK_CHANGED = UpdatePvP
+handlers.HONOR_CURRENCY_UPDATE = UpdatePvP
 
 local sheetPending = false
 local function SheetSoon()

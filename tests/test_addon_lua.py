@@ -542,6 +542,21 @@ class Addon(unittest.TestCase):
         self.start(FOREVER)
         self.assertFalse(self.run_lua("frames[1].events.COMBAT_LOG_EVENT_UNFILTERED") or False)
 
+    def test_honor_stats_are_recorded_and_secret_ones_skipped(self):
+        honor = ('function GetPVPLifetimeStats() return 120, 3, 8 end; function GetPVPThisWeekStats() return 14, 900 end; '
+                 'function UnitPVPRank() return 7 end; function GetPVPRankInfo(r) return ({ [7] = "Corporal", [8] = "Sergeant" })[r], r - 4 end')
+        self.start(CLASSIC + "\n" + honor)
+        p = self.char()[1].pvp
+        self.assertEqual((p.hk, p.dk, p.weekHK, p.weekHonor), (120, 3, 14, 900))
+        self.assertEqual((p.rankName, p.bestName), ("Corporal", "Sergeant"))
+        self.lua.execute("function GetPVPLifetimeStats() return secretMark, 3, 8 end")
+        self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.assertIsNone(self.char()[1].pvp.hk)
+
+    def test_no_honor_calls_no_pvp_record(self):
+        self.start(FOREVER)
+        self.assertIsNone(self.char()[1].pvp)
+
     # ---- Classic stays as it was
 
     def test_classic_is_untouched(self):
