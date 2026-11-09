@@ -576,15 +576,21 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 /* achievement badges: a round medal, its ring coloured by tier and filled to --fill percent; locked ones are grey */
 .achievements.badges { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 20px 12px; padding-top: 4px; }
 .abadge { --tc: #e8b440; display: grid; justify-items: center; align-content: start; gap: 2px; min-width: 0; text-align: center; }
-.abadge.silver { --tc: #c3c7d3; } .abadge.copper { --tc: #c0763a; } .abadge.diamond { --tc: #7fe3ff; } .abadge.locked { --tc: var(--good); }
-.abadge.diamond .medal { box-shadow: 0 0 14px color-mix(in srgb, var(--tc) 55%, transparent); }
-/* four pips, one per tier, lit in that tier's colour once reached */
-.abadge .pips { display: flex; gap: 5px; margin: -2px 0 2px; }
-.abadge .pips i { width: 8px; height: 8px; transform: rotate(45deg); background: var(--pc, var(--track)); box-shadow: inset 0 0 0 1px var(--pc, var(--line)); }
+.abadge.silver { --tc: #c3c7d3; } .abadge.copper { --tc: #c0763a; } .abadge.epic { --tc: #b76cff; } .abadge.legendary { --tc: #ff8000; } .abadge.locked { --tc: var(--good); }
+.abadge:is(.epic, .legendary) .medal { box-shadow: 0 0 14px color-mix(in srgb, var(--tc) 55%, transparent); }
+/* one icon per tier (coin, star, crown, amethyst, flame), in colour once reached and dark until then */
+.abadge .pips { display: flex; gap: 3px; margin: -2px 0 2px; }
+.abadge .pips i { display: flex; filter: grayscale(1) brightness(.45); opacity: .7; }
+.abadge .pips i.on { filter: none; opacity: 1; }
 .abadge .tier { font: 700 12px/1.2 var(--sf); letter-spacing: .08em; text-transform: uppercase; color: var(--tc); }
-/* a count per tier: a pip in the tier's colour and the number */
+/* a count per tier: the tier's icon and the number */
 .tc { display: inline-flex; align-items: center; gap: 4px; margin: 0 3px; font-weight: 700; color: var(--pc); }
-.tc::before { content: ""; width: 7px; height: 7px; transform: rotate(45deg); background: var(--pc); }
+/* a character's best achievements, as small medals under the signature stats heading */
+.achievements.badges.achtags { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 14px 8px; margin: -4px 0 16px; }
+.achtags:empty { display: none; }
+.achtags .abadge .medal { width: 54px; height: 54px; margin-bottom: 4px; }
+.achtags .abadge .medal .wicon { width: 26px; height: 26px; }
+.achtags .abadge .t { font-size: 14px; }
 .abadge .medal { position: relative; display: grid; place-items: center; width: 68px; height: 68px; margin-bottom: 6px; border-radius: 50%;
   background: conic-gradient(var(--tc) calc(var(--fill) * 1%), var(--track) 0); }
 .abadge .medal::before { content: ""; position: absolute; inset: 4px; border-radius: 50%;
@@ -991,6 +997,26 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 #tip .who small { color: #8f8a7e; font-size: 11px; margin-left: 4px; }
 #tip .sw { width: 9px; height: 9px; border-radius: 2px; flex: none; }
 #tip .desc:last-child { color: #8f8a7e; font-size: 12px; }
+/* achievement tooltips: sections for the goals and who unlocked it; reached tiers lit, the next one marked, the rest dim */
+#tip.rich { max-width: 320px; min-width: 230px; gap: 2px; }
+#tip.rich .row span { display: inline-flex; align-items: center; gap: 6px; }
+#tip .ttier { font: 700 11px var(--sf); letter-spacing: .08em; text-transform: uppercase; }
+#tip .tshame { color: #ff6b5a; font-size: 12px; }
+#tip .tprog { display: grid; gap: 1px; margin-top: 2px; color: #ffd36b; }
+#tip .tnext { color: #b9b3a3; font-size: 12px; }
+#tip .tsec { margin: 6px 0 1px; padding-top: 5px; border-top: 1px solid rgba(232, 180, 64, .2);
+  font: 700 10px var(--sf); letter-spacing: .12em; text-transform: uppercase; color: #8f8a7e; }
+#tip .tg { opacity: .45; }
+#tip .tg span:first-child { color: #ece6d6; }
+#tip .tg span:last-child { white-space: normal; text-align: right; }
+#tip .tg .sprite { filter: grayscale(1); }
+#tip .tg.done { opacity: 1; }
+#tip .tg.done span:first-child { color: var(--pc); }
+#tip .tg.done .sprite { filter: none; }
+#tip .tg.next { opacity: 1; }
+#tip .tg.next span:last-child { color: #ffffff; }
+#tip .tg.next span:first-child::after { content: "◂"; color: #ffd36b; font-size: 11px; }
+#tip .tmore { color: #8f8a7e; font-size: 12px; }
 footer { color: var(--muted); font-size: 13px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
@@ -1138,7 +1164,7 @@ body.loading .loader { display: flex; flex-direction: column; align-items: cente
 /* the 3D model: on the right of the hero, where the full-body render goes; drag to turn it */
 .phero:has(.pmodel) { position: relative; }
 .phero:has(.pmodel) > :not(.pmodel) { position: relative; z-index: 1; pointer-events: none; } /* drags reach the model... */
-.phero:has(.pmodel) :is(a, button, [title], [data-tip]) { pointer-events: auto; } /* ...but links and tips still work */
+.phero:has(.pmodel) :is(a, button, [title], [data-tip], [data-tiph]) { pointer-events: auto; } /* ...but links and tips still work */
 .pmodel { position: absolute; top: 0; right: 0; bottom: 0; width: 44%; z-index: 0; cursor: grab; }
 .pmodel > div, .pmodel canvas { width: 100% !important; height: 100% !important; }
 @media (max-width: 560px) { .pmodel { opacity: .5; pointer-events: none; } .phero:has(.pmodel) > :not(.pmodel) { max-width: none; } }
