@@ -556,7 +556,8 @@
       return {
         id: pid, name: String(p.name || "Friend"), class: main ? main.class : "", rows, chars: owned, raw: p,
         days: mergeDays(owned),
-        deaths: owned.flatMap(ch => ch.deaths.filter((d, i, a) => !d || a.findIndex(o => o && o.t === d.t && o.by === d.by) === i).map(d => ({ ...d, _char: ch.name }))),
+        // addon 1.7.5 and older could save one death twice, seconds apart (PLAYER_DEAD fired twice)
+        deaths: owned.flatMap(ch => ch.deaths.filter((d, i, a) => !d || a.findIndex(o => o && Math.abs(o.t - d.t) < 15) === i).map(d => ({ ...d, _char: ch.name }))),
         spellDmg: mergeMaps(owned, "spellDmg"), casts: mergeMaps(owned, "casts"), heat: mergeMaps(owned, "heat"),
         zones: mergeMaps(owned, "zones"), healers: mergeMaps(owned, "healers"), kills: mergeMaps(owned, "kills"), duels,
         notable: owned.flatMap(ch => (ch.notable || []).filter(Boolean).map(n => ({ ...n, _char: ch.name }))),

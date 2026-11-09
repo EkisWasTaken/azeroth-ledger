@@ -474,10 +474,18 @@ class Addon(unittest.TestCase):
           { timestamp = 2, event = "SWING_DAMAGE", sourceName = "Wolf", amount = 30, sourceGUID = "Creature-1", causedDeath = true } }""")
         d = self.death()
         self.assertEqual((d.cause, d.by, d.spell, d.amt), ("mob", "Wolf", "Melee", 30))
+        d.t = d.t - 60  # a later death, not the same one again
         self.lua.execute("""recap = { { timestamp = 1, event = "ENVIRONMENTAL_DAMAGE", environmentalType = "Falling", amount = 90 } }""")
         d = self.death()
         self.assertEqual(d.cause, "fall")
         self.assertEqual(self.today("deaths_fall"), 1)
+
+    def test_player_dead_twice_is_one_death(self):
+        self.start(FOREVER)
+        self.death()
+        self.death()
+        self.assertEqual(self.run_lua("(function() local _, c = next(FunStatsDB.chars); return #c.deaths end)()"), 1)
+        self.assertEqual(self.today("deaths"), 1)
 
     def test_secret_recap_leaves_the_death_recorded(self):
         self.start(FOREVER)

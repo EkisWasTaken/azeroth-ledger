@@ -1019,6 +1019,9 @@ local function RecapDeath(entry)
 end
 
 local function OnDeath()
+  -- The game can fire PLAYER_DEAD twice for one death, seconds apart (seen 1-6 s on WoW Forever).
+  local prev = C.deaths[#C.deaths]
+  if prev and time() - (prev.t or 0) < 15 then return end
   Add("deaths")
   local cause, by, spell, amt = "unknown", nil, nil, nil
   if lastHit and GetTime() - lastHit.t < 15 then
