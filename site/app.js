@@ -120,7 +120,7 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
-    "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
     "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
@@ -2178,9 +2178,9 @@
       rows.forEach(r => r.deaths.forEach(d => { const k = key(d); if (k) o[k] = (o[k] || 0) + 1; }));
       return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 8);
     };
-    const duels = {};
-    people.forEach(p => Object.entries(p.duels || {}).forEach(([o, r]) => { const d = duels[o] ||= { w: 0, l: 0 }; d.w += (r && r.w) || 0; d.l += (r && r.l) || 0; }));
-    const dl = Object.entries(duels).sort((a, b) => (b[1].w + b[1].l) - (a[1].w + a[1].l)).slice(0, 12);
+    // one row per hero and opponent, so it says who fought whom
+    const dl = people.flatMap(p => Object.entries(p.duels || {}).map(([o, r]) => ({ p, o, w: (r && r.w) || 0, l: (r && r.l) || 0 })))
+      .filter(r => r.w + r.l).sort((a, b) => (b.w + b.l) - (a.w + a.l)).slice(0, 12);
     const frame = (title, small, body) => `<div class="frame"><div class="frame-title"><span>${tr(title)}</span>${small ? `<small>${tr(small)}</small>` : ""}</div>${body}</div>`;
     const empty = m => `<p class="empty">${tr(m)}</p>`;
     const hkOf = r => allTime ? r.g.hk || r.hon : r.hon, anyHonor = rows.some(r => r.g.hk || r.hon), anyRank = rows.some(r => r.g.rank || r.g.best);
@@ -2211,8 +2211,8 @@
     </div>
     <div class="duo even">
       ${frame("Killing spells", "what players finished us with", bars(count(d => d.spell), "{0} deaths") || empty("No player has killed anyone here yet."))}
-      ${frame("Duel record", "by opponent", dl.length ? `<div class="table-wrap"><table><thead><tr><th>${tr("Opponent")}</th><th>${tr("Won")}</th><th>${tr("Lost")}</th></tr></thead><tbody>${
-        dl.map(([o, r]) => `<tr><td>${esc(o)}</td><td>${num(r.w)}</td><td>${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("No duels yet."))}
+      ${frame("Duel record", "by opponent", dl.length ? `<div class="table-wrap"><table><thead><tr>${many ? `<th>${tr("Hero")}</th>` : ""}<th>${tr("Opponent")}</th><th>${tr("Won")}</th><th>${tr("Lost")}</th></tr></thead><tbody>${
+        dl.map(r => `<tr class="${fr(r.p)}">${many ? `<td><span class="nm">${nameHTML(r.p)}</span></td>` : ""}<td>${esc(r.o)}</td><td>${num(r.w)}</td><td>${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("No duels yet."))}
     </div>`;
   }
 
@@ -2267,9 +2267,9 @@
     } : null);
 
     const top = mostWanted(all), mw = top[0];
-    // The bounty is whatever the site owner puts up in config.js; nothing shows without one.
+    // There's always a bounty on the #1 enemy; config.js can name the reward and how to claim it.
     const bounty = (window.LEDGER_CONFIG || {}).bounty || {};
-    const reward = bounty.reward ? [tr("Reward: {0}", esc(bounty.reward)), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ") : "";
+    const reward = [bounty.reward ? tr("Reward: {0}", esc(bounty.reward)) : tr("Bounty: take them down to claim the reward"), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ");
     const st = mw && bountyState(people, mw[0]);
     const stLine = st ? tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t))) : "";
     const killedLine = k => k.n === 1 ? tr("Killed one of our heroes") : tr("Killed {0} of our heroes, {1} times", num(k.victims.size), num(k.n));
