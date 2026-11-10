@@ -100,7 +100,7 @@
     "{0} damage ({1}%)": "{0} damage ({1} %)", "{0} casts": "{0} casts",
     "Survival": "Överlevnad", "Exploration": "Utforskande", "Wealth": "Rikedom", "Questing": "Questande", "Chatter": "Prat",
     "Charts couldn't load. Check your connection and reload.": "Diagrammen kunde inte laddas. Kontrollera anslutningen och ladda om.",
-    "Nothing recorded yet.": "Inget registrerat än.", "everyone, from FunStats 1.9": "alla, från FunStats 1.9", "Biggest spenders": "Största slösarna", "who spent the most where": "vem som spenderade mest var", "Shows up once players with FunStats 1.9 spend or earn gold.": "Syns när spelare med FunStats 1.9 spenderar eller tjänar guld.", "Shows up once players with FunStats 1.9 spend gold.": "Syns när spelare med FunStats 1.9 spenderar guld.", "Most spent at the auction house in one day": "Mest spenderat på auktionshuset på en dag", "Most gold from the mailbox in one day": "Mest guld från brevlådan på en dag", "Most gold from vendors in one day": "Mest guld från handlare på en dag", "Most spent on training in one day": "Mest spenderat på träning på en dag", "No deaths in this period.": "Inga dödsfall under perioden.",
+    "Nothing recorded yet.": "Inget registrerat än.", "Most times character of the week": "Flest gånger veckans karaktär", "{0} time": "{0} gång", "{0} times": "{0} gånger", "last crowned the week of {0}": "senast vald veckan {0}", "everyone, from FunStats 1.9": "alla, från FunStats 1.9", "Biggest spenders": "Största slösarna", "who spent the most where": "vem som spenderade mest var", "Shows up once players with FunStats 1.9 spend or earn gold.": "Syns när spelare med FunStats 1.9 spenderar eller tjänar guld.", "Shows up once players with FunStats 1.9 spend gold.": "Syns när spelare med FunStats 1.9 spenderar guld.", "Most spent at the auction house in one day": "Mest spenderat på auktionshuset på en dag", "Most gold from the mailbox in one day": "Mest guld från brevlådan på en dag", "Most gold from vendors in one day": "Mest guld från handlare på en dag", "Most spent on training in one day": "Mest spenderat på träning på en dag", "No deaths in this period.": "Inga dödsfall under perioden.",
 
     // deaths
     "fell to their death": "föll till döds", "drowned": "drunknade", "burned to death": "brann ihjäl", "fell into lava": "föll i lava",
@@ -2805,6 +2805,14 @@
     }
     const rich = people.filter(p => p.peakGold).sort((a, b) => b.peakGold - a.peakGold)[0];
     if (rich) recs.push({ cat: "loot", i: "loot", t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, top: podiumOf(people, p => p.peakGold, goldHTML), when: tr("most gold held at once") });
+    // Most times character of the week among these characters: the same contest as the overview's card. A tie goes to the latest winner.
+    if (people.length > 1) {
+      const wins = potwWins(people), times = n => tr(n === 1 ? "{0} time" : "{0} times", num(n));
+      const ranked = people.map(p => ({ p, w: wins[p.id] || [] })).filter(x => x.w.length)
+        .sort((a, b) => b.w.length - a.w.length || b.w.at(-1).localeCompare(a.w.at(-1)));
+      if (ranked.length) recs.push({ cat: "adventure", i: "sulfuras", t: tr("Most times character of the week"), v: times(ranked[0].w.length), p: ranked[0].p,
+        top: ranked.slice(0, 3).map(x => ({ p: x.p, v: times(x.w.length) })), when: tr("last crowned the week of {0}", shortDate(ranked[0].w.at(-1))) });
+    }
     // Lucky looters: bind-on-equip drops anywhere, and rare or better loot in dungeons and raids (recorded from FunStats 1.5).
     const drops = n => tr(n === 1 ? "{0} drop" : "{0} drops", num(n));
     [["Luckiest looter", n => n.boe, "bind-on-equip drops", "dice"], ["Dungeon loot", n => n.inst, "rare or better in dungeons", "gate"]].forEach(([t, ok, when, i]) => {
