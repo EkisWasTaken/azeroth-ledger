@@ -292,8 +292,16 @@ local function RecordPvPKill(name)
     map = mapID, x = x, y = y, cont = cont, cx = cx, cy = cy,
   }, MAX_PVP_KILLS)
 end
+-- Raw samples of what this client really sends, for /funstats check and whoever reads the save file next.
+local function Check()
+  FunStatsDB.check = FunStatsDB.check or {}
+  return FunStatsDB.check
+end
 local function OnHonorGain(msg)
   if not C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
+  local seen = Check()
+  seen.honor = seen.honor or {}
+  if #seen.honor < 5 then seen.honor[#seen.honor + 1] = msg end
   RecordPvPKill((HONOR_KILL and msg:match(HONOR_KILL)) or (HONOR_KILL_NO_RANK and msg:match(HONOR_KILL_NO_RANK)))
 end
 -- No honor message (it may not exist on every client): a dead enemy player in the target frame is the one we killed.
@@ -332,14 +340,17 @@ local function OnBattlefieldScore()
   if bgCounted then return end
   bgCounted = true
   local me = UnitName("player")
-  local mine
+  local mine, rows = nil, {}
   for i = 1, PvPNum(PvPCall(GetNumBattlefieldScores)) or 0 do
     local name, kb, hk, deaths, honor, faction = PvPCall(GetBattlefieldScore, i)
-    if type(name) == "string" and not (issecretvalue and issecretvalue(name)) and name:gsub("%-.*", "") == me then
-      mine = { kb = PvPNum(kb), hk = PvPNum(hk), deaths = PvPNum(deaths), honor = PvPNum(honor), side = PvPNum(faction) }
-      break
+    if type(name) == "string" and not (issecretvalue and issecretvalue(name)) then
+      if #rows < 10 then rows[#rows + 1] = name end
+      if not mine and name:gsub("%-.*", "") == me then
+        mine = { kb = PvPNum(kb), hk = PvPNum(hk), deaths = PvPNum(deaths), honor = PvPNum(honor), side = PvPNum(faction) }
+      end
     end
   end
+  Check().score = { me = me, winner = winner, rows = rows, found = mine and true or false, t = time() }
   -- Without my row, my side is my faction: 0 is Horde, 1 Alliance, as GetBattlefieldWinner says.
   local side = mine and mine.side or (UnitFactionGroup("player") == "Alliance" and 1 or 0)
   local won = winner == side
@@ -1677,7 +1688,10 @@ frame:SetScript("OnEvent", function(_, event, ...)
   end
 end)
 -- pcall: not every event exists in every client (specializations arrived with Mists of Pandaria).
-for event in pairs(handlers) do pcall(frame.RegisterEvent, frame, event) end
+local missingEvents = {} -- events this client doesn't have, for /funstats check
+for event in pairs(handlers) do
+  if not pcall(frame.RegisterEvent, frame, event) then missingEvents[#missingEvents + 1] = event end
+end
 -- Only my own casts, not every unit's nearby.
 if DM then
   handlers.UNIT_SPELLCAST_SUCCEEDED = OnSpellcast
@@ -1784,6 +1798,28 @@ SlashCmdList.FUNSTATS = function(input)
     Print("death announcements in group chat are now " .. (C.settings.announce and "ON" or "OFF"))
     return
   end
+  if cmd == "check" then
+    local seen = Check()
+    local yes = function(v) return v and "yes" or "no" end
+    Print("battleground scoreboard: " .. yes(GetBattlefieldWinner and GetBattlefieldScore and GetNumBattlefieldScores))
+    Print("honor kill message: " .. yes(HONOR_KILL or HONOR_KILL_NO_RANK))
+    table.sort(missingEvents)
+    Print("events this game doesn't have: " .. (#missingEvents > 0 and table.concat(missingEvents, ", ") or "none"))
+    local honor = seen.honor or {}
+    Print(("honor kill messages seen: %d%s"):format(#honor, honor[#honor] and (', last: "' .. honor[#honor] .. '"') or ""))
+    local sc = seen.score
+    Print(sc and ("last battleground: you are %q, %s on the scoreboard; first names: %s"):format(tostring(sc.me),
+      sc.found and "found" or "NOT found", table.concat(sc.rows or {}, ", ")) or "last battleground: none finished yet")
+    local killers = {}
+    for i = #C.deaths, 1, -1 do
+      local d = C.deaths[i]
+      if type(d) == "table" and d.cause == "player" and d.by and #killers < 3 then killers[#killers + 1] = d.by end
+    end
+    Print("players who killed you: " .. (#killers > 0 and table.concat(killers, ", ") or "none yet")
+      .. "; players you killed: " .. #C.pvpKills .. (C.pvpKills[#C.pvpKills] and (", last " .. C.pvpKills[#C.pvpKills].name) or ""))
+    Print("This is saved in the FunStats save file too, so the Ledger's developer can see what this game sends.")
+    return
+  end
   if cmd ~= "" then Print("unknown command '" .. cmd .. "'.") end
   local d = Day()
   Print(("Today: %d damage, %d healing, %d deaths, %d killing blows, %d jumps, earned %s"):format(
@@ -1791,5 +1827,6 @@ SlashCmdList.FUNSTATS = function(input)
   Print("Everything is automatic: stats save when you log out, the Ledger app uploads them, and guild mates and friends are tracked too.")
   Print("Optional: |cffffd100/funstats bosses|r boss kills and this run, |cffffd100/funstats sync|r stats received from others, "
     .. "|cffffd100/funstats announce|r deaths in group chat (" .. (C.settings.announce and "on" or "off") .. "), "
-    .. "|cffffd100/funstats add Name|r track someone else, |cffffd100/funstats friends|r list them.")
+    .. "|cffffd100/funstats add Name|r track someone else, |cffffd100/funstats friends|r list them, "
+    .. "|cffffd100/funstats check|r what this game lets FunStats record.")
 end

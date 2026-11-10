@@ -656,6 +656,32 @@ class Addon(unittest.TestCase):
     HONOR = ('COMBATLOG_HONORGAIN = "%s dies, honorable kill Rank: %s (Estimated Honor Points: %d)"; '
              'function GetPVPLifetimeStats() return pvpHK, 0 end; pvpHK = 10')
 
+    def check(self):
+        self.lua.execute("printed = ''")
+        self.lua.globals().SlashCmdList.FUNSTATS("check")
+        return self.lua.globals().printed
+
+    def test_check_says_what_this_game_supports(self):
+        self.start(CLASSIC + "\n" + self.HONOR + "\n" + self.BG)
+        out = self.check()
+        self.assertIn("battleground scoreboard: yes", out)
+        self.assertIn("honor kill message: yes", out)
+        self.start(FOREVER)
+        out = self.check()
+        self.assertIn("battleground scoreboard: no", out)
+        self.assertIn("honor kill message: no", out)
+
+    def test_check_keeps_the_first_raw_honor_messages_and_scoreboard(self):
+        self.start(CLASSIC + "\n" + self.BG)
+        for i in range(7):  # no honor format on this client: the text is kept anyway, to see what the game sends
+            self.fire("CHAT_MSG_COMBAT_HONOR_GAIN", f"Someone{i} was slain")
+        self.lua.execute("bgWinner = 1")
+        self.fire("UPDATE_BATTLEFIELD_SCORE")
+        c = self.lua.globals().FunStatsDB.check
+        self.assertEqual((len(c.honor), c.honor[1]), (5, "Someone0 was slain"))
+        self.assertEqual((c.score.me, c.score.rows[1], c.score.rows[2]), ("Oldname", "Someone-Other", "Oldname"))
+        self.assertIn("honor kill messages seen: 5", self.check())
+
     def test_an_honorable_kill_remembers_who_and_where(self):
         self.start(CLASSIC + "\n" + self.HONOR)
         self.lua.execute("pvpHK = 11")
