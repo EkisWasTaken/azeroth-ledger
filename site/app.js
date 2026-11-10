@@ -100,7 +100,7 @@
     "{0} damage ({1}%)": "{0} damage ({1} %)", "{0} casts": "{0} casts",
     "Survival": "Överlevnad", "Exploration": "Utforskande", "Wealth": "Rikedom", "Questing": "Questande", "Chatter": "Prat",
     "Charts couldn't load. Check your connection and reload.": "Diagrammen kunde inte laddas. Kontrollera anslutningen och ladda om.",
-    "Nothing recorded yet.": "Inget registrerat än.",
+    "Nothing recorded yet.": "Inget registrerat än.", "No deaths in this period.": "Inga dödsfall under perioden.",
 
     // deaths
     "fell to their death": "föll till döds", "drowned": "drunknade", "burned to death": "brann ihjäl", "fell into lava": "föll i lava",
@@ -147,7 +147,7 @@
     "Not found": "Hittades inte", "There's nobody with that link on this realm.": "Det finns ingen med den länken på den här realmen.",
     "Adventurer": "Äventyrare", "Known for: {0}": "Känd för: {0}", "highest level": "högsta level", "played": "spelat", "damage": "damage", "deaths": "dödsfall",
     "character": "karaktär", "characters": "karaktärer", "Where {0} stands out from the group, all time": "Där {0} sticker ut från gruppen, totalt",
-    "{0}'s biggest numbers so far": "{0}s största siffror hittills", "#{0} of {1}": "#{0} av {1}", " · {0}× the others' average": " · {0}× de andras snitt",
+    "{0}'s biggest numbers so far": "{0}s största siffror hittills", "#{0} of {1}": "#{0} av {1}", " · {0}× the average": " · {0}× snittet",
     "Only friend with this stat so far": "Enda vännen med det här hittills", "No stats yet. They appear after {0}'s first synced session.": "Ingen statistik än. Den dyker upp efter {0}s första synkade session.",
     "No characters yet.": "Inga karaktärer än.", "(tied)": "(delad)", "No achievements held yet. Someone else is ahead on everything, for now.": "Inga achievements än. Någon annan leder allt, för tillfället.",
     "No creature has killed {0} yet.": "Ingen mob har dödat {0} än.", "Personal bests appear after the first synced session.": "Personliga rekord dyker upp efter första synkade sessionen.",
@@ -1430,7 +1430,7 @@
     charts[id] = new window.Chart(canvas, cfg);
   }
 
-  function drawChart(id, config) {
+  function drawChart(id, config, empty) {
     const canvas = $(id);
     if (!canvas) return;
     const box = canvas.parentElement;
@@ -1442,7 +1442,7 @@
       canvas.hidden = true;
       const p = document.createElement("p");
       p.className = "nochart";
-      p.textContent = !hasChart ? tr("Charts couldn't load. Check your connection and reload.") : (config === null ? tr("Nothing recorded yet.") : "");
+      p.textContent = !hasChart ? tr("Charts couldn't load. Check your connection and reload.") : (config === null ? empty || tr("Nothing recorded yet.") : "");
       box.appendChild(p);
       return;
     }
@@ -2102,7 +2102,7 @@
       type: "doughnut",
       data: { labels: ck.map(c => tr((CAUSE[c] || CAUSE.unknown)[0])), datasets: [{ data: ck.map(c => causes[c]), backgroundColor: ck.map(c => (CAUSE[c] || CAUSE.unknown)[1]) }] },
       options: { plugins: { legend: { display: !legend, position: legendPos } } },
-    } : null);
+    } : null, tr("No deaths in this period."));
   }
 
   // PvP: kills (hk), deaths to players, duels, and the game's own honor counts (c.pvp, all time, from FunStats 1.8.0).
@@ -3160,7 +3160,7 @@
     $("pSig").innerHTML = sig.slice(0, 6).map(x => `<div class="frame sigc" style="--c:${p.color}">
         <span class="lbl">${x.label}</span><span class="val">${x.value}</span>
         <span class="tag">${x.rank === 1 && x.total > 1 ? `<span class="rank1">#1</span>` : ""}${esc(x.tag)}</span>
-        <span class="cmp">${x.total > 1 ? tr("#{0} of {1}", x.rank, x.total) + (x.avg > 0 ? tr(" · {0}× the others' average", x.ratio >= 10 ? dec(x.ratio, 0) : dec(x.ratio, 1)) : "") : tr("Only one with this stat so far")}</span>
+        <span class="cmp">${x.total > 1 ? `<span>${tr("#{0} of {1}", x.rank, x.total)}</span>` + (x.avg > 0 ? ` <span>${tr(" · {0}× the average", x.ratio >= 10 ? dec(x.ratio, 0) : dec(x.ratio, 1)).trim()}</span>` : "") : tr("Only one with this stat so far")}</span>
       </div>`).join("") || `<p class="empty">${tr("No stats yet. They appear after {0}'s first synced session.", esc(p.name))}</p>`;
 
     // character sheet with a picker for alts
@@ -4100,6 +4100,8 @@
     document.documentElement.lang = LANG;
     staticText.forEach(([el, en]) => { el.innerHTML = tr(en); });
     staticAria.forEach(([el, en]) => el.setAttribute("aria-label", tr(en)));
+    $("searchBox").placeholder = tr("Search characters or guilds");
+    $("scrim").setAttribute("aria-label", tr("Close menu"));
   }
   translateStatic();
   // Mac players see the manual install first; the Windows app is no use to them.

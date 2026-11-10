@@ -297,7 +297,7 @@ local function UpdatePvP()
   if next(p) then p.t = time(); C.pvp = p end
 end
 
-local function UpdateProfile()
+local function UpdateProfile(loggingOut)
   C.game = GameInfo()
   C.guid = playerGUID -- how the Ledger app knows this character in the combat log files
   C.name = playerName
@@ -312,7 +312,8 @@ local function UpdateProfile()
   local level = UnitLevel("player")
   if level and level > (C.level or 0) then C.level = level end
   UpdateGuild()
-  UpdatePvP()
+  -- Logging out, WoW Forever reports made-up honor counts (0 honorable, 90 dishonorable): keep the last real ones.
+  if not loggingOut then UpdatePvP() end
   C.lastSeen = time()
   C.owner = FunStatsDB.id
 end
@@ -1488,7 +1489,7 @@ end
 function handlers.PLAYER_LOGOUT()
   if C then
     ReadMeter()
-    UpdateProfile() -- gold stays as PLAYER_MONEY left it: the game reports 0 while logging out
+    UpdateProfile(true) -- gold and honor stay as last seen: the game reports nonsense while logging out
   end
 end
 

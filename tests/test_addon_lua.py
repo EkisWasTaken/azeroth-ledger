@@ -614,6 +614,14 @@ class Addon(unittest.TestCase):
         self.assertEqual(self.today("honorKills"), 3)
         self.assertEqual(self.char()[1].pvp.hk, 123)
 
+    def test_honor_counts_read_while_logging_out_are_ignored(self):
+        # Seen on WoW Forever: playing it says 3 honorable, 0 dishonorable; the save written at logout said 0 and 90.
+        self.start(CLASSIC + "\nfunction GetPVPLifetimeStats() return 3, 0 end")
+        self.lua.execute("function GetPVPLifetimeStats() return 0, 90 end")
+        self.fire("PLAYER_LOGOUT")
+        p = self.char()[1].pvp
+        self.assertEqual((p.hk, p.dk), (3, 0))
+
     def test_deaths_saved_twice_by_old_versions_are_cleaned_up(self):
         save = ('local t = os.time(); local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
                 'days = { [day] = { deaths = 4, deaths_fall = 2 } }, '
