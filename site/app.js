@@ -725,7 +725,7 @@
       // A couple of enemy players gank the first three, so the Most Wanted board has someone on it.
       // and one hero takes Gankalot down an hour later
       const pvpKills = pi === 1 && deaths.length ? [{ ...deaths[deaths.length - 1], t: deaths[deaths.length - 1].t + 3600, name: "Gankalot", cause: undefined, by: undefined }] : undefined;
-      if (pi < 3) deaths.slice(-2).forEach((d, j) => deaths.push({ ...d, t: d.t + 600, cause: "player", by: j || pi === 2 ? "Gankalot" : "Shadowknife", spell: "Backstab" }));
+      if (pi < 3) deaths.slice(-2).forEach((d, j) => deaths.push({ ...d, t: d.t + 600, cause: "player", by: j || pi === 2 ? "Gankalot" : "Shadowknife", spell: "Backstab", byClass: "ROGUE", byRace: j || pi === 2 ? "Scourge" : "Orc", byLvl: 60 }));
       const others = roster.filter((_, i) => i !== pi);
       others.forEach(([n]) => { healers[n] = ri(2000, 40000) * (n === "Mirelle" ? 4 : 1); });
       const duels = {};
@@ -2222,8 +2222,10 @@
     const killers = {};
     all.forEach(({ p, d }) => {
       if (d.cause !== "player" || !d.by) return;
-      const k = killers[d.by] ||= { n: 0, victims: new Set(), last: d };
+      const k = killers[d.by] ||= { n: 0, victims: new Set(), last: d, who: {} };
       k.n++; k.victims.add(p.name); if (d.t > k.last.t) k.last = d;
+      // class, race and level as last seen (addon 1.13+ records them)
+      for (const f of ["byClass", "byRace", "byLvl"]) if (d[f] && !(k.who[f] && k.who[f].t > d.t)) k.who[f] = { v: d[f], t: d.t };
     });
     return Object.entries(killers).sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
   }
@@ -2284,6 +2286,7 @@
         <div class="bounty-file">
           <p class="bf-eye">${tr("Most wanted")}</p>
           <strong class="bf-name">${esc(name)}</strong>
+          ${(w => w ? `<span class="bf-who">${w}</span>` : "")([k.who.byLvl && tr("Lvl {0}", esc(k.who.byLvl.v)), k.who.byRace && esc(RACE[k.who.byRace.v] || k.who.byRace.v), k.who.byClass && classOf({ class: k.who.byClass.v })[0]].filter(Boolean).join(" "))}
           <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}</span></div>
           ${k.last.zone ? `<span class="bf-seen">${tr("Last seen in {0}", esc(k.last.zone))}</span>` : ""}
           ${reward && !(st && st.paid) ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}

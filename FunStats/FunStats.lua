@@ -153,6 +153,19 @@ local function CountRun(r)
   d.dungeons = (d.dungeons or 0) + 1
 end
 
+-- An enemy player's class, race and level. The level only shows on a unit we can see (target, nameplate...); nil for "??".
+local ENEMY_UNITS = { "target", "focus", "mouseover", "targettarget" }
+for i = 1, 40 do ENEMY_UNITS[#ENEMY_UNITS + 1] = "nameplate" .. i end
+local function EnemyInfo(guid)
+  if type(guid) ~= "string" or not guid:find("^Player%-") then return end
+  local _, class, _, race = GetPlayerInfoByGUID(guid)
+  local lvl
+  for _, u in ipairs(ENEMY_UNITS) do
+    if UnitGUID(u) == guid then lvl = UnitLevel(u); break end
+  end
+  return class, race, lvl and lvl > 0 and lvl or nil
+end
+
 local function MapPosition(unit)
   unit = unit or "player"
   local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit(unit)
@@ -606,8 +619,10 @@ local function OnFriendDeath(guid, name, key)
     if UnitIsFeignDeath and UnitIsFeignDeath(name) then return end
     local hit = friendLastHit[guid]
     local cause, by, spell, amt = "unknown", nil, nil, nil
+    local byClass, byRace, byLvl
     if hit and GetTime() - hit.t < 15 then
       if hit.env then cause = hit.env else cause = hit.pvp and "player" or "mob"; by, spell = hit.by, hit.spell end
+      if cause == "player" then byClass, byRace, byLvl = hit.byClass, hit.byRace, hit.byLvl end
       amt = hit.amt
     end
     OAdd(key, "deaths")
@@ -621,7 +636,7 @@ local function OnFriendDeath(guid, name, key)
       t = time(), lvl = O.level, zone = GetRealZoneText(),
       inst = IsInInstance() and (GetInstanceInfo()) or nil,
       map = spot.map, x = spot.x, y = spot.y, cont = spot.cont, cx = spot.cx, cy = spot.cy,
-      cause = cause, by = by, spell = spell, amt = amt,
+      cause = cause, by = by, spell = spell, amt = amt, byClass = byClass, byRace = byRace, byLvl = byLvl,
     }, MAX_FRIEND_DEATHS)
     friendLastHit[guid] = nil
   end)
@@ -661,6 +676,7 @@ local function OnFriendCombat(sub, srcGUID, srcName, srcFlags, dstGUID, dstName,
     OAdd(dst, "taken", amount)
     local pvp = srcFlags and band(srcFlags, TYPE_PLAYER) ~= 0 and not FriendKey(srcGUID, srcName) and srcGUID ~= playerGUID
     friendLastHit[dstGUID] = { by = srcName, spell = spell, amt = amount, env = env, pvp = pvp, t = GetTime() }
+    if pvp then local h = friendLastHit[dstGUID]; h.byClass, h.byRace, h.byLvl = EnemyInfo(srcGUID) end
   end
 end
 
@@ -1021,6 +1037,7 @@ local function OnCombatLog()
       Add("taken", amount)
       local pvp = srcFlags and band(srcFlags, TYPE_PLAYER) ~= 0 and not fromMe
       lastHit = { by = srcName, spell = spell, amt = amount, env = env, pvp = pvp, t = GetTime() }
+      if pvp then lastHit.byClass, lastHit.byRace, lastHit.byLvl = EnemyInfo(srcGUID) end
     end
   end
 
@@ -1170,6 +1187,12 @@ local function RecapDeath(entry)
   else
     entry.cause = last.sourceGUID and last.sourceGUID:find("^Player%-") and "player" or "mob"
     entry.by = not last.hideCaster and last.sourceName or nil
+    if entry.cause == "player" then
+      local class, race, lvl = EnemyInfo(last.sourceGUID)
+      if class then entry.byClass, entry.byRace, entry.byLvl = class, race, lvl or entry.byLvl end
+    else
+      entry.byClass, entry.byRace, entry.byLvl = nil, nil, nil
+    end
     entry.spell = last.event == "SWING_DAMAGE" and "Melee" or last.spellName
   end
 end
@@ -1180,12 +1203,14 @@ local function OnDeath()
   if prev and time() - (prev.t or 0) < 15 then return end
   Add("deaths")
   local cause, by, spell, amt = "unknown", nil, nil, nil
+  local byClass, byRace, byLvl
   if lastHit and GetTime() - lastHit.t < 15 then
     if lastHit.env then
       cause = lastHit.env
     else
       cause = lastHit.pvp and "player" or "mob"
       by, spell = lastHit.by, lastHit.spell
+      byClass, byRace, byLvl = lastHit.byClass, lastHit.byRace, lastHit.byLvl
     end
     amt = lastHit.amt
   end
@@ -1203,7 +1228,7 @@ local function OnDeath()
     sub = GetSubZoneText() ~= "" and GetSubZoneText() or nil,
     inst = inInstance and (GetInstanceInfo()) or nil,
     map = mapID, x = x, y = y, cont = cont, cx = cx, cy = cy,
-    cause = cause, by = by, spell = spell, amt = amt,
+    cause = cause, by = by, spell = spell, amt = amt, byClass = byClass, byRace = byRace, byLvl = byLvl,
     grouped = IsInGroup() or nil,
   }, MAX_DEATHS)
   if DM and C_DeathRecap then

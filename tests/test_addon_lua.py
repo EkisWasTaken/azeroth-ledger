@@ -468,6 +468,16 @@ class Addon(unittest.TestCase):
         self.lua.execute("runTimers()")
         return self.run_lua("(function() local _, c = next(FunStatsDB.chars); return c.deaths[#c.deaths] end)()")
 
+    def test_a_player_killer_keeps_class_race_and_level(self):
+        self.start(FOREVER)
+        self.lua.execute("""players["Player-9-ENEMY"] = { "Gankalot", "" }
+          function UnitGUID(u) if u == "player" then return "Player-1-AAA" elseif u == "nameplate3" then return "Player-9-ENEMY" end end
+          function UnitLevel(u) return u == "nameplate3" and 58 or 10 end
+          recap = { { timestamp = 2, event = "SPELL_DAMAGE", sourceName = "Gankalot", spellName = "Bolt", amount = 90,
+            sourceGUID = "Player-9-ENEMY", causedDeath = true } }""")
+        d = self.death()
+        self.assertEqual((d.cause, d.by, d.byClass, d.byRace, d.byLvl), ("player", "Gankalot", "WARRIOR", "Human", 58))
+
     def test_death_cause_from_recap(self):
         self.start(FOREVER)
         self.lua.execute("""recap = { { timestamp = 1, event = "SPELL_DAMAGE", sourceName = "Old", spellName = "Bolt", amount = 1 },
