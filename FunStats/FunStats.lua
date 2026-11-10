@@ -147,7 +147,6 @@ local function CountRun(r)
   local d = C.days[key] or {}
   C.days[key] = d
   d.dungeons = (d.dungeons or 0) + 1
-  C.instances[r.inst] = (C.instances[r.inst] or 0) + 1
 end
 
 local function MapPosition(unit)
@@ -291,7 +290,8 @@ local function UpdatePvP()
   p.honor = PvPNum(PvPCall(GetHonorCurrency)) or PvPNum(PvPCall(UnitHonor, "player"))
   -- Honorable kills per day: what the game's lifetime count went up by. A secret or missing count keeps the last one.
   local old = C.pvp and C.pvp.hk
-  if not p.hk then p.hk = old end
+  -- The lifetime count only grows: a lower reading is a glitch, and keeping it would count the same kills again.
+  if not p.hk or (old and p.hk < old) then p.hk = old end
   -- shortcut: kills made while the addon was off land on the day it next sees the count; fine, it's rare
   if p.hk and old and p.hk > old then Add("honorKills", p.hk - old) end
   if next(p) then p.t = time(); C.pvp = p end
@@ -362,7 +362,7 @@ local function InitCharacter()
   C.deaths = C.deaths or {}
   C.kills = C.kills or {}
   C.killNames = C.killNames or 0
-  C.instances = C.instances or {}
+  C.instances = nil -- runs per instance, never shown anywhere; C.runs has them
   C.levels = C.levels or {}
   C.notable = C.notable or {}
   C.best = C.best or {}
@@ -380,6 +380,23 @@ local function InitCharacter()
   C.bosses = C.bosses or {}         -- "encounterID:difficultyID" -> kills, wipes, fastest kill, best DPS
   C.fights = C.fights or {}         -- recent boss fights, with the group's damage and healing
   C.runs = C.runs or {}             -- finished dungeon and raid runs; C.run is the one in progress
+  -- FunStats 1.7.5 and older saved some deaths twice, seconds apart: drop the copies and their day counts.
+  if not C.deathsDeduped then
+    local kept = {}
+    for _, d in ipairs(C.deaths) do
+      local prev = kept[#kept]
+      if type(d) == "table" and prev and d.t and prev.t and d.t - prev.t < 15 then
+        local day = C.days[date("%Y-%m-%d", d.t)]
+        if day and day.deaths then day.deaths = day.deaths > 1 and day.deaths - 1 or nil end
+        if day and d.cause and day["deaths_" .. d.cause] then
+          day["deaths_" .. d.cause] = day["deaths_" .. d.cause] > 1 and day["deaths_" .. d.cause] - 1 or nil
+        end
+      else
+        kept[#kept + 1] = d
+      end
+    end
+    C.deaths, C.deathsDeduped = kept, true
+  end
   -- FunStats 1.9.0 and older counted every time you walked in, quick looks included: recount from the saved runs.
   -- Days before the first saved run stay as they are, since there's nothing to check them against.
   if not C.runsCounted and C.runs[1] then

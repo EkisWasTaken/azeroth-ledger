@@ -236,7 +236,7 @@ local function Meta(ch)
   for _, f in ipairs(PROFILE) do m[f] = ch[f] end
   m.owner = FunStatsDB.id
   m.best, m.levels, m.levelPlayed, m.dingAt = ch.best, ch.levels, ch.levelPlayed, ch.dingAt
-  m.heat, m.duels, m.instances = ch.heat, ch.duels, ch.instances
+  m.heat, m.duels = ch.heat, ch.duels
   m.gear, m.gearAt, m.talents, m.spec, m.professions = ch.gear, ch.gearAt, ch.talents, ch.spec, ch.professions
   m.traits = ch.traits
   m.pvp = ch.pvp

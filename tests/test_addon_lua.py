@@ -606,6 +606,24 @@ class Addon(unittest.TestCase):
         self.assertEqual(self.run_lua('FunStatsDB.chars["Oldname-PvE"].days[date("%Y-%m-%d", os.time())].dungeons'), 2)
         self.assertEqual(days["2000-01-01"].dungeons, 2)  # before the first saved run: left alone
 
+    def test_a_lower_honor_count_for_a_moment_counts_nothing_twice(self):
+        self.start(CLASSIC + "\nfunction GetPVPLifetimeStats() return 120, 0, 0 end")
+        for hk in (0, 120, 123):
+            self.lua.execute(f"function GetPVPLifetimeStats() return {hk}, 0, 0 end")
+            self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.assertEqual(self.today("honorKills"), 3)
+        self.assertEqual(self.char()[1].pvp.hk, 123)
+
+    def test_deaths_saved_twice_by_old_versions_are_cleaned_up(self):
+        save = ('local t = os.time(); local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
+                'days = { [day] = { deaths = 4, deaths_fall = 2 } }, '
+                'deaths = { { t = t, cause = "fall" }, { t = t + 2, cause = "fall" }, { t = t + 600, cause = "mob" }, '
+                '{ t = t + 606, cause = "mob" } } } } }')
+        self.start(CLASSIC + "\n" + save)
+        c = self.char()[1]
+        self.assertEqual(len(c.deaths), 2)
+        self.assertEqual((self.today("deaths"), self.today("deaths_fall")), (2, 1))
+
     def test_no_honor_calls_no_pvp_record(self):
         self.start(FOREVER)
         self.assertIsNone(self.char()[1].pvp)
