@@ -531,6 +531,24 @@ class Addon(unittest.TestCase):
         self.lua.execute('fire("CHAT_MSG_ADDON", "FunStats", secretMark, "PARTY", secretMark)')
         self.assertEqual(self.today("msgs"), 0)
 
+    def test_a_friend_logging_off_mid_sync_stops_the_whispers_quietly(self):
+        self.start(FOREVER + "\nERR_CHAT_PLAYER_NOT_FOUND_S = \"No player named '%s' is currently playing.\"; "
+                   "filters = {}; function ChatFrame_AddMessageEventFilter(e, fn) filters[e] = fn end; "
+                   "tickers = {}; C_Timer.NewTicker = function(_, fn) tickers[#tickers + 1] = fn end")
+        self.lua.execute('local _, c = next(FunStatsDB.chars); for i = 10, 29 do c.days["2026-10-" .. i] = { dmg = i } end')
+        self.lua.execute('fire("CHAT_MSG_ADDON", "FunStats1", "1:1:1:" .. ADDON_TABLE.Encode({ k = "r", c = "John Smith-PvE", s = "" }), '
+                         '"WHISPER", "Marrolock Fear")')
+        pump = "for _, fn in ipairs(tickers) do fn() end"
+        self.lua.execute(pump)
+        before = self.run_lua("#sent")
+        self.assertGreater(before, 0)
+        offline = "No player named 'Marrolock Fear' is currently playing."
+        self.assertTrue(self.lua.globals().filters.CHAT_MSG_SYSTEM(None, "CHAT_MSG_SYSTEM", offline))
+        self.assertFalse(self.lua.globals().filters.CHAT_MSG_SYSTEM(None, "CHAT_MSG_SYSTEM",
+                                                                    "No player named 'Stranger' is currently playing."))
+        self.lua.execute(f"now = now + 100; {pump}")
+        self.assertEqual(self.run_lua("#sent"), before)
+
     def test_announce_goes_through_the_new_chat_call(self):
         self.start(FOREVER)
         self.lua.execute("IsInGroup = function() return true end")

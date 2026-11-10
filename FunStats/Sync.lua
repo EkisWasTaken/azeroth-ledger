@@ -154,6 +154,7 @@ ns.Encode, ns.Decode = Encode, Decode
 local queue, qHead, qTail = {}, 1, 0
 local tokens, lastRefill = 8, 0
 local msgSeq = 0
+local whispered = {} -- whisper target -> when we last sent them something
 
 local function Pump()
   local now = GetTime()
@@ -163,9 +164,31 @@ local function Pump()
     local m = queue[qHead]
     queue[qHead] = nil
     qHead = qHead + 1
-    pcall(C_ChatInfo.SendAddonMessage, PREFIX, m[1], m[2], m[3]) -- Forever may refuse addon chat inside instances
-    tokens = tokens - 1
+    if not m.dropped then
+      pcall(C_ChatInfo.SendAddonMessage, PREFIX, m[1], m[2], m[3]) -- Forever may refuse addon chat inside instances
+      if m[2] == "WHISPER" then whispered[m[3]] = now end
+      tokens = tokens - 1
+    end
   end
+end
+
+-- "No player named 'X' is currently playing.": X logged off while we were still sending them stats.
+-- Drop what's left for them (they'll ask again next time) and say true so the line is hidden from chat.
+local NOT_FOUND = ns.FormatToPattern(ERR_CHAT_PLAYER_NOT_FOUND_S)
+local function WentOffline(msg)
+  if not NOT_FOUND or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return false end
+  local name = msg:match(NOT_FOUND)
+  if not name then return false end
+  name = ns.SplitName(name)
+  local ours = false
+  for target, t in pairs(whispered) do
+    if GetTime() - t < 30 and ns.SplitName(target) == name then ours = true end
+  end
+  for i = qHead, qTail do
+    local m = queue[i]
+    if m and m[2] == "WHISPER" and ns.SplitName(m[3]) == name then m.dropped, ours = true, true end
+  end
+  return ours
 end
 
 local function Send(t, channel, target)
@@ -489,8 +512,14 @@ frame:SetScript("OnEvent", function(_, event, ...)
     HelloSoon(15)
   elseif event == "GROUP_ROSTER_UPDATE" then
     if IsInGroup() then HelloSoon(6) end
+  elseif event == "CHAT_MSG_SYSTEM" then
+    WentOffline(...)
   end
 end)
+if ChatFrame_AddMessageEventFilter then
+  ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", function(_, _, msg) return WentOffline(msg) end)
+end
+frame:RegisterEvent("CHAT_MSG_SYSTEM")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("GROUP_ROSTER_UPDATE")

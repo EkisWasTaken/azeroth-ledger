@@ -112,6 +112,7 @@ local function FormatToPattern(fmt)
   p = p:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
   return "^" .. p .. "$"
 end
+ns.FormatToPattern = FormatToPattern
 
 local ROLL_PATTERN = FormatToPattern(RANDOM_ROLL_RESULT)
 local LOOT_SELF = FormatToPattern(LOOT_ITEM_SELF)
