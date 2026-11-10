@@ -100,7 +100,7 @@
     "{0} damage ({1}%)": "{0} damage ({1} %)", "{0} casts": "{0} casts",
     "Survival": "Överlevnad", "Exploration": "Utforskande", "Wealth": "Rikedom", "Questing": "Questande", "Chatter": "Prat",
     "Charts couldn't load. Check your connection and reload.": "Diagrammen kunde inte laddas. Kontrollera anslutningen och ladda om.",
-    "Nothing recorded yet.": "Inget registrerat än.", "No deaths in this period.": "Inga dödsfall under perioden.",
+    "Nothing recorded yet.": "Inget registrerat än.", "everyone, from FunStats 1.9": "alla, från FunStats 1.9", "Biggest spenders": "Största slösarna", "who spent the most where": "vem som spenderade mest var", "Shows up once players with FunStats 1.9 spend or earn gold.": "Syns när spelare med FunStats 1.9 spenderar eller tjänar guld.", "Shows up once players with FunStats 1.9 spend gold.": "Syns när spelare med FunStats 1.9 spenderar guld.", "Most spent at the auction house in one day": "Mest spenderat på auktionshuset på en dag", "Most gold from the mailbox in one day": "Mest guld från brevlådan på en dag", "Most gold from vendors in one day": "Mest guld från handlare på en dag", "Most spent on training in one day": "Mest spenderat på träning på en dag", "No deaths in this period.": "Inga dödsfall under perioden.",
 
     // deaths
     "fell to their death": "föll till döds", "drowned": "drunknade", "burned to death": "brann ihjäl", "fell into lava": "föll i lava",
@@ -2555,6 +2555,15 @@
         } } } },
     } : null);
 
+    // Where the group's gold went in the picked period, and who spent the most at each place.
+    const tot = {};
+    rows.forEach(r => Object.entries(r.s).forEach(([k, v]) => { if (typeof v === "number") tot[k] = (tot[k] || 0) + v; }));
+    $("gSources").innerHTML = goldSourcesHTML(tot) || `<p class="empty">${tr("Shows up once players with FunStats 1.9 spend or earn gold.")}</p>`;
+    $("gSpenders").innerHTML = GOLD_SOURCES.map(([k, l]) => {
+      const best = rows.filter(r => r.s["out" + k]).sort((a, b) => b.s["out" + k] - a.s["out" + k])[0];
+      return best ? `<div class="glead">${zam(WOWICON.coin, 18)}<span class="lbl">${tr(l)}</span><a class="plink" href="${profileHref(best.p)}"><span class="cname" style="--cc:${classOf(best.p.chars[0])[1]}">${esc(best.p.name)}</span></a><span class="n">${goldHTML(best.s["out" + k])}</span></div>` : "";
+    }).join("") || `<p class="empty">${tr("Shows up once players with FunStats 1.9 spend gold.")}</p>`;
+
     const gr = rows.filter(r => r.s.goldIn || r.s.goldOut).sort((a, b) => (b.s.goldIn || 0) - (a.s.goldIn || 0)).slice(0, 10);
     drawChart("cGold", gr.length ? {
       type: "bar",
@@ -2776,6 +2785,8 @@
       ["hk", "Most players killed in one day", num, "combat", "crest"], ["combat", "Longest time in combat in one day", dur, "combat", "shield"],
       ["hearth", "Most hearthstones in one day", num, "adventure", "hearth"], ["swim", "Longest swim in one day", dur, "adventure", "spring"],
       ["msgs", "Chattiest day", num, "adventure", "speech"], ["goldOut", "Biggest spending spree in one day", goldHTML, "loot", "anvil"],
+      ["outAH", "Most spent at the auction house in one day", goldHTML, "loot", "coin"], ["inMail", "Most gold from the mailbox in one day", goldHTML, "loot", "scroll"],
+      ["inVendor", "Most gold from vendors in one day", goldHTML, "loot", "loot"], ["outTrainer", "Most spent on training in one day", goldHTML, "loot", "atiesh"],
       ["ghost", "Longest time dead in one day", dur, "shame", "ghost"], ["deaths_fall", "Most falls to death in one day", num, "shame", "feather"],
       ["wipes", "Most wipes in one day", num, "shame", "shieldBad"], ["repair", "Biggest repair bill in one day", goldHTML, "shame", "anvil"],
       ["afk", "Longest AFK in one day", dur, "shame", "zzz"], ["sorry", "Most apologies in one day", num, "shame", "flag"],
