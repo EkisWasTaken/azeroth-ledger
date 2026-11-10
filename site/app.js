@@ -24,7 +24,7 @@
     "Damage and healing per day": "Damage och healing per dag", "last 30 days played": "senaste 30 speldagarna",
     "Level progress": "Levelprogress", "Damage by ability": "Damage per spell", "Causes of death": "Dödsorsaker", "Nemeses": "Ärkefiender",
     "Personal Bests": "Personliga rekord", "Recent deaths": "Senaste dödsfall", "When they play": "När de spelar",
-    "Favorite zones": "Favoritzoner", "hours": "timmar", "Best loot": "Bästa lootet", "rare and better": "rare och bättre",
+    "Favorite zones": "Favoritzoner", "Where the gold went": "Vart guldet tog vägen", "from FunStats 1.9": "från FunStats 1.9", "Earned": "Intjänat", "Vendors & repairs": "Handlare & reparationer", "Auction House": "Auktionshuset", "Trading": "Byteshandel", "Trainers": "Tränare", "Mail": "Post", "Flight paths": "Flygrutter", "Loot, quests & other": "Loot, quests & annat", "Spending by vendor, auction house, trades and more shows up after {0} plays with FunStats 1.9.": "Utgifter hos handlare, auktionshuset, byten med mera syns när {0} har spelat med FunStats 1.9.", "hours": "timmar", "Best loot": "Bästa lootet", "rare and better": "rare och bättre",
     "Ledger of Deeds": "Dådens liggare", "Achievements Earned": "Achievements", "Glory for some, shame for others": "Ära för vissa, skam för andra",
     "The Meters": "Mätarna", "Who's pumping, who's padding": "Vem pumpar, vem paddar", "Damage Done": "Damage", "Damage per day": "Damage per dag",
     "The Race to 60": "Racet till 60", "Every ding, plotted": "Varje ding, inritat", "By date": "Per datum", "By /played": "Per /played",
@@ -702,6 +702,9 @@
           maxHit: Math.round(ri(150, 400) * scale), maxHitSpell: Object.keys(spells)[0], maxHitTarget: pickOne(mobs),
         };
         d.rollSum = d.rolls * ri(25, 75);
+        [["out", goldOut, [["Vendor", 0.4], ["AH", 0.3], ["Trainer", 0.15], ["Taxi", 0.1], ["Trade", 0.05]]],
+          ["in", goldIn, [["Other", 0.6], ["Vendor", 0.25], ["Mail", 0.1], ["Trade", 0.05]]]]
+          .forEach(([dir, total, parts]) => parts.forEach(([k, f]) => d[dir + k] = Math.round(total * f)));
         if (nd && rnd() < 0.35) d.deaths_fall = 1;
         if (d.dungeons) d.dungeonName = pickOne(dungeons);
         dmap[k] = d;
@@ -3105,7 +3108,7 @@
     if (!p) {
       $("pHero").innerHTML = `<h2>${tr("Not found")}</h2><p class="muted">${tr("There's no character with that link.")} <a class="back" href="#">${tr("Back to the Ledger")}</a></p>`;
       $("p-compare").classList.add("is-empty");
-      ["pSig", "pAch", "pAchCount", "pSheet", "pBests", "pDeaths", "pHeat", "pZones", "pLoot", "pNemesis", "pCharPick", "pLately", "pPvp"].forEach(id => $(id).innerHTML = "");
+      ["pSig", "pAch", "pAchCount", "pSheet", "pBests", "pDeaths", "pHeat", "pZones", "pGold", "pLoot", "pNemesis", "pCharPick", "pLately", "pPvp"].forEach(id => $(id).innerHTML = "");
       ["cPDaily", "cPRace", "cPSpells", "cPCause"].forEach(id => drawChart(id, null));
       $("pBosses").tHead.innerHTML = $("pBosses").tBodies[0].innerHTML = "";
       return;
@@ -3233,6 +3236,7 @@
     const zMax = Math.max(1, ...zs.map(z => z[1]));
     $("pZones").innerHTML = zs.map(([z, v]) => `<div class="hbar acc" data-tip="${esc(z)}|${dur(v)}"><span>${esc(z)}</span><span class="track"><span class="fill" style="display:block;width:${(v / zMax) * 100}%"></span></span><span class="num">${dec(v / 3600, 1)} h</span></div>`).join("")
       || `<p class="empty">${tr("Zones appear once {0} has played with the addon.", esc(p.name))}</p>`;
+    $("pGold").innerHTML = goldSourcesHTML(s) || `<p class="empty">${tr("Spending by vendor, auction house, trades and more shows up after {0} plays with FunStats 1.9.", esc(p.name))}</p>`;
     const loot = p.notable.filter(n => n.q >= 3).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 30);
     const lootLine = n => {
       return `<div>${itemHTML(n)}${dropTags(n)}${n._char && n._char !== p.name ? ` <span class="muted">${tr("on {0}", esc(n._char))}</span>` : ""} <span class="muted" style="font-size:13px">${n.t ? new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" }) : ""}</span></div>`;
@@ -3245,6 +3249,18 @@
       `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${lastDeaths.map(d => deathLine(p, d, true)).join("") || `<p class="empty">${tr("{0} hasn't died yet. Impressive.", esc(p.name))}</p>`}</div>`;
 
     whRefresh();
+  }
+
+  // Gold in and out by the window that was open (addon fields outVendor, inAH, ...), biggest first.
+  const GOLD_SOURCES = [["Vendor", "Vendors & repairs"], ["AH", "Auction House"], ["Trade", "Trading"], ["Trainer", "Trainers"],
+    ["Mail", "Mail"], ["Taxi", "Flight paths"], ["Other", "Loot, quests & other"]];
+  function goldSourcesHTML(s) {
+    const group = (dir, cls, title) => {
+      const rows = GOLD_SOURCES.map(([k, l]) => [tr(l), s[dir + k] || 0]).filter(r => r[1] > 0).sort((a, b) => b[1] - a[1]);
+      const max = Math.max(1, ...rows.map(r => r[1]));
+      return rows.length ? `<div class="lh">${tr(title)}</div>` + rows.map(([l, v]) => `<div class="hbar ${cls}"><span>${esc(l)}</span><span class="track"><span class="fill" style="display:block;width:${(v / max) * 100}%"></span></span><span class="num">${goldHTML(v)}</span></div>`).join("") : "";
+    };
+    return group("out", "bad", "Spent") + group("in", "", "Earned");
   }
 
   // Two characters side by side, all time.

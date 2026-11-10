@@ -1103,10 +1103,22 @@ end
 -- Money, XP, levels, loot, rolls, chat
 ---------------------------------------------------------------------------
 
+-- Where gold came from or went: whichever of these windows is open when it changes.
+local MONEY_WINDOWS = {
+  MERCHANT = "Vendor", AUCTION_HOUSE = "AH", TRADE = "Trade", TRAINER = "Trainer", MAIL = "Mail", TAXIMAP = "Taxi",
+}
+local moneySrc, moneySrcClosed = nil, 0
+-- A finished trade or flight can close its window just before the gold moves, so the source lingers a second.
+local function MoneySource()
+  if moneySrc and moneySrcClosed > 0 and GetTime() - moneySrcClosed > 1 then moneySrc, moneySrcClosed = nil, 0 end
+  return moneySrc or "Other"
+end
+
 local function OnMoney()
   local now = GetMoney()
   local diff = now - lastMoney
-  if diff > 0 then Add("goldIn", diff) elseif diff < 0 then Add("goldOut", -diff) end
+  if diff > 0 then Add("goldIn", diff); Add("in" .. MoneySource(), diff)
+  elseif diff < 0 then Add("goldOut", -diff); Add("out" .. MoneySource(), -diff) end
   lastMoney = now
   if now > (C.peakGold or 0) then C.peakGold = now end
   C.gold = now
@@ -1445,6 +1457,10 @@ if DM then
 end
 handlers.PLAYER_DEAD = OnDeath
 handlers.PLAYER_MONEY = OnMoney
+for prefix, src in pairs(MONEY_WINDOWS) do
+  handlers[prefix .. (prefix == "TAXIMAP" and "_OPENED" or "_SHOW")] = function() moneySrc, moneySrcClosed = src, 0 end
+  handlers[prefix .. "_CLOSED"] = function() if moneySrc == src then moneySrcClosed = GetTime() end end
+end
 handlers.PLAYER_XP_UPDATE = OnXP
 handlers.PLAYER_LEVEL_UP = OnLevelUp
 handlers.CHAT_MSG_LOOT = OnLoot

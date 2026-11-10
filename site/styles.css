@@ -916,6 +916,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .glead .cname { color: var(--cc, var(--accent)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plately .lh { font: 400 13px var(--pf); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 0 6px; }
 .plately .lh ~ .lh { margin-top: 14px; }
+#pGold .lh { font: 700 11px var(--pf); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .plately .clog { max-height: none; overflow: visible; padding-right: 0; }
 @media (min-width: 1000px) {
   .pside { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: stretch; }

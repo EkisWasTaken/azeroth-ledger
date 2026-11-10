@@ -560,6 +560,27 @@ class Addon(unittest.TestCase):
         self.fire("PLAYER_PVP_KILLS_CHANGED")
         self.assertEqual(self.today("honorKills"), 4)
 
+    def test_gold_is_sorted_by_the_open_window(self):
+        self.start(CLASSIC)
+
+        def money(amount):
+            self.lua.execute(f"function GetMoney() return {amount} end")
+            self.fire("PLAYER_MONEY")
+
+        self.fire("MERCHANT_SHOW")
+        money(300)  # bought something for 200
+        money(400)  # sold something for 100
+        self.fire("MERCHANT_CLOSED")
+        self.fire("TAXIMAP_OPENED")
+        self.fire("TAXIMAP_CLOSED")
+        money(350)  # the flight is paid just after the map closes
+        self.lua.execute("now = now + 5")
+        money(450)  # looted later, with no window open
+        self.assertEqual((self.today("outVendor"), self.today("inVendor")), (200, 100))
+        self.assertEqual(self.today("outTaxi"), 50)
+        self.assertEqual(self.today("inOther"), 100)
+        self.assertEqual((self.today("goldIn"), self.today("goldOut")), (200, 250))
+
     def test_no_honor_calls_no_pvp_record(self):
         self.start(FOREVER)
         self.assertIsNone(self.char()[1].pvp)
