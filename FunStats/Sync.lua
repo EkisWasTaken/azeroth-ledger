@@ -240,6 +240,9 @@ local function Meta(ch)
   m.gear, m.gearAt, m.talents, m.spec, m.professions = ch.gear, ch.gearAt, ch.talents, ch.spec, ch.professions
   m.traits = ch.traits
   m.pvp, m.bg = ch.pvp, ch.bg
+  -- The last 20 enemy players killed, enough for the website to see a bounty claimed; the app uploads them all.
+  local pk = ch.pvpKills or {}
+  m.pvpKills = { unpack(pk, math.max(1, #pk - 19)) }
   m.game = ch.game
   m.kills = Top(ch.kills, 40)
   m.spellDmg = Top(ch.spellDmg, 30)

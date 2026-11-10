@@ -33,5 +33,8 @@ window.LEDGER_CONFIG = {
   modelViewer: "https://ledger-models.eliaspown.workers.dev",
   // The bounty on the Most Wanted enemy player, shown on the overview and the top poster. Any text works:
   // reward: "50 gold" or "[Black Lotus]", claim: "Whisper Ekis in game". Empty reward: no bounty line at all.
-  bounty: { reward: "", claim: "" },
+  // When one of us kills the Most Wanted, the poster says "Claimed" and who did it. Once you've paid, add the player
+  // and the day you paid, e.g. paid: { "Gankalot": "2026-11-12" }: the poster says "Paid", and if they kill one of us
+  // again after that day, the bounty is open again.
+  bounty: { reward: "", claim: "", paid: {} },
 };

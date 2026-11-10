@@ -120,7 +120,7 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
-    "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
     "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
@@ -723,6 +723,8 @@
         }
       }
       // A couple of enemy players gank the first three, so the Most Wanted board has someone on it.
+      // and one hero takes Gankalot down an hour later
+      const pvpKills = pi === 1 && deaths.length ? [{ ...deaths[deaths.length - 1], t: deaths[deaths.length - 1].t + 3600, name: "Gankalot", cause: undefined, by: undefined }] : undefined;
       if (pi < 3) deaths.slice(-2).forEach((d, j) => deaths.push({ ...d, t: d.t + 600, cause: "player", by: j || pi === 2 ? "Gankalot" : "Shadowknife", spell: "Backstab" }));
       const others = roster.filter((_, i) => i !== pi);
       others.forEach(([n]) => { healers[n] = ri(2000, 40000) * (n === "Mirelle" ? 4 : 1); });
@@ -736,6 +738,7 @@
         guild: pi >= 4 ? "Murloc Mafia" : "Example Guild", owner: pi === 2 || pi === 3 ? "demo-player-jordan" : "demo-player-" + pi,
         game: { demo: true, hardcore: hc || undefined },
         pvp: (r => r ? { hk: r * 37, dk: ri(0, 3), weekHK: ri(0, r * 4), weekHonor: ri(0, r * 300), rank: 4 + r, rankName: ["Private", "Corporal", "Sergeant", "Master Sergeant"][r - 1], best: 4 + r, bestName: ["Private", "Corporal", "Sergeant", "Master Sergeant"][r - 1] } : undefined)(pi < 4 ? 4 - pi : 0),
+        pvpKills,
         bg: pi < 4 ? { "Warsong Gulch": { n: 14 - pi * 3, w: 8 - pi * 2, l: 6 - pi, kb: 40 - pi * 8, hk: 120 - pi * 20, deaths: 30, honor: 2400 - pi * 400 }, "Arathi Basin": { n: 6, w: 2, l: 4, kb: 15, hk: 70, deaths: 18, honor: 1100 } } : undefined,
         lastSeen: Date.now() / 1000, peakGold: goldNow * 1.4, gold: goldNow, deaths, levels, levelPlayed, dingAt, heat, zones: zoneT, spellDmg, casts, healers, duels,
         best: { hit: { amt: ri(900, 1500), spell: Object.keys(spells)[0], target: "Hogger", t: Date.now() / 1000 - 86400 * ri(1, 20) } },
@@ -1110,11 +1113,12 @@
   // Deaths get the game's own corpse skull from its world map (red for PvP, site/maps/icons/); level-ups and loot a
   // round pin with a game icon (Wowhead). The same few files for every marker, so the browser fetches each once.
   const MAP_ICON = {
+    pvpkills: () => "ability_dualwield",
     dings: () => "spell_holy_innerfire",
     loot: e => (e.d.q >= 4 ? "inv_misc_gem_amethyst_02" : "inv_misc_bag_10"),
   };
-  const mapIcon = e => e.kind === "deaths"
-    ? `<img class="skull" src="maps/icons/${e.d.cause === "player" ? "skull-red" : "skull"}.png" width="22" height="22" alt="">`
+  const mapIcon = e => e.kind === "deaths" || e.kind === "wanted"
+    ? `<img class="skull${e.kind === "wanted" ? " wanted" : ""}" src="maps/icons/${e.d.cause === "player" ? "skull-red" : "skull"}.png" width="22" height="22" alt="">`
     : `<span class="pin ${e.kind}"><img src="https://wow.zamimg.com/images/wow/icons/medium/${MAP_ICON[e.kind](e)}.jpg" width="18" height="18" alt=""></span>`;
   // Markers closer than about one marker's width at the current zoom are one marker with a count; clicking it zooms in.
   let markBucket = "";
@@ -1153,10 +1157,19 @@
     return null;
   }
   // Everything with a continent position in the chosen range, oldest first.
-  function mapEvents(people) {
+  function mapEvents(people, wanted) {
     const out = [], ok = t => t && inRange(localKey(t)), atlas = pickAtlas();
     for (const p of people) {
-      for (const d of p.deaths) { const at = ok(d.t) && contSpot(d, atlas); if (at) out.push({ kind: "deaths", p, t: d.t, ...at, d }); }
+      for (const d of p.deaths) {
+        const at = ok(d.t) && contSpot(d, atlas);
+        if (!at) continue;
+        out.push({ kind: "deaths", p, t: d.t, ...at, d });
+        if (wanted && d.cause === "player" && plainName(d.by) === plainName(wanted)) out.push({ kind: "wanted", p, t: d.t, ...at, d });
+      }
+      for (const ch of p.chars) for (const k of asArr(ch.pvpKills)) {
+        const at = k && ok(k.t) && contSpot(k, atlas);
+        if (at) out.push({ kind: "pvpkills", p, t: k.t, ...at, d: { ...k, _char: ch.name } });
+      }
       for (const n of p.notable) { const at = n.cx != null && ok(n.t) && onTop(n.cont, n.cx, n.cy, atlas); if (at) out.push({ kind: "loot", p, t: n.t, ...at, d: n }); }
       for (const ch of p.chars) for (const [lvl, sp] of Object.entries(ch.dingAt || {})) {
         const t = (ch.levels || {})[lvl], at = sp && sp.cx != null && ok(t) && onTop(sp.cont, sp.cx, sp.cy, atlas);
@@ -1167,7 +1180,8 @@
   }
   function mapTip(e) {
     const who = esc(e.d._char || nameTxt(e.p)), when = shortDate(localKey(e.t)), where = esc(e.d.zone || "");
-    if (e.kind === "deaths") {
+    if (e.kind === "pvpkills") return `<b>${who}</b> ${tr("killed {0}", `<b>${esc(e.d.name)}</b>`)}<br><span class="muted">${[where, when].filter(Boolean).join(" · ")}</span>`;
+    if (e.kind === "deaths" || e.kind === "wanted") {
       const how = e.d.cause === "fall" ? tr("fell to their death") : e.d.cause === "drown" ? tr("drowned")
         : e.d.by ? tr(e.d.cause === "player" ? "killed in PvP by {0}" : "killed by {0}", esc(e.d.by)) + (e.d.spell || e.d.amt ? ` (${[e.d.spell ? esc(e.d.spell) : "", e.d.amt ? tr("{0} damage", num(e.d.amt)) : ""].filter(Boolean).join(", ")})` : "") : tr("died");
       return `<b>${who}</b> ${how}<br><span class="muted">${[e.d.lvl ? tr("Lvl {0}", e.d.lvl) : "", where, when].filter(Boolean).join(" · ")}</span>`;
@@ -1177,10 +1191,13 @@
   }
 
   function renderMap(people) {
-    const m = (state.map ||= { cont: "", layers: { deaths: false, dings: false, loot: false }, who: "" });
+    const m = (state.map ||= { cont: "", layers: { deaths: false, dings: false, loot: false, pvpkills: false, wanted: false }, who: "" });
     const atlas = pickAtlas(), game = mapGame();
     if (!people.some(p => p.id === m.who)) m.who = "";
-    const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people);
+    // The Most Wanted layer follows the poster it was opened from, else whoever tops the board in this range.
+    const ranged = people.flatMap(p => p.deaths.filter(d => d && d.t && inRange(localKey(d.t))).map(d => ({ p, d })));
+    const wanted = m.wanted || (mostWanted(ranged)[0] || [])[0];
+    const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people, wanted);
     // Kalimdor and the Eastern Kingdoms always; Outland (TBC clients only) once something happened there; Azeroth on Mists of Pandaria.
     const conts = MAP_ART[game].filter(c => atlas[c] && (c !== "1945" || all.some(e => e.cont === c)));
     $("s-map").classList.toggle("nosec", !conts.length);
@@ -1240,8 +1257,12 @@
     deaths.forEach(d => { const z = d.inst || d.zone || tr("Unknown"); byZone[z] = (byZone[z] || 0) + 1; if (d.by) byFoe[d.by] = (byFoe[d.by] || 0) + 1; });
     const top = Object.entries(byZone).sort((a, b) => b[1] - a[1]).slice(0, 6), max = top.length ? top[0][1] : 1;
     const foe = Object.entries(byFoe).sort((a, b) => b[1] - a[1])[0];
+    const zoneNamed = n => { for (const [c, a] of Object.entries(atlas)) { const z = a && a.zones && a.zones.find(q => q.n === n); if (z && !MAP_ART[game].includes(String(z.id))) return { c, z }; } return null; };
     $("mapSide").innerHTML = top.length
-      ? top.map(([z, n]) => `<div class="zl"><span>${esc(z)}</span><span class="n">${num(n)}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span></div>`).join("")
+      ? top.map(([z, n]) => {
+        const at = zoneNamed(z), row = `<span>${esc(z)}</span><span class="n">${num(n)}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span>`;
+        return at ? `<button type="button" class="zl" data-placecont="${at.c}" data-placezone="${at.z.id}" title="${esc(tr("Show on map"))}">${row}</button>` : `<div class="zl">${row}</div>`;
+      }).join("")
         + (foe ? `<p class="muted" style="margin-top:6px">${tr("Top killer: {0}", `<b style="color:var(--ink)">${esc(foe[0])}</b> (${num(foe[1])})`)}</p>` : "")
       : `<p class="empty">${tr("No deaths in this range. Impressive.")}</p>`;
     const unplaced = deaths.filter(d => !contSpot(d, pickAtlas())).length;
@@ -1266,7 +1287,14 @@
     const c = e.target.closest("#mapConts [data-cont]"), l = e.target.closest("#s-map [data-layer]"), mk = e.target.closest(".mk");
     if (c) { state.map.cont = c.dataset.cont; state.map.zone = ""; state.map.trail = []; render(); }
     if (e.target.closest("[data-mapup]")) closeZone();
-    if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; render(); }
+    if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; if (l.dataset.layer === "wanted") state.map.wanted = ""; render(); }
+    const pz = e.target.closest("[data-placezone]");
+    if (pz) {
+      Object.assign(state.map, { cont: pz.dataset.placecont, zone: "", trail: [] });
+      state.map.layers.deaths = true;
+      const z = zoneById(pz.dataset.placezone);
+      if (z) openZone(z); else render();
+    }
     if (mk) {
       // a group zooms in on itself (up to the closest zoom); a single marker, or a group fully zoomed in, shows its details
       const g = (state.mapGroups || [])[+mk.dataset.g], v = mapView(), box = $("map");
@@ -2188,6 +2216,31 @@
     </div>`;
   }
 
+  // Most Wanted: enemy players who killed our heroes, ranked by how many of our heroes, then by kills. `all` is [{ p, d }].
+  const plainName = n => String(n || "").replace(/-.*/, "");
+  function mostWanted(all) {
+    const killers = {};
+    all.forEach(({ p, d }) => {
+      if (d.cause !== "player" || !d.by) return;
+      const k = killers[d.by] ||= { n: 0, victims: new Set(), last: d };
+      k.n++; k.victims.add(p.name); if (d.t > k.last.t) k.last = d;
+    });
+    return Object.entries(killers).sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
+  }
+  // Did one of us take this player down after they started killing us? config.js bounty.paid has the day each bounty
+  // was paid ({ name: "YYYY-MM-DD" }): a kill after that day is a new claim, and killing us again after it reopens the bounty.
+  function bountyState(people, name) {
+    const paidOn = (((window.LEDGER_CONFIG || {}).bounty || {}).paid || {})[name] || "", same = n => plainName(n) === plainName(name);
+    const onUs = people.flatMap(p => p.deaths).filter(d => d && d.t && d.cause === "player" && same(d.by));
+    if (!onUs.length) return null;
+    const first = Math.min(...onUs.map(d => d.t));
+    const claim = people.flatMap(p => p.chars.flatMap(c => asArr(c.pvpKills).filter(k => k && k.t > first && same(k.name)).map(k => ({ who: c.name, t: k.t }))))
+      .sort((a, b) => b.t - a.t)[0];
+    if (!claim) return null;
+    if (localKey(claim.t) > paidOn) return { ...claim, claimed: true };
+    return onUs.some(d => localKey(d.t) > paidOn) ? null : { ...claim, paid: true };
+  }
+
   function renderDeaths(people) {
     const all = [];
     people.forEach(p => p.deaths.forEach(d => { if (d && d.t && inRange(localKey(d.t))) all.push({ p, d }); }));
@@ -2211,27 +2264,24 @@
       options: { interaction: { mode: "index", intersect: false }, scales: { x: { ...gridX, stacked: true }, y: { ...gridY, stacked: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } },
     } : null);
 
-    // Most Wanted: enemy players only, ranked by how many of our heroes they killed, then by kills.
-    const killers = {};
-    all.forEach(({ p, d }) => {
-      if (d.cause !== "player" || !d.by) return;
-      const k = killers[d.by] ||= { n: 0, victims: new Set(), zones: {} };
-      k.n++; k.victims.add(p.name); if (d.zone) k.zones[d.zone] = (k.zones[d.zone] || 0) + 1;
-    });
-    const top = Object.entries(killers).sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
-    const mw = top[0];
+    const top = mostWanted(all), mw = top[0];
     // The bounty is whatever the site owner puts up in config.js; nothing shows without one.
     const bounty = (window.LEDGER_CONFIG || {}).bounty || {};
     const reward = bounty.reward ? [tr("Reward: {0}", esc(bounty.reward)), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ") : "";
+    const st = mw && bountyState(people, mw[0]);
+    const stLine = st ? tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t))) : "";
     const killedLine = k => k.n === 1 ? tr("Killed one of our heroes") : tr("Killed {0} of our heroes, {1} times", num(k.victims.size), num(k.n));
-    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${icon("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${killedLine(mw[1])}</span>${reward ? `<span>${reward}</span>` : ""}</div><b>×${num(mw[1].n)}</b></div>` : "";
+    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${icon("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${killedLine(mw[1])}</span>${reward && !(st && st.paid) ? `<span>${reward}</span>` : ""}${stLine ? `<span class="mw-claim">${stLine}</span>` : ""}</div><b>×${num(mw[1].n)}</b></div>` : "";
     $("wanted").innerHTML = top.map(([name, k], i) => {
-      const zone = Object.entries(k.zones).sort((a, b) => b[1] - a[1])[0];
+      const s0 = i === 0 && st;
       return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
+        ${s0 ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : ""}
         <div class="f">${killedLine(k)}</div>
         <div class="f">${tr("Victims: {0}", [...k.victims].map(esc).join(", "))}</div>
-        ${zone ? `<div class="f">${tr("Last seen in {0}", esc(zone[0]))}</div>` : ""}
-        ${i === 0 && reward ? `<div class="r">${reward}</div>` : ""}</div>`;
+        ${k.last.zone ? `<div class="f">${tr("Last seen in {0}", esc(k.last.zone))}</div>` : ""}
+        ${i === 0 && reward && !(st && st.paid) ? `<div class="r">${reward}</div>` : ""}
+        ${s0 ? `<div class="f cl">${stLine}</div>` : ""}
+        <button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button></div>`;
     }).join("") || `<p class="empty">${tr("No enemy player has claimed a victim yet.")}</p>`;
 
     // deadliest zones
@@ -3878,6 +3928,14 @@
   });
   $("pageTabs").addEventListener("click", e => { const b = e.target.closest(".pagetab"); if (b) { setMenu(false); setPage(b.dataset.pg); } });
   // "Details" and "View all" on the overview's cards open their page.
+  // "Show on map" on a Most Wanted poster: the atlas with only where that player killed us.
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-wantedmap]");
+    if (!b) return;
+    const m = (state.map ||= { cont: "", layers: {}, who: "" });
+    Object.assign(m, { wanted: b.dataset.wantedmap, who: "", layers: { wanted: true } });
+    setPage("atlas");
+  });
   document.addEventListener("click", e => {
     const g = e.target.closest("[data-goto]");
     if (!g) return;

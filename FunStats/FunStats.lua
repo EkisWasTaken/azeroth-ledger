@@ -5,6 +5,7 @@
 local ADDON_NAME, ns = ...
 local DB_VERSION = 1
 local MAX_DEATHS = 300
+local MAX_PVP_KILLS = 300
 local MAX_NOTABLE = 200
 local MAX_KILL_NAMES = 400
 
@@ -117,6 +118,8 @@ local LOOT_SELF = FormatToPattern(LOOT_ITEM_SELF)
 local LOOT_SELF_MULTI = FormatToPattern(LOOT_ITEM_SELF_MULTIPLE)
 local LOOT_PUSHED = FormatToPattern(LOOT_ITEM_PUSHED_SELF)
 local LOOT_PUSHED_MULTI = FormatToPattern(LOOT_ITEM_PUSHED_SELF_MULTIPLE)
+local HONOR_KILL = FormatToPattern(COMBATLOG_HONORGAIN)
+local HONOR_KILL_NO_RANK = FormatToPattern(COMBATLOG_HONORGAIN_NO_RANK)
 
 local QUALITY_BY_COLOR = {
   ff9d9d9d = 0, ffffffff = 1, ff1eff00 = 2,
@@ -276,6 +279,29 @@ local function PvPRankName(rank)
   local name = PvPCall(GetPVPRankInfo, rank)
   if type(name) == "string" and not (issecretvalue and issecretvalue(name)) then return name end
 end
+-- Enemy players we killed, by name and place, so the website can tell when one of us took down its Most Wanted.
+-- The honor message and the kill count both report one kill: the same name within 10 s is that kill again.
+local function RecordPvPKill(name)
+  if type(name) ~= "string" or name == "" or (issecretvalue and issecretvalue(name)) then return end
+  local last = C.pvpKills[#C.pvpKills]
+  if last and last.name == name and time() - last.t < 10 then return end
+  local mapID, x, y = MapPosition()
+  local cont, cx, cy = OnContinent(mapID, x, y)
+  PushCapped(C.pvpKills, {
+    t = time(), name = name, zone = GetRealZoneText(), sub = GetSubZoneText() ~= "" and GetSubZoneText() or nil,
+    map = mapID, x = x, y = y, cont = cont, cx = cx, cy = cy,
+  }, MAX_PVP_KILLS)
+end
+local function OnHonorGain(msg)
+  if not C or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
+  RecordPvPKill((HONOR_KILL and msg:match(HONOR_KILL)) or (HONOR_KILL_NO_RANK and msg:match(HONOR_KILL_NO_RANK)))
+end
+-- No honor message (it may not exist on every client): a dead enemy player in the target frame is the one we killed.
+local function TargetKill()
+  if not (UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and UnitIsEnemy and UnitIsEnemy("player", "target")) then return end
+  RecordPvPKill((UnitName("target")))
+end
+
 local function UpdatePvP()
   if not C then return end
   local p = {}
@@ -293,7 +319,7 @@ local function UpdatePvP()
   -- The lifetime count only grows: a lower reading is a glitch, and keeping it would count the same kills again.
   if not p.hk or (old and p.hk < old) then p.hk = old end
   -- shortcut: kills made while the addon was off land on the day it next sees the count; fine, it's rare
-  if p.hk and old and p.hk > old then Add("honorKills", p.hk - old) end
+  if p.hk and old and p.hk > old then Add("honorKills", p.hk - old); TargetKill() end
   if next(p) then p.t = time(); C.pvp = p end
 end
 
@@ -406,6 +432,7 @@ local function InitCharacter()
   C.heat = C.heat or {}             -- seconds played per "weekday-hour"
   C.zones = C.zones or {}           -- seconds spent per zone
   C.levelPlayed = C.levelPlayed or {} -- played seconds when each level was reached
+  C.pvpKills = C.pvpKills or {}     -- enemy players we killed: name, when, where
   C.bg = C.bg or {}                 -- battleground name -> games, wins, losses and my scoreboard totals
   C.duels = C.duels or {}         -- opponent -> { w, l }
   C.healers = C.healers or {}       -- who healed me, total effective healing
@@ -1557,6 +1584,7 @@ handlers.PLAYER_PVP_KILLS_CHANGED = UpdatePvP
 handlers.PLAYER_PVP_RANK_CHANGED = UpdatePvP
 handlers.HONOR_CURRENCY_UPDATE = UpdatePvP
 handlers.UPDATE_BATTLEFIELD_SCORE = OnBattlefieldScore
+handlers.CHAT_MSG_COMBAT_HONOR_GAIN = OnHonorGain
 
 local sheetPending = false
 local function SheetSoon()

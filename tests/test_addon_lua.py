@@ -653,6 +653,36 @@ class Addon(unittest.TestCase):
         self.fire("UPDATE_BATTLEFIELD_SCORE")
         self.assertEqual(self.today("bgs"), 0)
 
+    HONOR = ('COMBATLOG_HONORGAIN = "%s dies, honorable kill Rank: %s (Estimated Honor Points: %d)"; '
+             'function GetPVPLifetimeStats() return pvpHK, 0 end; pvpHK = 10')
+
+    def test_an_honorable_kill_remembers_who_and_where(self):
+        self.start(CLASSIC + "\n" + self.HONOR)
+        self.lua.execute("pvpHK = 11")
+        self.fire("CHAT_MSG_COMBAT_HONOR_GAIN", "Gankalot dies, honorable kill Rank: Private (Estimated Honor Points: 12)")
+        self.fire("PLAYER_PVP_KILLS_CHANGED")  # the same kill, seen through the count: not a second record
+        kills = self.char()[1].pvpKills
+        self.assertEqual(len(kills), 1)
+        self.assertEqual((kills[1].name, kills[1].zone), ("Gankalot", "Elwynn"))
+        self.assertEqual(self.today("honorKills"), 1)
+
+    def test_without_the_honor_message_a_dead_enemy_target_is_the_kill(self):
+        self.start(CLASSIC + "\n" + self.HONOR)
+        self.lua.execute('function UnitName(u) if u == "target" then return "Shadowknife" end return myFirst, mySecond end; '
+                         'function UnitIsDeadOrGhost(u) return u == "target" end; function UnitIsEnemy() return true end; pvpHK = 11')
+        self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.fire("CHAT_MSG_COMBAT_HONOR_GAIN", "Shadowknife dies, honorable kill Rank: Private (Estimated Honor Points: 12)")
+        kills = self.char()[1].pvpKills
+        self.assertEqual(len(kills), 1)
+        self.assertEqual(kills[1].name, "Shadowknife")
+
+    def test_a_kill_with_no_name_to_find_is_only_counted(self):
+        self.start(CLASSIC + "\n" + self.HONOR)
+        self.lua.execute("pvpHK = 12")
+        self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.assertEqual(len(self.char()[1].pvpKills), 0)
+        self.assertEqual(self.today("honorKills"), 2)
+
     def test_honor_kills_recounted_by_old_versions_are_dropped_once(self):
         save = ('local day = date("%Y-%m-%d", os.time()); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
                 'days = { [day] = { honorKills = 9, quests = 1 } }, pvp = { hk = 3 } } } }')
