@@ -193,6 +193,10 @@ function CombatLogGetCurrentEventInfo() return unpack(combatInfo) end
 HELM = "|cnIQ3:|Hitem:123::::::::|h[Helm]|h|r"
 
 
+# Early today, so saved events minutes or hours later still fall on today when the tests run near midnight.
+TODAY_EARLY = 'local t = os.time(); local n = os.date("*t", t); n.hour, n.min, n.sec = 0, 1, 0; t = os.time(n); '
+
+
 @unittest.skipUnless(LuaRuntime, "lupa not installed")
 class Addon(unittest.TestCase):
     def start(self, game):
@@ -625,7 +629,7 @@ class Addon(unittest.TestCase):
         self.assertEqual(self.today("dungeons"), 1)
 
     def test_old_dungeon_counts_are_recounted_from_saved_runs(self):
-        save = ('local t = os.time(); local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
+        save = (TODAY_EARLY + 'local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
                 'days = { [day] = { dungeons = 9 }, ["2000-01-01"] = { dungeons = 2 } }, '
                 'runs = { { inst = "Deadmines", t = t, dur = 900 }, { inst = "Deadmines", t = t + 905, dur = 600 }, '
                 '{ inst = "Stockade", t = t + 3000, dur = 900 } } } } }')
@@ -748,7 +752,7 @@ class Addon(unittest.TestCase):
         self.assertEqual(self.today("honorKills"), 2)  # new kills still count after the cleanup
 
     def test_deaths_saved_twice_by_old_versions_are_cleaned_up(self):
-        save = ('local t = os.time(); local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
+        save = (TODAY_EARLY + 'local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
                 'days = { [day] = { deaths = 4, deaths_fall = 2 } }, '
                 'deaths = { { t = t, cause = "fall" }, { t = t + 2, cause = "fall" }, { t = t + 600, cause = "mob" }, '
                 '{ t = t + 606, cause = "mob" } } } } }')

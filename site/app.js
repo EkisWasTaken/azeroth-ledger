@@ -408,6 +408,7 @@
   // ---------- state ----------
   const state = {
     data: { chars: {}, days: {}, obs: {}, players: {} },
+    potwLocks: {}, // "Game|Realm|week" -> the locked character of the week's key
     status: "loading",
     updated: 0,
     demo: false,
@@ -433,65 +434,7 @@
     return JSON.stringify(v);
   };
 
-  // Combine char docs, month docs and other players' observations into one object per character.
-  // A character's own upload always wins; observations only fill days the character's own addon didn't record,
-  // and several observers of the same day are combined with max (not sum) so nothing is counted twice.
-  function characters(src) {
-    const out = {};
-    for (const [id, c] of Object.entries(src.chars || {})) {
-      // the highest level reached counts even if the upload's level lags behind it (older FunStats on Mists of Pandaria)
-      const dinged = Math.max(0, ...Object.keys(c.levels && typeof c.levels === "object" ? c.levels : {}).map(Number).filter(n => n > 0 && n < 200));
-      out[id] = { ...c, id, level: Math.max(+c.level || 0, dinged) || c.level, days: {}, deaths: (c.deaths || []).filter(Boolean), self: true };
-    }
-    for (const d of Object.values(src.days || {})) {
-      const ch = out[d.char];
-      if (ch && d.days) Object.assign(ch.days, d.days);
-    }
-    const obsBy = {};
-    for (const o of Object.values(src.obs || {})) {
-      if (!o || !o.char) continue;
-      let ch = out[o.char];
-      if (!ch) ch = out[o.char] = { id: o.char, key: o.key, name: o.name, realm: o.realm, class: o.class, race: o.race, level: o.level, lastSeen: o.lastSeen, game: o.game, guild: o.guild, days: {}, deaths: [], self: false };
-      else if (!ch.self && (o.lastSeen || 0) > (ch.lastSeen || 0)) { ch.level = o.level || ch.level; ch.lastSeen = o.lastSeen; }
-      if (!ch.self) { ch.class ||= o.class; ch.race ||= o.race; }
-      (obsBy[o.char] ||= []).push(o);
-    }
-    for (const [cid, list] of Object.entries(obsBy)) {
-      const ch = out[cid];
-      const selfDays = new Set(Object.keys(ch.days));
-      const merged = {};
-      for (const o of list) for (const [k, d] of Object.entries(o.days || {})) {
-        if (selfDays.has(k)) continue;
-        const t = merged[k] ||= { observed: true };
-        for (const [f, v] of Object.entries(d)) if (typeof v === "number") t[f] = Math.max(t[f] || 0, v);
-      }
-      Object.assign(ch.days, merged);
-      const extra = [];
-      for (const o of list) for (const d of o.deaths || []) {
-        if (!d || !d.t || selfDays.has(localKey(d.t))) continue;
-        if (extra.some(x => Math.abs(x.t - d.t) < 10)) continue;
-        extra.push({ ...d, observed: true });
-      }
-      ch.deaths = ch.deaths.concat(extra);
-    }
-    for (const [cid, a] of Object.entries(src.api || {})) {
-      const ch = out[cid];
-      if (!ch) continue;
-      if (a.avatar) ch.avatar = a.avatar; // Blizzard's face render, addon users included
-      if (a.render) ch.render = a.render; // and the full-body one
-      if (a.look && a.look.race) ch.look = a.look; // race, gender and customizations for the 3D model
-      if (ch.self || a.faceOnly) continue;
-      if (a.gear && Object.keys(a.gear).length && !(ch.gear && Object.keys(ch.gear).length)) { ch.gear = a.gear; ch.armory = true; ch.ilvl = a.ilvl; }
-      ch.class ||= a.class;
-      ch.race ||= a.race;
-      if ((a.lastLogin || 0) >= (ch.lastSeen || 0)) {
-        if (a.level) ch.level = a.level;
-        if (a.guild !== undefined) ch.guild = a.guild || ch.guild;
-        if (a.lastLogin) ch.lastSeen = a.lastLogin;
-      }
-    }
-    return Object.values(out).sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  }
+  const { characters } = LedgerData;
 
   // ---------- roster: friends own characters ----------
   // A roster entry is "Name-Realm" (exact character) or just "Name" (any realm).
@@ -1760,31 +1703,48 @@
     ["xp", "XP", compact], ["levels", "Levels gained", num], ["goldIn", "Gold looted", goldHTML], ["dungeons", "Dungeon runs", num], ["played", "Time played", dur],
     ["tiers", "Achievement tiers", num]];
   // The week's winner among these characters, or nothing when fewer than two played or nobody did anything.
-  function potwOf(people, wk) {
+  // realmWide: the whole realm competes, so a finished week's locked winner (supabase/potw-locks.sql) holds.
+  function potwOf(people, wk, realmWide) {
     const rows = people.map(p => {
-      const s = {};
-      for (const [k, d] of Object.entries(p.days)) if (k >= wk && k <= addDays(wk, 6)) for (const [f, v] of Object.entries(d)) if (typeof v === "number" && f !== "gold" && f !== "maxHit") s[f] = (s[f] || 0) + v;
+      const s = LedgerData.weekTotals(p.days, wk, addDays(wk, 6));
       // achievement tiers reached that week (not the Hall of Shame ones: nobody wins for dying)
       s.tiers = newTiers(p, wk, addDays(wk, 7)).reduce((n, x) => n + x.lvl - x.was, 0);
       return { p, s };
     });
-    const top = Object.fromEntries(POTW.map(([f]) => [f, Math.max(0, ...rows.map(r => r.s[f] || 0))]));
-    const share = (r, f) => top[f] ? (r.s[f] || 0) / top[f] : 0;
-    rows.forEach(r => r.score = POTW.reduce((a, [f]) => a + share(r, f), 0));
-    const best = rows.sort((a, b) => b.score - a.score)[0];
-    return best && best.score && rows.length > 1 ? { best, top, share } : null;
+    const res = LedgerData.scorePotw(rows, POTW.map(([f]) => f));
+    if (!realmWide || state.status !== "ok" || state.demo) return res;
+    const locked = state.potwLocks[state.realm + "|" + wk];
+    if (locked) {
+      const row = rows.find(r => r.p.chars.some(c => c.key === locked));
+      return row && res ? { ...res, best: row } : res;
+    }
+    // a week is locked once it has been over a full day, so Monday-night play that uploads on Tuesday still counts
+    if (res && addDays(wk, 8) <= todayKey()) lockPotw(wk, res.best.p.chars[0].key);
+    return res;
+  }
+  const potwLocking = new Set();
+  function lockPotw(wk, char) {
+    const id = state.realm + "|" + wk, url = String(CONFIG.supabaseUrl || "").replace(/\/$/, ""), key = String(CONFIG.publishableKey || "");
+    if (potwLocking.has(id) || !url || !key) return;
+    potwLocking.add(id);
+    const headers = { apikey: key, "Content-Type": "application/json" };
+    if (!key.startsWith("sb_")) headers.Authorization = "Bearer " + key;
+    fetch(`${url}/rest/v1/rpc/lock_potw`, { method: "POST", headers, body: JSON.stringify({ p_realm: state.realm, p_week: wk, p_char: char }) })
+      .then(r => r.ok ? r.json() : null)
+      .then(v => { if (typeof v === "string" && v) { state.potwLocks[id] = v; if (v !== char) render(); } })
+      .catch(() => {}); // no table yet (potw-locks.sql not run): weeks stay live
   }
   // Every finished week each character won, keyed by character: { key: [week, …] }.
-  function potwWins(people) {
+  function potwWins(people, realmWide) {
     const cur = weekOf(todayKey()), wins = {};
-    weeksAvailable(people).filter(w => w < cur).forEach(w => { const r = potwOf(people, w); if (r) (wins[r.best.p.id] ||= []).push(w); });
+    weeksAvailable(people).filter(w => w < cur).forEach(w => { const r = potwOf(people, w, realmWide); if (r) (wins[r.best.p.id] ||= []).push(w); });
     return wins;
   }
   function renderPotw(people) {
     if (!$("potw")) return;
     const cur = weekOf(todayKey());
     const wk = state.view === "week" && state.week < cur ? state.week : addDays(cur, -7);
-    const res = potwOf(people, wk);
+    const res = potwOf(people, wk, state.realmWide);
     if (!res) return void ($("potw").innerHTML = "");
     const { best, top, share } = res;
     const why = POTW.filter(([f]) => best.s[f]).sort((a, b) => share(best, b[0]) - share(best, a[0])).slice(0, 3)
@@ -2895,7 +2855,7 @@
     if (rich) recs.push({ cat: "loot", i: "loot", t: tr("Deepest pockets"), v: goldHTML(rich.peakGold), p: rich, top: podiumOf(people, p => p.peakGold, goldHTML), when: tr("most gold held at once") });
     // Most times character of the week among these characters: the same contest as the overview's card. A tie goes to the latest winner.
     if (people.length > 1) {
-      const wins = potwWins(people), times = n => tr(n === 1 ? "{0} time" : "{0} times", num(n));
+      const wins = potwWins(people, state.realmWide), times = n => tr(n === 1 ? "{0} time" : "{0} times", num(n));
       const ranked = people.map(p => ({ p, w: wins[p.id] || [] })).filter(x => x.w.length)
         .sort((a, b) => b.w.length - a.w.length || b.w.at(-1).localeCompare(a.w.at(-1)));
       if (ranked.length) recs.push({ cat: "adventure", i: "sulfuras", t: tr("Most times character of the week"), v: times(ranked[0].w.length), p: ranked[0].p,
@@ -3529,6 +3489,7 @@
       const mates = focus && focus.guild ? realmChars.filter(c => c.guild === focus.guild) : [];
       if (mates.length > 1) { scope = mates; state.scopeGuild = focus.guild; }
     }
+    state.realmWide = scope === realmChars;
 
     const theme = document.documentElement.dataset.theme || "forever";
     document.querySelectorAll(".theme-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.theme === theme)));
@@ -3555,7 +3516,7 @@
     renderScopeHead(route, people);
     if (route.kind === "char") {
       // wins are counted across the whole realm, the same field the overview's card picks from
-      state.potwWins = potwWins(buildPeople(realmChars, Object.fromEntries(realmChars.map(c => [c.key, { name: c.name, chars: [c.key] }]))).people);
+      state.potwWins = potwWins(buildPeople(realmChars, Object.fromEntries(realmChars.map(c => [c.key, { name: c.name, chars: [c.key] }]))).people, true);
       renderProfile(people, route.key);
       return;
     }
@@ -3789,51 +3750,15 @@
           const atlases = {};
           if (res.ok) for (const a of await res.json()) if (a.realm && a.atlas && typeof a.atlas === "object") atlases[a.realm] = a.atlas;
           state.atlases = atlases;
+          const locks = await fetch(`${url}/rest/v1/potw_locks?select=realm,week,char_key`, { headers }).catch(() => null);
+          if (locks && locks.ok) for (const l of await locks.json()) state.potwLocks[`${l.realm}|${l.week}`] = l.char_key;
         } catch (e) {
           rows = await readAll("entries");
         }
         knownRows.clear();
         for (const r of rows) knownRows.set(r.id, r);
       }
-      const src = { chars: {}, days: {}, obs: {}, players: {}, api: {}, crests: {}, journal: null };
-      const relays = {};
-      let updated = 0;
-      for (const r of knownRows.values()) {
-        const data = r.data && typeof r.data === "object" ? r.data : {};
-        const id = "c-" + r.char_key;
-        if (r.kind === "char") {
-          const { days, ...rest } = data;
-          src.chars[id] = { ...rest, key: r.char_key, deaths: Array.isArray(rest.deaths) ? rest.deaths : [], notable: Array.isArray(rest.notable) ? rest.notable : [] };
-          src.days[id] = { char: id, days: days && typeof days === "object" ? days : {} };
-        } else if (r.kind === "relay") {
-          // a copy of someone's stats, received in game by another player. Copies are merged below, newest on top.
-          // A copy can't be newer than its upload, so a made-up lastSeen far in the future doesn't win.
-          const seen = Math.min(Number(data.lastSeen) || 0, (Date.parse(r.updated_at) || 0) / 1000);
-          (relays[r.char_key] ||= []).push({ data, seen });
-        } else if (r.kind === "obs") {
-          src.obs[r.id] = { ...data, char: id, key: r.char_key, deaths: Array.isArray(data.deaths) ? data.deaths : [] };
-        } else if (r.kind === "api" && !data.missing) {
-          // level, gear and guild from Blizzard's API; plus guild crests and the dungeon journal (art and boss portraits)
-          if (String(r.id).startsWith("g:")) src.crests[`${data.realm}|${data.guild}`.toLowerCase()] = data;
-          else if (r.id === "j:journal") src.journal = data;
-          else src.api[id] = data;
-        }
-        updated = Math.max(updated, Date.parse(r.updated_at) || 0);
-      }
-      // Copies only fill in characters that haven't uploaded their own stats. Each friend's copy may hold only the
-      // days they happened to receive (a fresh install starts at today), so all copies are merged: the newest
-      // copy's profile and days win, older copies fill the days it lacks, and deaths and notables are combined.
-      for (const [key, list] of Object.entries(relays)) {
-        const id = "c-" + key;
-        if (src.chars[id]) continue;
-        list.sort((a, b) => a.seen - b.seen || Object.keys(a.data.days || {}).length - Object.keys(b.data.days || {}).length);
-        const { days, ...rest } = list[list.length - 1].data;
-        const all = f => { const seen = new Set(); return list.flatMap(c => Array.isArray(c.data[f]) ? c.data[f] : [])
-          .filter(e => { const k = e && `${e.t}|${e.by || e.item || e.cause || e.boss || e.inst || ""}`; return k && !seen.has(k) && seen.add(k); })
-          .sort((a, b) => (a.t || 0) - (b.t || 0)); };
-        src.chars[id] = { ...rest, key, relay: true, deaths: all("deaths"), notable: all("notable") };
-        src.days[id] = { char: id, days: Object.assign({}, ...list.map(c => c.data.days && typeof c.data.days === "object" ? c.data.days : {})) };
-      }
+      const { src, updated } = LedgerData.mergeRows(knownRows.values());
       state.data = src;
       state.updated = updated;
       state.status = "ok";

@@ -143,6 +143,8 @@ WoW Forever is version 1.60.1, interface 16001, and is already listed in `FunSta
 ## Tests
 
 - `python -m unittest discover tests` checks that the three uploaders (the Python script, the site's **Add stats** page and the Windows app) turn the same save file into the same rows, and that none of them sends the upload code. The site check needs Node.js, and the app check needs a built `site/AzerothLedger.exe`. Each is skipped if it can't run.
+- `node --test tests/test_site_data.mjs` checks the site's data rules in `site/ledger-data.js`: how uploads, friends' relay copies and observations combine into one character, and who is character of the week. It runs on a real snapshot of the database (`tests/fixtures/`), so a past week's winner can't quietly change.
+- `supabase/potw-locks.sql` locks each finished week's character of the week in the database, a day after the week ends.
 - `tests/upload_rules.sql` checks the database rules: claims, copies, the 400-copy limit, hiding, releasing and blocking. Paste it into Supabase's **SQL Editor** and run it. It always ends with an error on purpose, so nothing is saved. "ALL CHECKS PASSED" means everything works; "FAILED: …" names the rule that broke.
 
 ## Files
