@@ -136,6 +136,20 @@ local function PushCapped(list, entry, cap)
   while #list > cap do table.remove(list, 1) end
 end
 
+-- Back in the same dungeon within 10 minutes of leaving is the same run (the site joins those runs too).
+local function SameRun(prev, r)
+  return prev and prev.inst == r.inst and r.t - (prev.t + (prev.dur or 0)) < 600
+end
+
+-- One dungeon run on the day it started.
+local function CountRun(r)
+  local key = date("%Y-%m-%d", r.t)
+  local d = C.days[key] or {}
+  C.days[key] = d
+  d.dungeons = (d.dungeons or 0) + 1
+  C.instances[r.inst] = (C.instances[r.inst] or 0) + 1
+end
+
 local function MapPosition(unit)
   unit = unit or "player"
   local mapID = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit(unit)
@@ -366,6 +380,21 @@ local function InitCharacter()
   C.bosses = C.bosses or {}         -- "encounterID:difficultyID" -> kills, wipes, fastest kill, best DPS
   C.fights = C.fights or {}         -- recent boss fights, with the group's damage and healing
   C.runs = C.runs or {}             -- finished dungeon and raid runs; C.run is the one in progress
+  -- FunStats 1.9.0 and older counted every time you walked in, quick looks included: recount from the saved runs.
+  -- Days before the first saved run stay as they are, since there's nothing to check them against.
+  if not C.runsCounted and C.runs[1] then
+    local counted, prev = {}, nil
+    for _, r in ipairs(C.runs) do
+      if not SameRun(prev, r) then local k = date("%Y-%m-%d", r.t); counted[k] = (counted[k] or 0) + 1 end
+      prev = r
+    end
+    local from = date("%Y-%m-%d", C.runs[1].t)
+    for k, d in pairs(C.days) do
+      if d.dungeons and k >= from then d.dungeons = math.min(d.dungeons, counted[k] or 0) end
+      if d.dungeons == 0 then d.dungeons = nil end
+    end
+  end
+  C.runsCounted = true
   -- Deaths saved before continent positions existed get them now.
   for _, d in ipairs(C.deaths) do
     if type(d) == "table" and d.map and d.x and not d.cx then d.cont, d.cx, d.cy = OnContinent(d.map, d.x, d.y) end
@@ -670,6 +699,7 @@ local function EndRun()
   r.left, r.last = nil, nil
   -- A quick look inside without a single boss pull isn't a run worth listing.
   if r.bosses == 0 and r.wipes == 0 and r.dur < 300 then return end
+  if not SameRun(C.runs[#C.runs], r) then CountRun(r) end
   PushCapped(C.runs, r, MAX_RUNS)
 end
 
@@ -692,8 +722,6 @@ local function OnZone()
     }
     AddMates(r)
     C.run = r
-    Add("dungeons")
-    C.instances[name] = (C.instances[name] or 0) + 1
   else
     -- Released and left mid-boss-fight: the game's ENCOUNTER_END never reaches us outside, so that pull was a wipe.
     if fight then OnEncounterEnd(fight.id, fight.name, fight.d, fight.size, 0) end

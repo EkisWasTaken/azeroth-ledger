@@ -581,6 +581,31 @@ class Addon(unittest.TestCase):
         self.assertEqual(self.today("inOther"), 100)
         self.assertEqual((self.today("goldIn"), self.today("goldOut")), (200, 250))
 
+    def test_a_dungeon_run_counts_once_and_a_quick_look_not_at_all(self):
+        self.start(CLASSIC + "\nclock = os.time(); time = function() return clock end; "
+                   "tickers = {}; C_Timer.NewTicker = function(_, fn) tickers[#tickers + 1] = fn end")
+
+        def enter(name, after):
+            self.lua.execute(f"clock = clock + {after}; for _, fn in ipairs(tickers) do fn() end; inInstance = true; "
+                             f"function GetInstanceInfo() return {name!r}, 'party', 1, 'Normal' end")
+            self.fire("ZONE_CHANGED_NEW_AREA")
+
+        enter("Deadmines", 0)
+        enter("Stockade", 60)  # a minute in the Deadmines without a pull: just a look
+        enter("Stockade", 30)  # a zone change inside the same dungeon
+        enter("Deadmines", 400)  # 7 minutes in the Stockade: a real run
+        self.assertEqual(self.today("dungeons"), 1)
+
+    def test_old_dungeon_counts_are_recounted_from_saved_runs(self):
+        save = ('local t = os.time(); local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
+                'days = { [day] = { dungeons = 9 }, ["2000-01-01"] = { dungeons = 2 } }, '
+                'runs = { { inst = "Deadmines", t = t, dur = 900 }, { inst = "Deadmines", t = t + 905, dur = 600 }, '
+                '{ inst = "Stockade", t = t + 3000, dur = 900 } } } } }')
+        self.start(CLASSIC + "\n" + save)
+        days = self.char()[1].days
+        self.assertEqual(self.run_lua('FunStatsDB.chars["Oldname-PvE"].days[date("%Y-%m-%d", os.time())].dungeons'), 2)
+        self.assertEqual(days["2000-01-01"].dungeons, 2)  # before the first saved run: left alone
+
     def test_no_honor_calls_no_pvp_record(self):
         self.start(FOREVER)
         self.assertIsNone(self.char()[1].pvp)
