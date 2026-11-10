@@ -120,6 +120,8 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
+    "Dead or alive": "Död eller levande", "Enemy player": "Fiendespelare", "Last seen": "Senast sedd", "Favourite move": "Favoritdrag",
+    "Victims": "Offer", "All wanted posters": "Alla efterlysningar",
     "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
@@ -2271,7 +2273,33 @@
     const st = mw && bountyState(people, mw[0]);
     const stLine = st ? tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t))) : "";
     const killedLine = k => k.n === 1 ? tr("Killed one of our heroes") : tr("Killed {0} of our heroes, {1} times", num(k.victims.size), num(k.n));
-    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${icon("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${killedLine(mw[1])}</span>${reward && !(st && st.paid) ? `<span>${reward}</span>` : ""}${stLine ? `<span class="mw-claim">${stLine}</span>` : ""}</div><b>×${num(mw[1].n)}</b></div>` : "";
+    // The overview's bounty card: only the #1 enemy player, as a poster with the case file beside it.
+    $("oWanted").innerHTML = mw ? (() => {
+      const [name, k] = mw, mine = all.filter(x => x.d.cause === "player" && x.d.by === name);
+      const moves = {};
+      mine.forEach(x => { if (x.d.spell) moves[x.d.spell] = (moves[x.d.spell] || 0) + 1; });
+      const move = Object.entries(moves).sort((a, b) => b[1] - a[1])[0];
+      const stamp = st ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : "";
+      const fact = (label, value) => value ? `<div><dt>${tr(label)}</dt><dd>${value}</dd></div>` : "";
+      return `<article class="bounty frame card">
+        <div class="bounty-poster"><div class="bp-w">${tr("Wanted")}</div><div class="bp-sub">${tr("Dead or alive")}</div>
+          <div class="bp-seal">${icon("skull", 3)}</div><div class="bp-name">${esc(name)}</div>
+          <div class="bp-count">×${num(k.n)}</div>${stamp}</div>
+        <div class="bounty-file">
+          <p class="bf-eye">${tr("Most wanted")} · ${tr("Enemy player")}</p>
+          <h3>${esc(name)}</h3>
+          <p class="bf-line">${killedLine(k)}</p>
+          <dl class="bf-facts">
+            ${fact("Last seen", k.last.zone ? `${esc(k.last.zone)} <small>${shortDate(localKey(k.last.t))}</small>` : "")}
+            ${fact("Favourite move", move ? esc(move[0]) : "")}
+            ${fact("Victims", [...k.victims].map(v => `<span class="bf-victim">${esc(v)}</span>`).join(""))}
+          </dl>
+          ${reward && !(st && st.paid) ? `<div class="bf-reward">${icon("loot", 2)}<span>${reward}</span></div>` : ""}
+          ${stLine ? `<p class="bf-claim${st.paid ? " paid" : ""}">${stLine}</p>` : ""}
+          <div class="bf-actions"><button type="button" class="chip" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button>
+            <button type="button" class="linkbtn" data-goto="deaths">${tr("All wanted posters")} ›</button></div>
+        </div></article>`;
+    })() : "";
     $("wanted").innerHTML = top.map(([name, k], i) => {
       const s0 = i === 0 && st;
       return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>

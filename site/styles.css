@@ -725,7 +725,6 @@ a.mrow:hover .nm { color: var(--accent); }
 .poster .stamp.paid { color: #1f6b2a; border-color: #1f6b2a; }
 .poster .cl { font-weight: 700; color: #a3170c; }
 .poster .linkbtn { justify-self: center; color: #6b4a1e; font-size: 12px; }
-.mostwanted .mw-claim { color: var(--bad); font-weight: 700; }
 
 /* ---------- Tables ---------- */
 .table-wrap { overflow-x: auto; min-width: 0; max-width: 100%; }
@@ -1073,14 +1072,54 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .donut-legend div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .donut-legend i { width: 9px; height: 9px; border-radius: 50%; }
 .donut-legend strong { color: var(--ink); font-variant-numeric: tabular-nums; }
-.mostwanted { margin: 0 20px 20px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px;
-  border-radius: 12px; background: color-mix(in srgb, var(--bad) 8%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 22%, transparent); }
-.mw-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--bad) 14%, transparent); }
-.mostwanted div { display: grid; min-width: 0; }
-.mostwanted p { font: 700 10px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--bad); }
-.mostwanted strong { font: 400 20px/1.15 var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mostwanted span { font-size: 12px; color: var(--muted); }
-.mostwanted > b { font: 400 26px var(--sf); color: var(--bad); }
+/* the overview's bounty card: a nailed-up wanted poster beside the case file on the #1 enemy player */
+#oWanted:empty { display: none; }
+.bounty { display: grid; grid-template-columns: minmax(200px, 250px) minmax(0, 1fr); overflow: hidden; position: relative;
+  background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--bad) 16%, transparent), transparent 60%), var(--panel); }
+.bounty-poster { position: relative; margin: 22px 0 22px 22px; padding: 18px 14px 16px; display: grid; justify-items: center; gap: 2px; text-align: center;
+  color: var(--parch-ink); transform: rotate(-2deg); border-radius: 3px;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), transparent 55%), radial-gradient(circle at 80% 90%, rgba(107,74,30,.35), transparent 50%), var(--parch);
+  box-shadow: inset 0 0 0 2px #6b4a1e, inset 0 0 0 5px var(--parch), inset 0 0 0 6px #6b4a1e, inset 0 0 40px rgba(107,74,30,.45), 0 14px 26px rgba(0,0,0,.45); }
+.bounty-poster::before { content: ""; position: absolute; top: 7px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #d9d4cc, #5c564e 70%); box-shadow: 0 2px 3px rgba(0,0,0,.5); } /* the nail */
+.bp-w { font: 400 38px/1 var(--hf); letter-spacing: .06em; color: #8a1c10; margin-top: 6px; text-shadow: 0 1px 0 rgba(255,255,255,.35); }
+.bp-sub { font: 700 10px var(--nf); letter-spacing: .32em; text-transform: uppercase; color: #6b4a1e; padding: 3px 0 8px;
+  border-bottom: 1.5px solid rgba(59,36,18,.5); margin-bottom: 6px; }
+.bp-seal { width: 74px; height: 74px; display: grid; place-items: center; border-radius: 50%; margin: 4px 0 6px;
+  background: radial-gradient(circle, rgba(59,36,18,.08), rgba(59,36,18,.22)); box-shadow: inset 0 0 0 2px rgba(59,36,18,.45); }
+.bp-seal .wicon { width: 56px; height: 56px; border-radius: 50%; filter: sepia(.6) contrast(1.1); }
+.bp-name { font: 400 26px/1.1 var(--sf); overflow-wrap: anywhere; }
+.bp-count { font: 800 13px var(--nf); letter-spacing: .14em; color: #8a1c10; margin-top: 4px; }
+.bounty-poster .stamp { position: absolute; z-index: 1; top: 47%; left: 50%; transform: translate(-50%, -50%) rotate(-16deg); padding: 3px 14px; border: 3px solid #a3170c;
+  border-radius: 6px; color: #a3170c; font: 800 24px var(--nf); letter-spacing: .14em; text-transform: uppercase; opacity: .88; pointer-events: none;
+  background: color-mix(in srgb, var(--parch) 80%, transparent); }
+.bounty-poster .stamp.paid { color: #1f6b2a; border-color: #1f6b2a; }
+.bounty-file { display: grid; align-content: center; gap: 10px; padding: 24px 26px; min-width: 0; }
+.bf-eye { font: 700 11px var(--nf); letter-spacing: .16em; text-transform: uppercase; color: var(--bad); display: flex; align-items: center; gap: 8px; }
+.bf-eye::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 22%, transparent);
+  animation: bf-pulse 2.4s ease-in-out infinite; }
+@keyframes bf-pulse { 50% { box-shadow: 0 0 0 8px transparent; } }
+@media (prefers-reduced-motion: reduce) { .bf-eye::before { animation: none; } }
+.bounty-file h3 { font: 400 clamp(28px, 4vw, 40px)/1.05 var(--hf); color: var(--ink); overflow-wrap: anywhere; }
+.bf-line { color: var(--muted); font-size: 14px; }
+.bf-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 4px 0; }
+.bf-facts > div { padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent); min-width: 0; }
+.bf-facts dt { font: 700 10px var(--nf); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.bf-facts dd { margin: 0; color: var(--ink); font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; }
+.bf-facts small { color: var(--muted); font-size: 12px; }
+.bf-victim { padding: 1px 8px; border-radius: 999px; font-size: 12px; background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--ink); }
+.bf-reward { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; font-weight: 700; color: var(--accent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent);
+  box-shadow: inset 3px 0 0 var(--accent); }
+.bf-claim { font-weight: 700; color: var(--bad); }
+.bf-claim.paid { color: var(--good); }
+.bf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 2px; }
+@media (max-width: 640px) {
+  .bounty { grid-template-columns: minmax(0, 1fr); }
+  .bounty-poster { margin: 22px auto 0; width: min(240px, 80%); }
+  .bounty-file { padding: 20px 16px 22px; }
+}
 /* hero standings: a quiet table, each row a link to the character */
 .standings { display: grid; }
 .st-head, .st-row { display: grid; grid-template-columns: minmax(0, 1.9fr) 64px 84px 64px 20px; align-items: center; gap: 10px; padding: 0 20px; }
@@ -1157,7 +1196,7 @@ body.loading .loader { display: flex; flex-direction: column; align-items: cente
 /* ---------- WoW assets: real icons, crests, factions, renders, journal art ---------- */
 /* Game icons get the in-game look: a dark rim and slightly rounded corners. */
 .wicon { display: inline-block; flex: none; vertical-align: middle; border-radius: 4px; box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(255,255,255,.12); background: #000; }
-.ticon .wicon, .mw-icon .wicon { width: 38px; height: 38px; }
+.ticon .wicon { width: 38px; height: 38px; }
 .glead .wicon { width: 18px; height: 18px; border-radius: 3px; }
 .cicon .wicon { border-radius: 3px; }
 
