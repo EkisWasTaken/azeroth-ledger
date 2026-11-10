@@ -413,6 +413,11 @@ local function InitCharacter()
     end
   end
   C.runsCounted = true
+  -- FunStats 1.8.1-1.9.2 saved the made-up 0 read at logout, so every login counted the lifetime kills again: drop those days.
+  if not C.honorRecounted then
+    for _, d in pairs(C.days) do d.honorKills = nil end
+    C.honorRecounted = true
+  end
   -- Deaths saved before continent positions existed get them now.
   for _, d in ipairs(C.deaths) do
     if type(d) == "table" and d.map and d.x and not d.cx then d.cont, d.cx, d.cy = OnContinent(d.map, d.x, d.y) end

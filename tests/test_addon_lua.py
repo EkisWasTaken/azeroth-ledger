@@ -622,6 +622,16 @@ class Addon(unittest.TestCase):
         p = self.char()[1].pvp
         self.assertEqual((p.hk, p.dk), (3, 0))
 
+    def test_honor_kills_recounted_by_old_versions_are_dropped_once(self):
+        save = ('local day = date("%Y-%m-%d", os.time()); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
+                'days = { [day] = { honorKills = 9, quests = 1 } }, pvp = { hk = 3 } } } }')
+        self.start(CLASSIC + "\nfunction GetPVPLifetimeStats() return 3, 0 end\n" + save)
+        self.assertEqual(self.today("honorKills"), 0)
+        self.assertEqual(self.today("quests"), 1)
+        self.lua.execute("function GetPVPLifetimeStats() return 5, 0 end")
+        self.fire("PLAYER_PVP_KILLS_CHANGED")
+        self.assertEqual(self.today("honorKills"), 2)  # new kills still count after the cleanup
+
     def test_deaths_saved_twice_by_old_versions_are_cleaned_up(self):
         save = ('local t = os.time(); local day = date("%Y-%m-%d", t); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
                 'days = { [day] = { deaths = 4, deaths_fall = 2 } }, '
