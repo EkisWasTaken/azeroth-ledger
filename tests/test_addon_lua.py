@@ -622,6 +622,37 @@ class Addon(unittest.TestCase):
         p = self.char()[1].pvp
         self.assertEqual((p.hk, p.dk), (3, 0))
 
+    BG = ('function GetInstanceInfo() return "Warsong Gulch", "pvp", 0, "" end; bgWinner = nil; '
+          'function GetBattlefieldWinner() return bgWinner end; function GetNumBattlefieldScores() return 2 end; '
+          'function GetBattlefieldScore(i) return unpack(({ { "Someone-Other", 9, 9, 9, 99, 0 }, '
+          '{ "Oldname", 3, 12, 2, 150, 1 } })[i]) end')
+
+    def test_a_finished_battleground_counts_once(self):
+        self.start(CLASSIC + "\n" + self.BG)
+        self.fire("UPDATE_BATTLEFIELD_SCORE")  # still playing: no winner yet
+        self.assertIsNone(self.char()[1].bg["Warsong Gulch"])
+        self.lua.execute("bgWinner = 1")  # Alliance, my side in the score
+        for _ in range(3):
+            self.fire("UPDATE_BATTLEFIELD_SCORE")
+        b = self.char()[1].bg["Warsong Gulch"]
+        self.assertEqual((b.n, b.w, b.l, b.kb, b.hk, b.deaths, b.honor), (1, 1, 0, 3, 12, 2, 150))
+        self.assertEqual((self.today("bgs"), self.today("bgWins")), (1, 1))
+        self.lua.execute("bgWinner = nil")  # the next match starts
+        self.fire("UPDATE_BATTLEFIELD_SCORE")
+        self.lua.execute("bgWinner = 0")
+        self.fire("UPDATE_BATTLEFIELD_SCORE")
+        b = self.char()[1].bg["Warsong Gulch"]
+        self.assertEqual((b.n, b.w, b.l, b.kb), (2, 1, 1, 6))
+        self.assertEqual((self.today("bgs"), self.today("bgWins")), (2, 1))
+
+    def test_secret_or_missing_battleground_scores_count_nothing(self):
+        self.start(FOREVER)
+        self.fire("UPDATE_BATTLEFIELD_SCORE")  # a client without the scoreboard calls
+        self.assertEqual(self.today("bgs"), 0)
+        self.lua.execute(self.BG.replace("return bgWinner", "return secretMark"))
+        self.fire("UPDATE_BATTLEFIELD_SCORE")
+        self.assertEqual(self.today("bgs"), 0)
+
     def test_honor_kills_recounted_by_old_versions_are_dropped_once(self):
         save = ('local day = date("%Y-%m-%d", os.time()); FunStatsDB = { chars = { ["Oldname-PvE"] = { '
                 'days = { [day] = { honorKills = 9, quests = 1 } }, pvp = { hk = 3 } } } }')

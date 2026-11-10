@@ -29,12 +29,12 @@
     "The Meters": "Mätarna", "Who's pumping, who's padding": "Vem pumpar, vem paddar", "Damage Done": "Damage", "Damage per day": "Damage per dag",
     "The Race to 60": "Racet till 60", "Every ding, plotted": "Varje ding, inritat", "By date": "Per datum", "By /played": "Per /played",
     "The Spirit Healer's Log": "Spirit Healerns logg", "Combat log": "Combat log", "most recent first": "senaste först",
-    "Deaths by level": "Dödsfall per level", "Most Wanted": "Mest efterlysta", "The creatures that killed us most": "Mobsen som dödat oss mest",
+    "Deaths by level": "Dödsfall per level", "Most Wanted": "Mest efterlysta",
     "Deadliest places": "Dödligaste platserna", "Combat Analysis": "Stridsanalys", "Crits, whiffs and the art of not getting hit": "Crits, bom och konsten att inte bli träffad",
     "Playstyle": "Spelstil", "each stat scaled to the group's best": "varje värde jämfört med gruppens bästa",
     "Crit rate": "Crit rate", "Damage taken vs healing received": "Tagen damage mot mottagen healing", "Combat sheet": "Stridsblad",
     "PvP Battlefield": "PvP-slagfältet", "Players killed": "Dödade spelare", "PvP deaths": "PvP-dödsfall", "K/D": "K/D", "kills per death": "kills per dödsfall",
-    "Duels": "Dueller", "Honorable kills": "Honorable kills", "Dishonorable kills": "Dishonorable kills", "civilians slain": "dödade civila", "PvP rank": "PvP-rank", "Rank {0}": "Rank {0}", "Highest rank": "Högsta rank", "Honor this week": "Honor denna vecka", "{0} to spend": "{0} att spendera", "{0} this week": "{0} denna vecka", "{0} all time": "{0} totalt", "all time": "totalt", "killing blows": "killing blows", "Best day": "Bästa dagen", "Hardest hit taken": "Hårdaste träffen", "by {0}": "av {0}", "HKs": "HKs", "Killing spells": "Dödande spells", "what players finished us with": "vad spelare dödade oss med", "Rare drops": "Rare drops", "Levels": "Levels", "{0} won, {1} lost": "{0} vunna, {1} förlorade", "PvP standings": "PvP-ställning", "Kills": "Kills", "Nemeses": "Ärkefiender", "the players who killed us most": "spelarna som dödat oss mest",
+    "Duels": "Dueller", "Honorable kills": "Honorable kills", "Dishonorable kills": "Dishonorable kills", "civilians slain": "dödade civila", "PvP rank": "PvP-rank", "Rank {0}": "Rank {0}", "Highest rank": "Högsta rank", "Honor this week": "Honor denna vecka", "{0} to spend": "{0} att spendera", "{0} this week": "{0} denna vecka", "{0} all time": "{0} totalt", "all time": "totalt", "killing blows": "killing blows", "Best day": "Bästa dagen", "Hardest hit taken": "Hårdaste träffen", "by {0}": "av {0}", "HKs": "HKs", "Killing spells": "Dödande spells", "what players finished us with": "vad spelare dödade oss med", "Rare drops": "Rare drops", "Levels": "Levels", "{0} won, {1} lost": "{0} vunna, {1} förlorade", "PvP standings": "PvP-ställning", "Battlegrounds": "Battlegrounds", "Battleground": "Battleground", "BGs": "BGs", "{0} won": "{0} vunna", "all time, per game": "totalt, per match", "Games": "Matcher", "Won–lost": "Vunna–förlorade", "Win rate": "Vinstandel", "Honor": "Honor", "Kills": "Kills", "Nemeses": "Ärkefiender", "the players who killed us most": "spelarna som dödat oss mest",
     "Gank zones": "Gank-zoner", "where players killed us": "där spelare dödat oss", "Duel record": "Duellfacit", "by opponent": "per motståndare", "Opponent": "Motståndare",
     "Won": "Vunna", "Lost": "Förlorade", "No player has killed anyone here yet.": "Ingen spelare har dödat någon här än.", "No duels yet.": "Inga dueller än.", "Nobody to compare yet.": "Ingen att jämföra med än.",
     "Loot Council": "Lootrådet", "Mostly grey, occasionally purple": "Mest grått, ibland lila", "Loot by quality": "Loot per kvalitet",
@@ -118,9 +118,9 @@
     "Guild progress": "Guildernas progress", "Character": "Karaktär", "Guild": "Guild", "Members": "Medlemmar", "Runs": "Runs", "Bosses": "Bossar",
     "{0} kill rate": "{0} lyckade", "fastest {0}": "snabbast {0}", "bosses killed and dungeon runs in this range": "dödade bossar och dungeon runs i perioden",
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
-    "Wanted": "Efterlyst", "for the murder of {0} hero": "för mordet på {0} hjälte", "for the murder of {0} heroes": "för mordet på {0} hjältar",
-    "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}", "Reward: {0} gold": "Belöning: {0} guld",
-    "No creature has claimed a victim yet.": "Ingen mob har krävt ett offer än.", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "Wanted": "Efterlyst",
+    "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
+    "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
     "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
@@ -241,7 +241,7 @@
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
-    "Loot quality": "Lootkvalitet", "Most wanted": "Mest efterlyst", "Responsible for {0} death": "Ansvarig för {0} dödsfall", "Responsible for {0} deaths": "Ansvarig för {0} dödsfall",
+    "Loot quality": "Lootkvalitet", "Most wanted": "Mest efterlyst",
     "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
     "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
     "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
@@ -702,6 +702,7 @@
           maxHit: Math.round(ri(150, 400) * scale), maxHitSpell: Object.keys(spells)[0], maxHitTarget: pickOne(mobs),
         };
         d.rollSum = d.rolls * ri(25, 75);
+        if (pi < 4 && rnd() < 0.25) { d.bgs = ri(1, 4); d.bgWins = ri(0, d.bgs); }
         [["out", goldOut, [["Vendor", 0.4], ["AH", 0.3], ["Trainer", 0.15], ["Taxi", 0.1], ["Trade", 0.05]]],
           ["in", goldIn, [["Other", 0.6], ["Vendor", 0.25], ["Mail", 0.1], ["Trade", 0.05]]]]
           .forEach(([dir, total, parts]) => parts.forEach(([k, f]) => d[dir + k] = Math.round(total * f)));
@@ -721,6 +722,8 @@
           });
         }
       }
+      // A couple of enemy players gank the first three, so the Most Wanted board has someone on it.
+      if (pi < 3) deaths.slice(-2).forEach((d, j) => deaths.push({ ...d, t: d.t + 600, cause: "player", by: j || pi === 2 ? "Gankalot" : "Shadowknife", spell: "Backstab" }));
       const others = roster.filter((_, i) => i !== pi);
       others.forEach(([n]) => { healers[n] = ri(2000, 40000) * (n === "Mirelle" ? 4 : 1); });
       const duels = {};
@@ -733,6 +736,7 @@
         guild: pi >= 4 ? "Murloc Mafia" : "Example Guild", owner: pi === 2 || pi === 3 ? "demo-player-jordan" : "demo-player-" + pi,
         game: { demo: true, hardcore: hc || undefined },
         pvp: (r => r ? { hk: r * 37, dk: ri(0, 3), weekHK: ri(0, r * 4), weekHonor: ri(0, r * 300), rank: 4 + r, rankName: ["Private", "Corporal", "Sergeant", "Master Sergeant"][r - 1], best: 4 + r, bestName: ["Private", "Corporal", "Sergeant", "Master Sergeant"][r - 1] } : undefined)(pi < 4 ? 4 - pi : 0),
+        bg: pi < 4 ? { "Warsong Gulch": { n: 14 - pi * 3, w: 8 - pi * 2, l: 6 - pi, kb: 40 - pi * 8, hk: 120 - pi * 20, deaths: 30, honor: 2400 - pi * 400 }, "Arathi Basin": { n: 6, w: 2, l: 4, kb: 15, hk: 70, deaths: 18, honor: 1100 } } : undefined,
         lastSeen: Date.now() / 1000, peakGold: goldNow * 1.4, gold: goldNow, deaths, levels, levelPlayed, dingAt, heat, zones: zoneT, spellDmg, casts, healers, duels,
         best: { hit: { amt: ri(900, 1500), spell: Object.keys(spells)[0], target: "Hogger", t: Date.now() / 1000 - 86400 * ri(1, 20) } },
         kills: Object.fromEntries(mobs.map(m => [m, ri(5, 90)])),
@@ -2123,9 +2127,13 @@
       const s = sumFor(p, allTime), deaths = p.deaths.filter(inR);
       let day = null;
       for (const [k, d] of Object.entries(p.days)) { const n = (d.honorKills || 0) + (d.hk || 0) * !d.honorKills; if ((allTime || inRange(k)) && n > ((day && day.n) || 0)) day = { k, n }; }
-      return { p, hk: s.hk || 0, hon: s.honorKills || 0, dd: deaths.length, deaths, w: s.duelsWon || 0, l: s.duelsLost || 0, g: honorOf(p), day };
+      return { p, hk: s.hk || 0, hon: s.honorKills || 0, dd: deaths.length, deaths, w: s.duelsWon || 0, l: s.duelsLost || 0, bg: s.bgs || 0, bw: s.bgWins || 0, g: honorOf(p), day };
     });
-    const t = rows.reduce((a, r) => ({ hk: a.hk + r.hk, hon: a.hon + r.hon, dd: a.dd + r.dd, w: a.w + r.w, l: a.l + r.l }), { hk: 0, hon: 0, dd: 0, w: 0, l: 0 });
+    const t = rows.reduce((a, r) => ({ hk: a.hk + r.hk, hon: a.hon + r.hon, dd: a.dd + r.dd, w: a.w + r.w, l: a.l + r.l, bg: a.bg + r.bg, bw: a.bw + r.bw }), { hk: 0, hon: 0, dd: 0, w: 0, l: 0, bg: 0, bw: 0 });
+    // Per battleground, all time: the addon keeps these as totals, not per day.
+    const maps = {};
+    people.forEach(p => p.chars.forEach(c => Object.entries(c.bg || {}).forEach(([m, v]) => { const o = maps[m] ||= {}; ["n", "w", "l", "hk", "deaths", "honor"].forEach(k => { o[k] = (o[k] || 0) + (+v[k] || 0); }); })));
+    const bgList = Object.entries(maps).sort((a, b) => b[1].n - a[1].n);
     const G = {};
     rows.forEach(r => ["hk", "dk", "weekHK", "weekHonor", "honor"].forEach(k => { if (r.g[k]) G[k] = (G[k] || 0) + r.g[k]; }));
     const many = people.length > 1, who = r => many ? esc(nameTxt(r.p)) : "";
@@ -2148,7 +2156,8 @@
     const frame = (title, small, body) => `<div class="frame"><div class="frame-title"><span>${tr(title)}</span>${small ? `<small>${tr(small)}</small>` : ""}</div>${body}</div>`;
     const empty = m => `<p class="empty">${tr(m)}</p>`;
     const hkOf = r => allTime ? r.g.hk || r.hon : r.hon, anyHonor = rows.some(r => r.g.hk || r.hon), anyRank = rows.some(r => r.g.rank || r.g.best);
-    const board = rows.filter(r => r.hk || r.dd || r.w || r.l || r.g.hk || r.hon).sort((a, b) => hkOf(b) - hkOf(a) || b.hk - a.hk || a.dd - b.dd);
+    const anyBg = rows.some(r => r.bg);
+    const board = rows.filter(r => r.hk || r.dd || r.w || r.l || r.g.hk || r.hon || r.bg).sort((a, b) => hkOf(b) - hkOf(a) || b.hk - a.hk || a.dd - b.dd);
     const tiles = [
       (G.hk || t.hon) && ["crest", tr("Honorable kills"), num(allTime ? G.hk || t.hon : t.hon), allTime ? (G.weekHK ? tr("{0} this week", num(G.weekHK)) : tr("all time")) : G.hk ? tr("{0} all time", num(G.hk)) : ""],
       G.dk && ["skull", tr("Dishonorable kills"), num(G.dk), tr("civilians slain")],
@@ -2161,10 +2170,13 @@
       bestDay && ["clock", tr("Best day"), num(bestDay.day.n), [shortDate(bestDay.day.k), who(bestDay)].filter(Boolean).join(" · ")],
       hardest && ["heart", tr("Hardest hit taken"), num(hardest.d.amt), tr("by {0}", esc(hardest.d.by || tr("another player")))],
       ["flag", tr("Duels"), `${num(t.w)}–${num(t.l)}`, tr("{0} won, {1} lost", num(t.w), num(t.l))],
+      t.bg && ["crest", tr("Battlegrounds"), `${num(t.bw)}–${num(t.bg - t.bw)}`, tr("{0} won", pct(t.bw / t.bg))],
     ].filter(Boolean);
     return `<div class="tiles">${tiles.map(tileHTML).join("")}</div>
-    ${many ? frame("PvP standings", "", board.length ? `<div class="table-wrap"><table><thead><tr><th></th>${anyHonor ? `<th>${tr("HKs")}</th>` : ""}${anyRank ? `<th>${tr("PvP rank")}</th>` : ""}<th>${tr("Kills")}</th><th>${tr("PvP deaths")}</th><th>${tr("K/D")}</th><th>${tr("Duels")}</th></tr></thead><tbody>${
-      board.map(r => `<tr class="${fr(r.p)}"><td><span class="nm">${nameHTML(r.p)}</span></td>${anyHonor ? `<td>${num(hkOf(r))}</td>` : ""}${anyRank ? `<td>${esc(r.g.rankName || r.g.bestName || "–")}</td>` : ""}<td>${num(r.hk)}</td><td>${num(r.dd)}</td><td>${kd(r.hk, r.dd)}</td><td>${num(r.w)}–${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("Nobody to compare yet.")) : ""}
+    ${many ? frame("PvP standings", "", board.length ? `<div class="table-wrap"><table><thead><tr><th></th>${anyHonor ? `<th>${tr("HKs")}</th>` : ""}${anyRank ? `<th>${tr("PvP rank")}</th>` : ""}<th>${tr("Kills")}</th><th>${tr("PvP deaths")}</th><th>${tr("K/D")}</th><th>${tr("Duels")}</th>${anyBg ? `<th>${tr("BGs")}</th>` : ""}</tr></thead><tbody>${
+      board.map(r => `<tr class="${fr(r.p)}"><td><span class="nm">${nameHTML(r.p)}</span></td>${anyHonor ? `<td>${num(hkOf(r))}</td>` : ""}${anyRank ? `<td>${esc(r.g.rankName || r.g.bestName || "–")}</td>` : ""}<td>${num(r.hk)}</td><td>${num(r.dd)}</td><td>${kd(r.hk, r.dd)}</td><td>${num(r.w)}–${num(r.l)}</td>${anyBg ? `<td>${num(r.bw)}–${num(r.bg - r.bw)}</td>` : ""}</tr>`).join("")}</tbody></table></div>` : empty("Nobody to compare yet.")) : ""}
+    ${bgList.length ? frame("Battlegrounds", "all time, per game", `<div class="table-wrap"><table><thead><tr><th>${tr("Battleground")}</th><th>${tr("Games")}</th><th>${tr("Won–lost")}</th><th>${tr("Win rate")}</th><th>${tr("HKs")}</th><th>${tr("Deaths")}</th><th>${tr("Honor")}</th></tr></thead><tbody>${
+      bgList.map(([m, v]) => `<tr><td>${esc(m)}</td><td>${num(v.n)}</td><td>${num(v.w)}–${num(v.l)}</td><td>${pct(v.w / v.n)}</td><td>${dec(v.hk / v.n, 1)}</td><td>${dec(v.deaths / v.n, 1)}</td><td>${num(Math.round(v.honor / v.n))}</td></tr>`).join("")}</tbody></table></div>`) : ""}
     <div class="duo even">
       ${frame("Nemeses", "the players who killed us most", bars(count(d => d.by), "{0} deaths") || empty("No player has killed anyone here yet."))}
       ${frame("Gank zones", "where players killed us", bars(count(d => d.inst || d.zone), "{0} deaths") || empty("No player has killed anyone here yet."))}
@@ -2199,24 +2211,28 @@
       options: { interaction: { mode: "index", intersect: false }, scales: { x: { ...gridX, stacked: true }, y: { ...gridY, stacked: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } },
     } : null);
 
-    // wanted posters
+    // Most Wanted: enemy players only, ranked by how many of our heroes they killed, then by kills.
     const killers = {};
     all.forEach(({ p, d }) => {
-      if (!d.by) return;
+      if (d.cause !== "player" || !d.by) return;
       const k = killers[d.by] ||= { n: 0, victims: new Set(), zones: {} };
       k.n++; k.victims.add(p.name); if (d.zone) k.zones[d.zone] = (k.zones[d.zone] || 0) + 1;
     });
-    const top = Object.entries(killers).sort((a, b) => b[1].n - a[1].n).slice(0, 8);
+    const top = Object.entries(killers).sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
     const mw = top[0];
-    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${icon("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${tr(mw[1].n === 1 ? "Responsible for {0} death" : "Responsible for {0} deaths", num(mw[1].n))}</span></div><b>×${num(mw[1].n)}</b></div>` : "";
+    // The bounty is whatever the site owner puts up in config.js; nothing shows without one.
+    const bounty = (window.LEDGER_CONFIG || {}).bounty || {};
+    const reward = bounty.reward ? [tr("Reward: {0}", esc(bounty.reward)), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ") : "";
+    const killedLine = k => k.n === 1 ? tr("Killed one of our heroes") : tr("Killed {0} of our heroes, {1} times", num(k.victims.size), num(k.n));
+    $("oWanted").innerHTML = mw ? `<div class="mostwanted"><span class="mw-icon">${icon("skull", 2)}</span><div><p>${tr("Most wanted")}</p><strong>${esc(mw[0])}</strong><span>${killedLine(mw[1])}</span>${reward ? `<span>${reward}</span>` : ""}</div><b>×${num(mw[1].n)}</b></div>` : "";
     $("wanted").innerHTML = top.map(([name, k], i) => {
       const zone = Object.entries(k.zones).sort((a, b) => b[1] - a[1])[0];
       return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
-        <div class="f">${tr(k.n === 1 ? "for the murder of {0} hero" : "for the murder of {0} heroes", num(k.n))}</div>
+        <div class="f">${killedLine(k)}</div>
         <div class="f">${tr("Victims: {0}", [...k.victims].map(esc).join(", "))}</div>
         ${zone ? `<div class="f">${tr("Last seen in {0}", esc(zone[0]))}</div>` : ""}
-        <div class="r">${tr("Reward: {0} gold", num(k.n * 15))}</div></div>`;
-    }).join("") || `<p class="empty">${tr("No creature has claimed a victim yet.")}</p>`;
+        ${i === 0 && reward ? `<div class="r">${reward}</div>` : ""}</div>`;
+    }).join("") || `<p class="empty">${tr("No enemy player has claimed a victim yet.")}</p>`;
 
     // deadliest zones
     const dz = {};

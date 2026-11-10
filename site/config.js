@@ -31,4 +31,7 @@ window.LEDGER_CONFIG = {
   // The Cloudflare Worker that serves Wowhead's 3D model viewer (proxy/modelviewer-worker.js), e.g. "https://ledger-models.you.workers.dev".
   // Empty: character pages show Blizzard's 2D render instead.
   modelViewer: "https://ledger-models.eliaspown.workers.dev",
+  // The bounty on the Most Wanted enemy player, shown on the overview and the top poster. Any text works:
+  // reward: "50 gold" or "[Black Lotus]", claim: "Whisper Ekis in game". Empty reward: no bounty line at all.
+  bounty: { reward: "", claim: "" },
 };

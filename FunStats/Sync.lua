@@ -239,7 +239,7 @@ local function Meta(ch)
   m.heat, m.duels = ch.heat, ch.duels
   m.gear, m.gearAt, m.talents, m.spec, m.professions = ch.gear, ch.gearAt, ch.talents, ch.spec, ch.professions
   m.traits = ch.traits
-  m.pvp = ch.pvp
+  m.pvp, m.bg = ch.pvp, ch.bg
   m.game = ch.game
   m.kills = Top(ch.kills, 40)
   m.spellDmg = Top(ch.spellDmg, 30)

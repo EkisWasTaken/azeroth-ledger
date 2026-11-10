@@ -297,6 +297,38 @@ local function UpdatePvP()
   if next(p) then p.t = time(); C.pvp = p end
 end
 
+-- Battlegrounds: read the final scoreboard once per match. The event fires many times, the winner stays set until you leave.
+local bgCounted = false
+local function OnBattlefieldScore()
+  if not C then return end
+  local winner = PvPNum(PvPCall(GetBattlefieldWinner))
+  if not winner then bgCounted = false; return end
+  if bgCounted then return end
+  bgCounted = true
+  local me = UnitName("player")
+  local mine
+  for i = 1, PvPNum(PvPCall(GetNumBattlefieldScores)) or 0 do
+    local name, kb, hk, deaths, honor, faction = PvPCall(GetBattlefieldScore, i)
+    if type(name) == "string" and not (issecretvalue and issecretvalue(name)) and name:gsub("%-.*", "") == me then
+      mine = { kb = PvPNum(kb), hk = PvPNum(hk), deaths = PvPNum(deaths), honor = PvPNum(honor), side = PvPNum(faction) }
+      break
+    end
+  end
+  -- Without my row, my side is my faction: 0 is Horde, 1 Alliance, as GetBattlefieldWinner says.
+  local side = mine and mine.side or (UnitFactionGroup("player") == "Alliance" and 1 or 0)
+  local won = winner == side
+  local map = GetInstanceInfo() or GetRealZoneText() or "?"
+  local b = C.bg[map] or { n = 0, w = 0, l = 0 }
+  C.bg[map] = b
+  b.n = b.n + 1
+  if won then b.w = b.w + 1 else b.l = b.l + 1 end
+  for _, f in ipairs({ "kb", "hk", "deaths", "honor" }) do
+    if mine and mine[f] then b[f] = (b[f] or 0) + mine[f] end
+  end
+  Add("bgs")
+  if won then Add("bgWins") end
+end
+
 local function UpdateProfile(loggingOut)
   C.game = GameInfo()
   C.guid = playerGUID -- how the Ledger app knows this character in the combat log files
@@ -374,7 +406,8 @@ local function InitCharacter()
   C.heat = C.heat or {}             -- seconds played per "weekday-hour"
   C.zones = C.zones or {}           -- seconds spent per zone
   C.levelPlayed = C.levelPlayed or {} -- played seconds when each level was reached
-  C.duels = C.duels or {}           -- opponent -> { w, l }
+  C.bg = C.bg or {}                 -- battleground name -> games, wins, losses and my scoreboard totals
+  C.duels = C.duels or {}         -- opponent -> { w, l }
   C.healers = C.healers or {}       -- who healed me, total effective healing
   C.playedTotal = C.playedTotal or 0
   C.dingAt = C.dingAt or {}         -- where each level was reached: zone and map positions
@@ -1523,6 +1556,7 @@ handlers.ENCOUNTER_END = OnEncounterEnd
 handlers.PLAYER_PVP_KILLS_CHANGED = UpdatePvP
 handlers.PLAYER_PVP_RANK_CHANGED = UpdatePvP
 handlers.HONOR_CURRENCY_UPDATE = UpdatePvP
+handlers.UPDATE_BATTLEFIELD_SCORE = OnBattlefieldScore
 
 local sheetPending = false
 local function SheetSoon()
