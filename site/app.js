@@ -3806,11 +3806,10 @@
           src.chars[id] = { ...rest, key: r.char_key, deaths: Array.isArray(rest.deaths) ? rest.deaths : [], notable: Array.isArray(rest.notable) ? rest.notable : [] };
           src.days[id] = { char: id, days: days && typeof days === "object" ? days : {} };
         } else if (r.kind === "relay") {
-          // a copy of someone's stats, received in game by another player; newest copy wins.
+          // a copy of someone's stats, received in game by another player. Copies are merged below, newest on top.
           // A copy can't be newer than its upload, so a made-up lastSeen far in the future doesn't win.
           const seen = Math.min(Number(data.lastSeen) || 0, (Date.parse(r.updated_at) || 0) / 1000);
-          const prev = relays[r.char_key];
-          if (!prev || seen > prev.seen) relays[r.char_key] = { data, seen };
+          (relays[r.char_key] ||= []).push({ data, seen });
         } else if (r.kind === "obs") {
           src.obs[r.id] = { ...data, char: id, key: r.char_key, deaths: Array.isArray(data.deaths) ? data.deaths : [] };
         } else if (r.kind === "api" && !data.missing) {
@@ -3821,13 +3820,19 @@
         }
         updated = Math.max(updated, Date.parse(r.updated_at) || 0);
       }
-      // Copies only fill in characters that haven't uploaded their own stats.
-      for (const [key, { data }] of Object.entries(relays)) {
+      // Copies only fill in characters that haven't uploaded their own stats. Each friend's copy may hold only the
+      // days they happened to receive (a fresh install starts at today), so all copies are merged: the newest
+      // copy's profile and days win, older copies fill the days it lacks, and deaths and notables are combined.
+      for (const [key, list] of Object.entries(relays)) {
         const id = "c-" + key;
         if (src.chars[id]) continue;
-        const { days, ...rest } = data;
-        src.chars[id] = { ...rest, key, relay: true, deaths: Array.isArray(rest.deaths) ? rest.deaths : [], notable: Array.isArray(rest.notable) ? rest.notable : [] };
-        src.days[id] = { char: id, days: days && typeof days === "object" ? days : {} };
+        list.sort((a, b) => a.seen - b.seen || Object.keys(a.data.days || {}).length - Object.keys(b.data.days || {}).length);
+        const { days, ...rest } = list[list.length - 1].data;
+        const all = f => { const seen = new Set(); return list.flatMap(c => Array.isArray(c.data[f]) ? c.data[f] : [])
+          .filter(e => { const k = e && `${e.t}|${e.by || e.item || e.cause || e.boss || e.inst || ""}`; return k && !seen.has(k) && seen.add(k); })
+          .sort((a, b) => (a.t || 0) - (b.t || 0)); };
+        src.chars[id] = { ...rest, key, relay: true, deaths: all("deaths"), notable: all("notable") };
+        src.days[id] = { char: id, days: Object.assign({}, ...list.map(c => c.data.days && typeof c.data.days === "object" ? c.data.days : {})) };
       }
       state.data = src;
       state.updated = updated;
