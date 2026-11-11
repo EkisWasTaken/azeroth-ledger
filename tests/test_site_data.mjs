@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 
 const require = createRequire(import.meta.url);
-const { mergeRows, characters, weekTotals, scorePotw } = require("../site/ledger-data.js");
+const { mergeRows, characters, weekTotals, scorePotw, mostWanted } = require("../site/ledger-data.js");
 const FIELDS = ["dmg", "heal", "kb", "quests", "xp", "levels", "goldIn", "dungeons", "played"];
 
 const load = rows => characters(mergeRows(rows).src);
@@ -79,4 +79,18 @@ test("leading many stats beats topping one; nobody wins alone or with nothing do
   assert.equal(scorePotw([p("A", { dmg: 100 }), p("B", { dmg: 90, quests: 5, xp: 5 })], FIELDS).best.p.name, "B");
   assert.equal(scorePotw([p("A", { dmg: 100 })], FIELDS), null);
   assert.equal(scorePotw([p("A", {}), p("B", {})], FIELDS), null);
+});
+
+test("Most Wanted: everyone with 2+ kills on us in the last 7 days, older kills drop off", () => {
+  const now = 1794000000, day = 86400, a = { name: "Ann" }, b = { name: "Bo" };
+  const kill = (p, by, ago) => ({ p, d: { t: now - ago * day, cause: "player", by } });
+  const board = mostWanted([
+    kill(a, "Gank", 1), kill(b, "Gank", 2),           // two heroes: tops the board
+    kill(a, "Stab", 1), kill(a, "Stab", 3), kill(a, "Stab", 4), // one hero, three times
+    kill(a, "Once", 1),                               // one kill: not wanted
+    kill(a, "Old", 8), kill(b, "Old", 9), kill(a, "Old", 6), // only one kill this week
+    { p: a, d: { t: now - day, cause: "mob", by: "Wolf" } }, { p: b, d: { t: now - day, cause: "mob", by: "Wolf" } },
+  ], now);
+  assert.deepEqual(board.map(([n]) => n), ["Gank", "Stab"]);
+  assert.equal(board[1][1].n, 3);
 });

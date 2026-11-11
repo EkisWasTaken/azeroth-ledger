@@ -120,7 +120,7 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
-    "No enemy player has claimed a victim yet.": "Ingen fiendespelare har krävt ett offer än.", "The enemy players who killed us most": "Fiendespelarna som dödat oss mest", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "+{0} more wanted": "+{0} fler efterlysta", "No enemy player has killed us twice in the last 7 days.":"Ingen fiendespelare har dödat oss två gånger de senaste 7 dagarna.", "Enemy players who killed us twice or more in the last 7 days": "Fiendespelare som dödat oss minst två gånger de senaste 7 dagarna", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
     "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
@@ -1137,9 +1137,8 @@
     const m = (state.map ||= { cont: "", layers: { deaths: false, dings: false, loot: false, pvpkills: false, wanted: false }, who: "" });
     const atlas = pickAtlas(), game = mapGame();
     if (!people.some(p => p.id === m.who)) m.who = "";
-    // The Most Wanted layer follows the poster it was opened from, else whoever tops the board in this range.
-    const ranged = people.flatMap(p => p.deaths.filter(d => d && d.t && inRange(localKey(d.t))).map(d => ({ p, d })));
-    const wanted = m.wanted || (mostWanted(ranged)[0] || [])[0];
+    // The Most Wanted layer follows the poster it was opened from, else whoever tops the board.
+    const wanted = m.wanted || (mostWanted(people)[0] || [])[0];
     const all = mapEvents(m.who ? people.filter(p => p.id === m.who) : people, wanted);
     // Kalimdor and the Eastern Kingdoms always; Outland (TBC clients only) once something happened there; Azeroth on Mists of Pandaria.
     const conts = MAP_ART[game].filter(c => atlas[c] && (c !== "1945" || all.some(e => e.cont === c)));
@@ -2176,19 +2175,9 @@
     </div>`;
   }
 
-  // Most Wanted: enemy players who killed our heroes, ranked by how many of our heroes, then by kills. `all` is [{ p, d }].
+  // Most Wanted (ledger-data.js): the last 7 days whatever the picked range, so the board resets on its own.
   const plainName = n => String(n || "").replace(/-.*/, "");
-  function mostWanted(all) {
-    const killers = {};
-    all.forEach(({ p, d }) => {
-      if (d.cause !== "player" || !d.by) return;
-      const k = killers[d.by] ||= { n: 0, victims: new Set(), last: d, who: {} };
-      k.n++; k.victims.add(p.name); if (d.t > k.last.t) k.last = d;
-      // class, race and level as last seen (addon 1.13+ records them)
-      for (const f of ["byClass", "byRace", "byLvl"]) if (d[f] && !(k.who[f] && k.who[f].t > d.t)) k.who[f] = { v: d[f], t: d.t };
-    });
-    return Object.entries(killers).sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
-  }
+  const mostWanted = people => LedgerData.mostWanted(people.flatMap(p => p.deaths.map(d => ({ p, d }))), Date.now() / 1000);
   // Did one of us take this player down after they started killing us? config.js bounty.paid has the day each bounty
   // was paid ({ name: "YYYY-MM-DD" }): a kill after that day is a new claim, and killing us again after it reopens the bounty.
   function bountyState(people, name) {
@@ -2226,16 +2215,17 @@
       options: { interaction: { mode: "index", intersect: false }, scales: { x: { ...gridX, stacked: true }, y: { ...gridY, stacked: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } },
     } : null);
 
-    const top = mostWanted(all), mw = top[0];
-    // There's always a bounty on the #1 enemy; config.js can name the reward and how to claim it.
+    const top = mostWanted(people);
+    // There's a bounty on every wanted enemy; config.js can name the reward and how to claim it.
     const bounty = (window.LEDGER_CONFIG || {}).bounty || {};
     const reward = [bounty.reward ? tr("Reward: {0}", esc(bounty.reward)) : tr("Bounty: take them down to claim the reward"), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ");
-    const st = mw && bountyState(people, mw[0]);
-    const stLine = st ? tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t))) : "";
+    const states = top.map(([name]) => bountyState(people, name));
+    const stLine = st => st ? tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t))) : "";
     const killedLine = k => k.n === 1 ? tr("Killed one of our heroes") : tr("Killed {0} of our heroes, {1} times", num(k.victims.size), num(k.n));
     // The overview's bounty: a small side quest on the #1 enemy player, a pinned poster with the job beside it.
-    $("oWanted").innerHTML = mw ? (() => {
-      const [name, k] = mw;
+    // The rest of the board is on the Deaths page, so the card never grows.
+    $("oWanted").innerHTML = top.slice(0, 1).map(([name, k], i) => {
+      const st = states[i];
       const stamp = st ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : "";
       // tally marks, bundled in fives like on a cell wall (the rest as a number)
       const n = Math.min(k.n, 15);
@@ -2250,21 +2240,22 @@
           <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}</span></div>
           ${k.last.zone ? `<span class="bf-seen">${tr("Last seen in {0}", esc(k.last.zone))}</span>` : ""}
           ${reward && !(st && st.paid) ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
-          ${stLine ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine}</span>` : ""}
+          ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>` : ""}
           <button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button>
+          ${top.length > 1 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(top.length - 1))} ›</button>` : ""}
         </div></div>`;
-    })() : "";
+    }).join("");
     $("wanted").innerHTML = top.map(([name, k], i) => {
-      const s0 = i === 0 && st;
+      const st = states[i];
       return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
-        ${s0 ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : ""}
+        ${st ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : ""}
         <div class="f">${killedLine(k)}</div>
         <div class="f">${tr("Victims: {0}", [...k.victims].map(esc).join(", "))}</div>
         ${k.last.zone ? `<div class="f">${tr("Last seen in {0}", esc(k.last.zone))}</div>` : ""}
-        ${i === 0 && reward && !(st && st.paid) ? `<div class="r">${reward}</div>` : ""}
-        ${s0 ? `<div class="f cl">${stLine}</div>` : ""}
+        ${reward && !(st && st.paid) ? `<div class="r">${reward}</div>` : ""}
+        ${st ? `<div class="f cl">${stLine(st)}</div>` : ""}
         <button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button></div>`;
-    }).join("") || `<p class="empty">${tr("No enemy player has claimed a victim yet.")}</p>`;
+    }).join("") || `<p class="empty">${tr("No enemy player has killed us twice in the last 7 days.")}</p>`;
 
     // deadliest zones
     const dz = {};

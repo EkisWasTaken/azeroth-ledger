@@ -123,7 +123,24 @@
     return best && best.score && rows.length > 1 ? { best, top, share } : null;
   }
 
-  const api = { localKey, mergeRows, characters, weekTotals, scorePotw };
+  // Most Wanted: enemy players with at least 2 kills on our heroes in the 7 days before `now` (unix seconds), so the
+  // board keeps several names and each one drops off a week after their kills. Most heroes first, then most kills.
+  // `all` is [{ p, d }] (a hero and one of their deaths).
+  const WANTED_DAYS = 7, WANTED_KILLS = 2;
+  function mostWanted(all, now) {
+    const since = now - WANTED_DAYS * 86400, killers = {};
+    all.forEach(({ p, d }) => {
+      if (!d || d.cause !== "player" || !d.by || !(d.t >= since)) return;
+      const k = killers[d.by] ||= { n: 0, victims: new Set(), last: d, who: {} };
+      k.n++; k.victims.add(p.name); if (d.t > k.last.t) k.last = d;
+      // class, race and level as last seen (addon 1.13+ records them)
+      for (const f of ["byClass", "byRace", "byLvl"]) if (d[f] && !(k.who[f] && k.who[f].t > d.t)) k.who[f] = { v: d[f], t: d.t };
+    });
+    return Object.entries(killers).filter(([, k]) => k.n >= WANTED_KILLS)
+      .sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
+  }
+
+  const api = { localKey, mergeRows, characters, weekTotals, scorePotw, mostWanted };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.LedgerData = api;
 })(this);

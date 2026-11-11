@@ -1048,6 +1048,9 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .card-head > div:first-child { display: grid; gap: 2px; min-width: 0; }
 .card-head h2 { font: 400 24px/1.1 var(--hf); }
 .card > .chart { margin: 16px 20px 14px; }
+/* the momentum chart fills its card when the Fatality report beside it (with its bounty) is taller */
+#s-momentum { grid-template-rows: auto 1fr; align-content: stretch; }
+#s-momentum > .chart { height: auto; min-height: 290px; }
 .card .eyebrow { font-size: 12.5px; }
 .linkbtn { border: 0; background: transparent; color: var(--muted); font: 600 13px var(--body); cursor: pointer; padding: 8px 4px; }
 .linkbtn:hover { color: var(--accent); }
