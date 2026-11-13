@@ -548,6 +548,16 @@ class Addon(unittest.TestCase):
         self.assertEqual(c.notable[1].item, "Helm")
         self.assertEqual(c.notable[1].id, 123)
 
+    def test_items_from_mail_trade_or_vendor_are_not_drops(self):
+        # Taking an item out of the mailbox says "You receive item:" like a quest reward: a bank alt got its friend's drop.
+        self.start(FOREVER)
+        for window in ("MAIL", "TRADE", "MERCHANT"):
+            self.fire(window + "_SHOW")
+            self.fire("CHAT_MSG_LOOT", f"You receive item: {HELM}.")
+            self.fire(window + "_CLOSED")
+        self.assertEqual(self.today("q3"), 0)
+        self.assertEqual(len(self.char()[1].notable), 0)
+
     def test_quest_rewards_are_not_world_drops(self):
         self.start(FOREVER)
         self.fire("CHAT_MSG_LOOT", f"You receive item: {HELM}.")

@@ -1322,6 +1322,9 @@ end
 
 local function OnLoot(msg)
   if DM and IsInInstance() then return end -- counted from the loot window there, see below
+  -- Mail, trades and shops also say "You receive item:": handed over or bought, not dropped.
+  local src = MoneySource()
+  if src == "Mail" or src == "Trade" or src == "Vendor" or src == "AH" then return end
   local link = msg:match(LOOT_SELF_MULTI) or msg:match(LOOT_SELF)
   local pushed = not link and ((LOOT_PUSHED_MULTI and msg:match(LOOT_PUSHED_MULTI)) or (LOOT_PUSHED and msg:match(LOOT_PUSHED)))
   link = link or pushed

@@ -95,13 +95,20 @@ test("Most Wanted: everyone with 2+ kills on us in the last 7 days, older kills 
   assert.equal(board[1][1].n, 3);
 });
 
-test("loot showcase: epics, BoE and equipped drops, best first; else the single best drop", () => {
+test("loot showcase: the newest epic, BoE and equipped drops; mailed copies and plain rares left out", () => {
   const { showcaseDrops } = require("../site/ledger-data.js");
-  const d = (item, q, t, extra = {}) => ({ n: { item, q, t, ...extra }, worn: false });
+  const [a, b] = [{ name: "A" }, { name: "B" }];
+  const d = (p, item, q, t, extra = {}, worn = false) => ({ p, n: { item, id: item.length, q, t, ...extra }, worn });
   const names = list => showcaseDrops(list).map(x => x.n.item);
-  const quest = d("Quest Chest", 3, 50, { quest: true }), oldWorn = { ...d("Old Helm", 3, 10), worn: true };
-  const newWorn = { ...d("New Helm", 3, 40), worn: true }, boe = d("Rare BoE", 3, 20, { boe: true }), epic = d("Epic", 4, 5);
-  assert.deepEqual(names([quest, oldWorn, newWorn, boe, epic]), ["Epic", "Rare BoE", "New Helm"]);
-  assert.deepEqual(names([quest, d("Old Rare", 3, 1)]), ["Quest Chest"]);
+  const list = [
+    d(a, "Quest Chest", 3, 90, { quest: true }, true),   // a worn quest reward is not a drop: left out
+    d(a, "Old Epic", 4, 5),
+    d(a, "Gloves", 3, 20, { boe: true, world: true }),   // looted by A...
+    d(b, "Gloves", 3, 30, { boe: true, quest: true }),   // ...and mailed to B: not a second drop
+    d(b, "New Helm", 3, 40, {}, true),
+    d(a, "Rare Blade", 3, 25, { boe: true }),
+  ];
+  assert.deepEqual(names(list), ["New Helm", "Rare Blade", "Gloves"]);
+  assert.deepEqual(names([d(a, "Quest Chest", 3, 50, { quest: true }), d(a, "Old Rare", 3, 1)]), ["Quest Chest"]);
   assert.deepEqual(names([]), []);
 });

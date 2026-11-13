@@ -140,13 +140,14 @@
       .sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
   }
 
-  // The loot card's showcase from [{ p, n, worn }] (worn: the hero has the item equipped now): up to `max` epics or
-  // better, BoE drops and worn drops, better quality and BoE first, then worn, then newest. Else the single best drop.
+  // The loot card's showcase from [{ p, n, worn }] (worn: the hero has the item equipped now): the newest `max` epics
+  // or better, BoE drops and worn drops (looted, not quest rewards). Else the single newest drop. An item "received" after another hero looted it
+  // was mailed or traded over (FunStats 1.13.1 and older saved those as quest rewards), so only the looter shows.
   function showcaseDrops(list, max = 3) {
-    const rank = x => x.n.q * 10 + (x.n.world && x.n.boe ? 5 : x.n.boe ? 3 : 0) + (x.worn ? 2 : 0);
-    const sorted = list.slice().sort((a, b) => rank(b) - rank(a) || b.n.t - a.n.t);
-    const top = sorted.filter(x => x.n.q >= 4 || x.n.boe || x.worn).slice(0, max);
-    return top.length ? top : sorted.slice(0, 1);
+    const mailed = x => x.n.quest && list.some(o => o.p !== x.p && o.n.id === x.n.id && !o.n.quest && o.n.t <= x.n.t);
+    const newest = list.filter(x => !mailed(x)).sort((a, b) => b.n.t - a.n.t);
+    const top = newest.filter(x => x.n.q >= 4 || x.n.boe || (x.worn && !x.n.quest)).slice(0, max);
+    return top.length ? top : newest.slice(0, 1);
   }
 
   const api = { localKey, mergeRows, characters, weekTotals, scorePotw, mostWanted, showcaseDrops };
