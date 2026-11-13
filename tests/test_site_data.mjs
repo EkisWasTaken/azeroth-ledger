@@ -94,3 +94,14 @@ test("Most Wanted: everyone with 2+ kills on us in the last 7 days, older kills 
   assert.deepEqual(board.map(([n]) => n), ["Gank", "Stab"]);
   assert.equal(board[1][1].n, 3);
 });
+
+test("loot showcase: epics, BoE and equipped drops, best first; else the single best drop", () => {
+  const { showcaseDrops } = require("../site/ledger-data.js");
+  const d = (item, q, t, extra = {}) => ({ n: { item, q, t, ...extra }, worn: false });
+  const names = list => showcaseDrops(list).map(x => x.n.item);
+  const quest = d("Quest Chest", 3, 50, { quest: true }), oldWorn = { ...d("Old Helm", 3, 10), worn: true };
+  const newWorn = { ...d("New Helm", 3, 40), worn: true }, boe = d("Rare BoE", 3, 20, { boe: true }), epic = d("Epic", 4, 5);
+  assert.deepEqual(names([quest, oldWorn, newWorn, boe, epic]), ["Epic", "Rare BoE", "New Helm"]);
+  assert.deepEqual(names([quest, d("Old Rare", 3, 1)]), ["Quest Chest"]);
+  assert.deepEqual(names([]), []);
+});

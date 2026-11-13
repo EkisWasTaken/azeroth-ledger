@@ -140,7 +140,16 @@
       .sort((a, b) => b[1].victims.size - a[1].victims.size || b[1].n - a[1].n).slice(0, 8);
   }
 
-  const api = { localKey, mergeRows, characters, weekTotals, scorePotw, mostWanted };
+  // The loot card's showcase from [{ p, n, worn }] (worn: the hero has the item equipped now): up to `max` epics or
+  // better, BoE drops and worn drops, better quality and BoE first, then worn, then newest. Else the single best drop.
+  function showcaseDrops(list, max = 3) {
+    const rank = x => x.n.q * 10 + (x.n.world && x.n.boe ? 5 : x.n.boe ? 3 : 0) + (x.worn ? 2 : 0);
+    const sorted = list.slice().sort((a, b) => rank(b) - rank(a) || b.n.t - a.n.t);
+    const top = sorted.filter(x => x.n.q >= 4 || x.n.boe || x.worn).slice(0, max);
+    return top.length ? top : sorted.slice(0, 1);
+  }
+
+  const api = { localKey, mergeRows, characters, weekTotals, scorePotw, mostWanted, showcaseDrops };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.LedgerData = api;
 })(this);
