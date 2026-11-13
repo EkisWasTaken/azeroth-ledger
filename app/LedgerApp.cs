@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.13.0.0")]
+[assembly: AssemblyVersion("1.13.1.0")]
 
 namespace AzerothLedger
 {
@@ -649,6 +649,7 @@ namespace AzerothLedger
                     spell = f[10];
                     i = 12;
                 }
+                if (fromMine && src != Me) spell += " (pet)"; // my pet, totem or guardian: kept apart from my own Melee
 
                 if (ev.EndsWith("_MISSED"))
                 {

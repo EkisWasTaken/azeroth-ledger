@@ -353,6 +353,36 @@ class Addon(unittest.TestCase):
         self.assertEqual(self.today("dmg"), 155)
         self.assertEqual(c.spellDmg["Melee"], 110)
 
+    def test_meter_pet_melee_counted_once_and_apart(self):
+        # The meter lists my auto attack and my pet's under the same spell id; reading it again must not count them again.
+        self.start(FOREVER)
+        both = "{ spellID = 6603, totalAmount = 60 }, { spellID = 6603, totalAmount = 30, creatureName = 'Wolf' }, { spellID = 9, totalAmount = 5, creatureName = '' }"
+        self.session(1, damage=95, spells=both)
+        for _ in range(3):
+            self.fire("PLAYER_REGEN_ENABLED")
+            self.lua.execute("runTimers()")
+        _, c = self.char()
+        self.assertEqual((c.spellDmg["Melee"], c.spellDmg["Melee (pet)"], c.spellDmg["Spell9"]), (60, 30, 5))
+        # without a pet name the two are added up, still once
+        self.session(2, damage=30, spells="{ spellID = 6603, totalAmount = 20 }, { spellID = 6603, totalAmount = 10 }")
+        for _ in range(3):
+            self.fire("PLAYER_REGEN_ENABLED")
+            self.lua.execute("runTimers()")
+        self.assertEqual(c.spellDmg["Melee"], 90)
+
+    def test_inflated_spell_damage_is_cleared_once(self):
+        # FunStats 1.13.0 and older counted pet melee again at every read: per-spell damage far above the total is dropped.
+        self.start(FOREVER)
+        _, c = self.char()
+        self.lua.execute("local _, c = next(FunStatsDB.chars); c.days['2026-11-01'] = { dmg = 100 }; "
+                         "c.spellDmg = { Melee = 9000, ['Auto Shot'] = 50 }; c.spellsChecked = nil")
+        self.lua.execute("frames = {}")
+        self.load((ADDON / "FunStats.lua").read_text(encoding="utf-8"), "FunStats.lua")
+        self.fire("PLAYER_LOGIN")
+        _, c = self.char()
+        self.assertIsNone(c.spellDmg["Melee"])
+        self.assertTrue(c.spellsChecked)
+
     def test_meter_ignores_sessions_kept_over_a_reload(self):
         self.start(FOREVER)
         self.session(1, damage=100)

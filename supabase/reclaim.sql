@@ -87,10 +87,18 @@ begin
     insert into entries (id, kind, char_key, data, updated_at)
     values (v_id, v_kind, v_key, v_data, now())
     on conflict (id) do update set
-      -- a character's days are kept: an upload from a fresh install (after a reclaim) adds to its history, never wipes it
+      -- a character's days are kept: an upload from a fresh install (after a reclaim) adds to its history, never wipes it.
+      -- Within a day, and in best, fields the new upload lacks are kept too: an upload without the app's combat log
+      -- numbers (the website's upload, another PC) must not wipe the biggest hit, hits or honor kills.
       data = case when excluded.kind = 'char' and jsonb_typeof(entries.data->'days') = 'object'
                    and jsonb_typeof(excluded.data->'days') = 'object'
-                  then excluded.data || jsonb_build_object('days', (entries.data->'days') || (excluded.data->'days'))
+                  then excluded.data || jsonb_build_object('days', (entries.data->'days') || (
+                         select coalesce(jsonb_object_agg(k, case when jsonb_typeof(v) = 'object' and jsonb_typeof(entries.data->'days'->k) = 'object'
+                                                                then (entries.data->'days'->k) || v else v end), '{}')
+                         from jsonb_each(excluded.data->'days') as e(k, v)))
+                    || case when jsonb_typeof(entries.data->'best') = 'object'
+                            then jsonb_build_object('best', (entries.data->'best') || case when jsonb_typeof(excluded.data->'best') = 'object' then excluded.data->'best' else '{}' end)
+                            else '{}' end
                   else excluded.data end,
       updated_at = now();
     n_saved := n_saved + 1;
@@ -105,4 +113,5 @@ grant execute on function public.upload_ledger(text, jsonb) to anon, authenticat
 
 -- 2. Release the character. The player's app claims it again on its next upload (within a few minutes of WoW saving).
 --    Only do this for someone you know is the real player: whoever uploads that name next gets it.
-delete from claims where char_key = 'Marrolock Fear-PvP-EU';
+--    Remove the "--" and put in the character's name:
+-- delete from claims where char_key = 'Name Surname-PvP-EU';

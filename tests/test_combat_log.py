@@ -152,6 +152,13 @@ class CombatLog(unittest.TestCase):
         self.assertEqual(d["spellDmg"]["Fireball"], 9000)
         self.assertEqual(d["spellDmg"]["Melee"], 67)
 
+    def test_pet_damage_is_named_apart(self):
+        pet = 'Pet-0-4621-0-116-299-0100000001,"Wolf",0x1111,0x80000000'
+        self.write(STANDARD + [line(f"SWING_DAMAGE,{pet},{wolf()},{block(WOLF)},40,40,-1,1,0,0,0,nil,nil,nil", 10)])
+        d = self.run_app()
+        self.assertEqual(d["spellDmg"]["Melee"], 67)
+        self.assertEqual(d["spellDmg"]["Melee (pet)"], 40)
+
     def test_reading_twice_counts_nothing_twice(self):
         self.write(STANDARD)
         first = self.run_app()

@@ -503,6 +503,15 @@ local function InitCharacter()
     for _, d in pairs(C.days) do d.honorKills = nil end
     C.honorRecounted = true
   end
+  -- FunStats 1.13.0 and older counted pet melee again at every damage meter read: per-spell damage well above the
+  -- day totals is wrong, so it starts over (the Ledger app's combat log numbers fill it back in on upload).
+  if not C.spellsChecked then
+    local spells, total = 0, 0
+    for _, v in pairs(C.spellDmg) do spells = spells + v end
+    for _, d in pairs(C.days) do total = total + (d.dmg or 0) end
+    if spells > total * 1.1 + 1000 then wipe(C.spellDmg) end
+    C.spellsChecked = true
+  end
   -- Deaths saved before continent positions existed get them now.
   for _, d in ipairs(C.deaths) do
     if type(d) == "table" and d.map and d.x and not d.cx then d.cont, d.cx, d.cy = OnContinent(d.map, d.x, d.y) end
@@ -1083,12 +1092,18 @@ end
 
 local function CountMeterSpells(session)
   local me = DM.GetCombatSessionSourceFromID(session, METER_DAMAGE, playerGUID)
+  -- My pet's spells come in the same list, its auto attack with my spell id: added up per name first, since two
+  -- entries under one key would each look like a reset to MeterNew and be counted again at every read.
+  local byName = {}
   for _, s in ipairs(me and me.combatSpells or {}) do
-    local new = MeterNew(session .. ":s" .. s.spellID, s.totalAmount)
-    if new > 0 then
-      local name = s.spellID == AUTO_ATTACK and "Melee" or C_Spell.GetSpellName(s.spellID)
-      CountIn(C.spellDmg, name or "Unknown", new, 200)
-    end
+    if issecretvalue and issecretvalue(s.totalAmount) then return end -- left uncounted, so the next read picks it up
+    local name = s.spellID == AUTO_ATTACK and "Melee" or C_Spell.GetSpellName(s.spellID) or "Unknown"
+    if s.creatureName and s.creatureName ~= "" then name = name .. " (pet)" end
+    byName[name] = (byName[name] or 0) + (s.totalAmount or 0)
+  end
+  for name, total in pairs(byName) do
+    local new = MeterNew(session .. ":s" .. name, total)
+    if new > 0 then CountIn(C.spellDmg, name, new, 200) end
   end
 end
 

@@ -72,6 +72,16 @@ begin
     raise exception 'FAILED: the public key can call the moderation helpers';
   end if;
 
+  -- 10. a re-upload without the combat log numbers keeps them (website upload after the app's)
+  perform upload_ledger(a, '[{"kind":"char","char_key":"Zzthree-Zztestrealm","data":{"best":{"hit":{"amt":408}},"days":{"2026-11-12":{"dmg":50,"maxHit":408,"hk":3}}}}]');
+  perform upload_ledger(a, '[{"kind":"char","char_key":"Zzthree-Zztestrealm","data":{"best":{"rollHi":37},"days":{"2026-11-12":{"dmg":60},"2026-11-13":{"dmg":5}}}}]');
+  select data into v from entries where id = 'c:Zzthree-Zztestrealm';
+  if v #>> '{days,2026-11-12,maxHit}' is distinct from '408' or v #>> '{days,2026-11-12,hk}' is distinct from '3'
+     or v #>> '{days,2026-11-12,dmg}' <> '60' or v #>> '{days,2026-11-13,dmg}' <> '5'
+     or v #>> '{best,hit,amt}' is distinct from '408' or v #>> '{best,rollHi}' <> '37' then
+    raise exception 'FAILED: a re-upload lost day or best fields (%)', v;
+  end if;
+
   raise exception 'ALL CHECKS PASSED (this error rolls the test back; nothing was saved)';
 end;
 $$;
