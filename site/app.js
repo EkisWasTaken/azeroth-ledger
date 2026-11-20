@@ -1941,8 +1941,10 @@
     const f = state.momMode;
     document.querySelectorAll("#momMode .chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === f)));
     const { labels, keys } = periodDays(people);
-    const series = p => keys.map(ks => ks.reduce((a, k) => a + ((p.days[k] && p.days[k][f]) || 0), 0));
-    const total = p => series(p).reduce((a, b) => a + b, 0);
+    // days still to come this week are left out, not drawn as a crash to zero
+    const today = todayKey(), future = ks => ks[0] > today;
+    const series = p => keys.map(ks => future(ks) ? null : ks.reduce((a, k) => a + ((p.days[k] && p.days[k][f]) || 0), 0));
+    const total = p => series(p).reduce((a, b) => a + (b || 0), 0);
     const group = people.reduce((a, p) => a + total(p), 0);
     // Healing: only real healers. Everyone heals a little (potions, bandages, self-heals); under 5% of the group's healing is left out.
     const pool = f === "heal" ? people.filter(p => total(p) >= group * .05) : people;
@@ -1950,7 +1952,7 @@
     const datasets = top.map(p => ({ label: nameTxt(p), data: series(p), borderColor: p.color, backgroundColor: p.color }));
     if (rest.length) {
       const sums = rest.map(series);
-      datasets.push({ label: tr("Others ({0})", rest.length), data: keys.map((_, i) => sums.reduce((a, s) => a + s[i], 0)), borderColor: OTHERS_COLOR, backgroundColor: OTHERS_COLOR });
+      datasets.push({ label: tr("Others ({0})", rest.length), data: keys.map((ks, i) => future(ks) ? null : sums.reduce((a, s) => a + s[i], 0)), borderColor: OTHERS_COLOR, backgroundColor: OTHERS_COLOR });
     }
     // With only a day or two of play a line is one cliff that reads as a crash; bars show the days as they are.
     const played = keys.filter((_, i) => datasets.some(d => d.data[i])).length;
@@ -3702,6 +3704,16 @@
   // ---------- loading from Supabase ----------
   const CONFIG = window.LEDGER_CONFIG || {};
   const knownRows = new Map(); // id -> row, so a refresh only downloads what changed
+  // The last download, kept in the browser (IndexedDB: too big for localStorage), so a return visit shows the
+  // ledger at once and then only downloads what changed. Any failure just means a normal first load.
+  const ledgerCache = {
+    db: () => new Promise((ok, no) => { const r = indexedDB.open("ledger", 1); r.onupgradeneeded = () => r.result.createObjectStore("cache"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }),
+    async get() {
+      try { const db = await this.db(); return await new Promise(ok => { const q = db.transaction("cache").objectStore("cache").get("v1"); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); }
+      catch (e) { return null; }
+    },
+    async put(v) { try { const db = await this.db(); db.transaction("cache", "readwrite").objectStore("cache").put(v, "v1"); } catch (e) { /* private window or full: no cache */ } },
+  };
   async function loadLedger(changesOnly) {
     state.lastLoad = Date.now();
     const url = String(CONFIG.supabaseUrl || "").replace(/\/$/, "");
@@ -3709,46 +3721,65 @@
     if (!url || !key || url.includes("YOUR") || key.includes("YOUR")) { state.status = "unconfigured"; render(); return; }
     const headers = { apikey: key };
     if (!key.startsWith("sb_")) headers.Authorization = "Bearer " + key;
+    // three pages at a time instead of one after another; the first short page is the end
     const readAll = async (table, filter = "") => {
-      const rows = [];
-      for (let from = 0; ; from += 1000) {
+      const page = async from => {
         const res = await fetch(`${url}/rest/v1/${table}?select=id,kind,char_key,data,updated_at&order=id&limit=1000&offset=${from}${filter}`, { headers });
         if (!res.ok) throw new Error("HTTP " + res.status);
-        const page = await res.json();
-        rows.push(...page);
-        if (page.length < 1000) break;
+        return res.json();
+      };
+      const rows = [];
+      for (let from = 0; ; from += 3000) {
+        const pages = await Promise.all([0, 1000, 2000].map(o => page(from + o)));
+        for (const p of pages) rows.push(...p);
+        if (pages.some(p => p.length < 1000)) return rows;
       }
-      return rows;
     };
+    // atlas and locks are small and change rarely: fetched beside the rows, never waited on one after the other
+    const extras = () => Promise.all([
+      fetch(`${url}/rest/v1/realm_atlas?select=realm,atlas`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`${url}/rest/v1/potw_locks?select=realm,week,char_key`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([atlas, locks]) => {
+      if (atlas) { const a = {}; for (const x of atlas) if (x.realm && x.atlas && typeof x.atlas === "object") a[x.realm] = x.atlas; state.atlases = a; }
+      if (locks) for (const l of locks) state.potwLocks[`${l.realm}|${l.week}`] = l.char_key;
+    });
     try {
       let incremental = false;
+      if (!changesOnly && !knownRows.size) {
+        const c = await ledgerCache.get();
+        if (c && Array.isArray(c.rows) && c.rows.length) {
+          for (const r of c.rows) knownRows.set(r.id, r);
+          state.atlases = c.atlases || {};
+          Object.assign(state.potwLocks, c.locks || {});
+          const { src, updated } = LedgerData.mergeRows(knownRows.values());
+          state.data = src;
+          state.updated = Math.min(updated, c.at || updated);
+          state.status = "ok";
+          render();
+          changesOnly = true;
+        }
+      }
       if (changesOnly && state.status === "ok" && knownRows.size && state.updated) {
         // A minute of overlap, so an upload that was still saving during the last refresh isn't missed.
         const since = new Date(state.updated - 60000).toISOString();
-        const changed = await readAll("entries_lite", `&updated_at=gte.${encodeURIComponent(since)}`);
+        const [changed, res] = await Promise.all([
+          readAll("entries_lite", `&updated_at=gte.${encodeURIComponent(since)}`),
+          fetch(`${url}/rest/v1/entries_lite?select=id&limit=1`, { headers: { ...headers, Prefer: "count=exact" } }),
+          extras(),
+        ]);
         const fresh = changed.filter(r => knownRows.get(r.id)?.updated_at !== r.updated_at);
         for (const r of fresh) knownRows.set(r.id, r);
         // A row count that doesn't match means something was deleted: read everything again.
-        const res = await fetch(`${url}/rest/v1/entries_lite?select=id&limit=1`, { headers: { ...headers, Prefer: "count=exact" } });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const total = Number((res.headers.get("content-range") || "").split("/")[1]);
         incremental = total === knownRows.size;
-        if (incremental && !fresh.length) return;
+        if (incremental && !fresh.length) { saveCache(); return; }
       }
       if (!incremental) {
         // entries_lite and realm_atlas come from supabase/hardening.sql; until it has run, read the whole table.
         let rows;
-        try {
-          rows = await readAll("entries_lite");
-          const res = await fetch(`${url}/rest/v1/realm_atlas?select=realm,atlas`, { headers });
-          const atlases = {};
-          if (res.ok) for (const a of await res.json()) if (a.realm && a.atlas && typeof a.atlas === "object") atlases[a.realm] = a.atlas;
-          state.atlases = atlases;
-          const locks = await fetch(`${url}/rest/v1/potw_locks?select=realm,week,char_key`, { headers }).catch(() => null);
-          if (locks && locks.ok) for (const l of await locks.json()) state.potwLocks[`${l.realm}|${l.week}`] = l.char_key;
-        } catch (e) {
-          rows = await readAll("entries");
-        }
+        try { [rows] = await Promise.all([readAll("entries_lite"), extras()]); }
+        catch (e) { rows = await readAll("entries"); }
         knownRows.clear();
         for (const r of rows) knownRows.set(r.id, r);
       }
@@ -3756,10 +3787,15 @@
       state.data = src;
       state.updated = updated;
       state.status = "ok";
+      saveCache();
     } catch (e) {
       if (state.status !== "ok") state.status = "error";
     }
     render();
+  }
+  function saveCache() {
+    if (state.demo) return;
+    ledgerCache.put({ at: state.updated, rows: [...knownRows.values()], atlases: state.atlases || {}, locks: state.potwLocks });
   }
 
   // ---------- navigation ----------

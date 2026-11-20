@@ -465,7 +465,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 /* Hardcore: three tiles fill the row, and long character names wrap instead of being cut. */
 #hcTiles { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 #hcTiles .foot { white-space: normal; }
-.tile .foot { font-size: 12px; line-height: 16px; min-height: 16px; color: color-mix(in srgb, var(--muted) 85%, var(--ink)); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+.tile .foot { font-size: 12px; line-height: 16px; min-height: 16px; color: color-mix(in srgb, var(--muted) 85%, var(--ink)); overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; }
 
 /* ---------- Coins (pixel squares) ---------- */
 .coins { white-space: nowrap; }
@@ -1101,7 +1101,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .bf-eye { font: 800 10px var(--nf); letter-spacing: .14em; text-transform: uppercase; color: #ffb4a0; display: flex; align-items: center; gap: 6px; }
 .bf-eye::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #ff4a3d; box-shadow: 0 0 0 3px rgba(255,74,61,.3); animation: bf-pulse 1.6s ease-in-out infinite; }
 @keyframes bf-pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
-.bf-name { font: 400 21px/1.1 var(--hf); color: #fff3da; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+.bf-name { font: 400 21px/1.1 var(--hf); color: #fff3da; max-width: 100%; overflow-wrap: anywhere; text-shadow: 0 2px 0 rgba(0,0,0,.5); }
 /* kills as tally marks: four strokes and the fifth across them */
 .bf-tally { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; color: #e3cfae; }
 .tally { position: relative; display: inline-block; height: 14px; --n: 4; width: calc(var(--n) * 5px - 3px);
@@ -1293,6 +1293,8 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .potw.has-render::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 42%; pointer-events: none;
   background: var(--render) center 25% / auto 170% no-repeat; -webkit-mask: linear-gradient(90deg, transparent, #000 50%); mask: linear-gradient(90deg, transparent, #000 50%); }
 .potw.has-render > * { position: relative; z-index: 1; }
+/* names and the guild stay readable where they run over the character render */
+.potw.has-render .ghead { text-shadow: 0 1px 3px #000, 0 0 10px #000; }
 @media (max-width: 560px) { .potw.has-render::after { opacity: .35; } }
 .lead.epic { --tone: #a335ee; } .lead.legendary { --tone: #ff8000; }
 .lead .ghead { gap: 16px; }
