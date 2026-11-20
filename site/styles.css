@@ -1174,6 +1174,10 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .dtag.worn { color: #9fe0a0; box-shadow: inset 0 0 0 1px #9fe0a0; }
 .dtag.inst { color: var(--ink); background: color-mix(in srgb, var(--ink) 14%, transparent); text-transform: none; letter-spacing: 0; }
 .drop .eyebrow .dtag { margin-left: 0; }
+/* an epic or better bind-on-equip drop: the showcase's headline */
+.drop.big { padding: 16px 18px; background: linear-gradient(135deg, color-mix(in srgb, var(--qc) 22%, transparent), transparent 70%); }
+.drop.big strong { font-size: 26px; }
+.drop.big .eyebrow { font-size: 13px; }
 .loot .epic-row { padding: 4px 8px; margin: 0 -8px; border-radius: 6px; background: linear-gradient(90deg, rgba(163, 53, 238, .18), transparent 80%); box-shadow: inset 2px 0 0 #a335ee; }
 @media (prefers-reduced-motion: no-preference) { html:not(.calm) .drop.qb4, html:not(.calm) .drop.qb5 { animation: epicglow 2.4s ease-in-out infinite alternate; } }
 @keyframes epicglow { to { filter: brightness(1.15); } }

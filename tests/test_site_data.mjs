@@ -112,3 +112,18 @@ test("loot showcase: the newest epic, BoE and equipped drops; mailed copies and 
   assert.deepEqual(names([d(a, "Quest Chest", 3, 50, { quest: true }), d(a, "Old Rare", 3, 1)]), ["Quest Chest"]);
   assert.deepEqual(names([]), []);
 });
+
+test("character of the week: twice the hours doesn't beat a better week in half the time", () => {
+  const p = (name, s) => ({ p: { name }, s });
+  const h = 3600, F = ["dmg", "quests", "bossKills"];
+  // Grinder plays 40 h and tops everything; Raider plays 20 h at a better rate (the old sum-of-totals crowned Grinder)
+  assert.equal(scorePotw([p("Grinder", { played: 40 * h, dmg: 100, quests: 40, bossKills: 6 }), p("Raider", { played: 20 * h, dmg: 70, quests: 30, bossKills: 3 })], F).best.p.name, "Raider");
+  // a 1 h session doesn't win on rate: the hours floor is 10
+  assert.equal(scorePotw([p("Main", { played: 30 * h, dmg: 100, quests: 30 }), p("Blip", { played: h, dmg: 10, quests: 3 })], F).best.p.name, "Main");
+});
+
+test("players killed: a day counts the game's honorable kills when they beat the killing blows", () => {
+  const [ch] = load([{ id: "c:Hero-R", kind: "char", char_key: "Hero-R", updated_at: "2026-11-19T20:00:00Z",
+    data: { name: "Hero", days: { "2026-11-17": { hk: 4, honorKills: 19 }, "2026-11-18": { hk: 3, honorKills: 1 }, "2026-11-19": { honorKills: 2 } } } }]);
+  assert.deepEqual(Object.values(ch.days).map(d => d.hk), [19, 3, 2]);
+});

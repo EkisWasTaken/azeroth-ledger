@@ -104,6 +104,9 @@
         if (a.lastLogin) ch.lastSeen = a.lastLogin;
       }
     }
+    // Players killed: killing blows (hk) only count the kills you finished, the game's honorable kills (honorKills)
+    // count every kill you took part in, so a day's kills are the larger of the two.
+    for (const ch of Object.values(out)) for (const d of Object.values(ch.days)) if (d && d.honorKills > (d.hk || 0)) d.hk = d.honorKills;
     return Object.values(out).sort((a, b) => String(a.name).localeCompare(String(b.name)));
   }
 
@@ -114,10 +117,15 @@
     return s;
   }
   // The week's winner from [{ s: totals }]: each field scores its share of the week's top value, so leading many
-  // things beats topping one. Nothing when fewer than two played or nobody did anything.
+  // things beats topping one. Half of each share is the total (square-rooted, so twice the hours isn't twice the
+  // score) and half is the rate per hour played (at least POTW_HOURS, so a short lucky session can't win on rate).
+  // Nothing when fewer than two played or nobody did anything.
+  const POTW_HOURS = 10;
   function scorePotw(rows, fields) {
-    const top = Object.fromEntries(fields.map(f => [f, Math.max(0, ...rows.map(r => r.s[f] || 0))]));
-    const share = (r, f) => top[f] ? (r.s[f] || 0) / top[f] : 0;
+    const rate = (r, f) => (r.s[f] || 0) / Math.max(POTW_HOURS, (r.s.played || 0) / 3600);
+    const max = fn => Object.fromEntries(fields.map(f => [f, Math.max(0, ...rows.map(r => fn(r, f)))]));
+    const top = max((r, f) => r.s[f] || 0), topRate = max(rate);
+    const share = (r, f) => top[f] ? (Math.sqrt((r.s[f] || 0) / top[f]) + rate(r, f) / topRate[f]) / 2 : 0;
     rows.forEach(r => r.score = fields.reduce((a, f) => a + share(r, f), 0));
     const best = rows.slice().sort((a, b) => b.score - a.score)[0];
     return best && best.score && rows.length > 1 ? { best, top, share } : null;

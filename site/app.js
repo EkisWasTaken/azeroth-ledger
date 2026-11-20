@@ -34,7 +34,7 @@
     "Playstyle": "Spelstil", "each stat scaled to the group's best": "varje värde jämfört med gruppens bästa",
     "Crit rate": "Crit rate", "Damage taken vs healing received": "Tagen damage mot mottagen healing", "Combat sheet": "Stridsblad",
     "PvP Battlefield": "PvP-slagfältet", "Players killed": "Dödade spelare", "PvP deaths": "PvP-dödsfall", "K/D": "K/D", "kills per death": "kills per dödsfall",
-    "Duels": "Dueller", "Honorable kills": "Honorable kills", "Dishonorable kills": "Dishonorable kills", "civilians slain": "dödade civila", "PvP rank": "PvP-rank", "Rank {0}": "Rank {0}", "Highest rank": "Högsta rank", "Honor this week": "Honor denna vecka", "{0} to spend": "{0} att spendera", "{0} this week": "{0} denna vecka", "{0} all time": "{0} totalt", "all time": "totalt", "killing blows": "killing blows", "Best day": "Bästa dagen", "Hardest hit taken": "Hårdaste träffen", "by {0}": "av {0}", "HKs": "HKs", "Killing spells": "Dödande spells", "what players finished us with": "vad spelare dödade oss med", "Rare drops": "Rare drops", "Levels": "Levels", "{0} won, {1} lost": "{0} vunna, {1} förlorade", "PvP standings": "PvP-ställning", "Battlegrounds": "Battlegrounds", "Battleground": "Battleground", "BGs": "BGs", "{0} won": "{0} vunna", "all time, per game": "totalt, per match", "Games": "Matcher", "Won–lost": "Vunna–förlorade", "Win rate": "Vinstandel", "Honor": "Honor", "Kills": "Kills", "Nemeses": "Ärkefiender", "the players who killed us most": "spelarna som dödat oss mest",
+    "Duels": "Dueller", "Honorable kills": "Honorable kills", "Dishonorable kills": "Dishonorable kills", "civilians slain": "dödade civila", "PvP rank": "PvP-rank", "Rank {0}": "Rank {0}", "Highest rank": "Högsta rank", "Honor this week": "Honor denna vecka", "{0} to spend": "{0} att spendera", "{0} this week": "{0} denna vecka", "{0} all time": "{0} totalt", "all time": "totalt", "kills you took part in": "kills du var med på", "Best day": "Bästa dagen", "Hardest hit taken": "Hårdaste träffen", "by {0}": "av {0}", "HKs": "HKs", "Killing spells": "Dödande spells", "what players finished us with": "vad spelare dödade oss med", "Rare drops": "Rare drops", "Levels": "Levels", "{0} won, {1} lost": "{0} vunna, {1} förlorade", "PvP standings": "PvP-ställning", "Battlegrounds": "Battlegrounds", "Battleground": "Battleground", "BGs": "BGs", "{0} won": "{0} vunna", "all time, per game": "totalt, per match", "Games": "Matcher", "Won–lost": "Vunna–förlorade", "Win rate": "Vinstandel", "Honor": "Honor", "Kills": "Kills", "Nemeses": "Ärkefiender", "the players who killed us most": "spelarna som dödat oss mest",
     "Gank zones": "Gank-zoner", "where players killed us": "där spelare dödat oss", "Duel record": "Duellfacit", "by opponent": "per motståndare", "Opponent": "Motståndare",
     "Won": "Vunna", "Lost": "Förlorade", "No player has killed anyone here yet.": "Ingen spelare har dödat någon här än.", "No duels yet.": "Inga dueller än.", "Nobody to compare yet.": "Ingen att jämföra med än.",
     "Loot Council": "Lootrådet", "Mostly grey, occasionally purple": "Mest grått, ibland lila", "Loot by quality": "Loot per kvalitet",
@@ -120,7 +120,7 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
-    "+{0} more wanted": "+{0} fler efterlysta", "No enemy player has killed us twice in the last 7 days.":"Ingen fiendespelare har dödat oss två gånger de senaste 7 dagarna.", "Enemy players who killed us twice or more in the last 7 days": "Fiendespelare som dödat oss minst två gånger de senaste 7 dagarna", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "+{0} more wanted": "+{0} fler efterlysta", "No enemy player has killed us twice in the last 7 days.":"Ingen fiendespelare har dödat oss två gånger de senaste 7 dagarna.", "Enemy players who killed us twice or more in the last 7 days": "Fiendespelare som dödat oss minst två gånger de senaste 7 dagarna", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Also taken down: {0}": "Också nedlagda: {0}", "{0} by {1}": "{0} av {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
     "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
@@ -251,7 +251,7 @@
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
     "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
     "Atlas": "Atlas", "Loot & Gold": "Loot & guld",
-    "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer",
+    "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer", "Boss kills": "Boss-kills",
     "Gold before max level": "Guld innan maxnivå", "looted and spent while levelling": "lootat och spenderat under levlingen",
     "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
     "Click a zone to open its map. Scroll to zoom, drag to move, right-click or scroll out to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka eller scrolla ut för att gå tillbaka.",
@@ -1628,7 +1628,8 @@
     people.forEach(p => {
       if (p.fallen && inRange(localKey(p.fallen.t))) cands.push({ s: 100, icon: "tomb", label: tr("Fallen"), p, tone: "dead", line: deathWhat(p.fallen),
         chips: [tr("Level {0}", esc(p.fallen.lvl || "?")), fullDate(p.fallen.t)] });
-      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push({ s: 70 + dropRank(n) / 5 + n.t / 1e10, icon: "lotus", label: tr("Best drop"), p,
+      // an epic BoE is rarer than a level cap, so it leads unless someone fell
+      p.notable.filter(n => n.q >= 4 && n.t && inRange(localKey(n.t))).forEach(n => cands.push({ s: (n.boe ? 88 : 70) + dropRank(n) / 5 + n.t / 1e10, icon: "lotus", label: tr("Best drop"), p,
         tone: n.q === 5 ? "legendary" : "epic", line: tr(worldDrop(n) ? "looted {0} out in the world" : n.quest ? "was rewarded {0}" : "looted {0}", itemHTML(n)),
         tags: dropTags(n), chips: [n.zone && esc(n.zone), fullDate(n.t)] }));
       const by = {};
@@ -1697,10 +1698,11 @@
   }
 
   // Character of the week: the best all-rounder of the last finished week. Each stat scores its share of the
-  // week's top value, so leading many things beats topping one.
-  const POTW = [["dmg", "Damage dealt", compact], ["heal", "Healing done", compact], ["kb", "Killing blows", num], ["quests", "Quests completed", num],
-    ["xp", "XP", compact], ["levels", "Levels gained", num], ["goldIn", "Gold looted", goldHTML], ["dungeons", "Dungeon runs", num], ["played", "Time played", dur],
-    ["tiers", "Achievement tiers", num]];
+  // week's top value (ledger-data.js scorePotw), so leading many things beats topping one. Only what counts:
+  // time played, gold and mob kills just reward the most hours, so they're left out.
+  const POTW = [["dmg", "Damage dealt", compact], ["heal", "Healing done", compact], ["quests", "Quests completed", num],
+    ["xp", "XP", compact], ["levels", "Levels gained", num], ["dungeons", "Dungeon runs", num], ["bossKills", "Boss kills", num],
+    ["hk", "Players killed", num], ["tiers", "Achievement tiers", num]];
   // The week's winner among these characters, or nothing when fewer than two played or nobody did anything.
   // realmWide: the whole realm competes, so a finished week's locked winner (supabase/potw-locks.sql) holds.
   function potwOf(people, wk, realmWide) {
@@ -2017,9 +2019,9 @@
       ? `<div class="qbar">${qs.map(x => `<i style="width:${(x.n / total) * 100}%;background:${QUAL[x.q][1]}"></i>`).join("")}</div>
         <div class="qlegend">${qs.map(x => `<div class="${x.q >= 4 ? "hot" : ""}"><i style="background:${QUAL[x.q][1]}"></i><span>${tr(QUAL[x.q][0])}</span><strong>${num(x.n)}</strong><small>${Math.round((x.n / total) * 100)}%</small></div>`).join("")}</div>`
       : `<p class="empty">${tr("No rare drops yet. Keep rolling Need.")}</p>`)
-      + (show.length ? `<div class="drops">${show.map(({ p, n, worn }) => `<div class="drop qb${n.q}">
+      + (show.length ? `<div class="drops">${show.map(({ p, n, worn }) => `<div class="drop qb${n.q}${n.q >= 4 && n.boe ? " big" : ""}">
           <span class="eyebrow">${tr(n.q >= 4 ? QUAL[n.q][0] : "Best drop")}${dropTags(n)}${worn ? `<span class="dtag worn">${tr("Equipped")}</span>` : ""}</span>
-          <strong>${itemHTML(n, "medium")}</strong>
+          <strong>${itemHTML(n, n.q >= 4 && n.boe ? "large" : "medium")}</strong>
           <p>${nameHTML(p)}${n.zone ? ` · ${esc(n.zone)}` : ""} · ${shortDate(localKey(n.t))}</p></div>`).join("")}</div>` : "");
     whRefresh();
   }
@@ -2151,7 +2153,7 @@
       ranked && ["shield", tr("PvP rank"), esc(ranked.g.rankName || tr("Rank {0}", ranked.g.rank)), who(ranked)],
       best && best.g.best > ((ranked && ranked.g.rank) || 0) && ["sulfuras", tr("Highest rank"), esc(best.g.bestName || tr("Rank {0}", best.g.best)), who(best)],
       G.weekHonor && ["coin", tr("Honor this week"), num(G.weekHonor), G.honor ? tr("{0} to spend", num(G.honor)) : ""],
-      ["axe", tr("Players killed"), num(t.hk), tr("killing blows")],
+      ["axe", tr("Players killed"), num(t.hk), tr("kills you took part in")],
       ["skull", tr("PvP deaths"), num(t.dd), ""],
       ["sword", tr("K/D"), kd(t.hk, t.dd), tr("kills per death")],
       bestDay && ["clock", tr("Best day"), num(bestDay.day.n), [shortDate(bestDay.day.k), who(bestDay)].filter(Boolean).join(" · ")],
@@ -2241,6 +2243,7 @@
           ${k.last.zone ? `<span class="bf-seen">${tr("Last seen in {0}", esc(k.last.zone))}</span>` : ""}
           ${reward && !(st && st.paid) ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
           ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>` : ""}
+          ${(down => down.length ? `<span class="bf-claim">${tr("Also taken down: {0}", down.join(", "))}</span>` : "")(top.slice(1).map(([n], j) => states[j + 1] && tr("{0} by {1}", esc(n), esc(states[j + 1].who))).filter(Boolean))}
           <button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button>
           ${top.length > 1 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(top.length - 1))} ›</button>` : ""}
         </div></div>`;
