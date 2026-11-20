@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.13.2.0")]
+[assembly: AssemblyVersion("1.13.3.0")]
 
 namespace AzerothLedger
 {
@@ -464,7 +464,7 @@ namespace AzerothLedger
         const int KeepLogDays = 14;
         static readonly HashSet<string> Events = new HashSet<string> {
             "COMBAT_LOG_VERSION", "SWING_DAMAGE", "SPELL_DAMAGE", "SPELL_PERIODIC_DAMAGE", "RANGE_DAMAGE", "DAMAGE_SHIELD", "ENVIRONMENTAL_DAMAGE",
-            "SWING_MISSED", "SPELL_MISSED", "RANGE_MISSED", "SPELL_HEAL", "SPELL_PERIODIC_HEAL", "SPELL_CAST_SUCCESS", "PARTY_KILL" };
+            "SWING_MISSED", "SPELL_MISSED", "RANGE_MISSED", "SPELL_HEAL", "SPELL_PERIODIC_HEAL", "SPELL_CAST_SUCCESS", "PARTY_KILL", "UNIT_DIED" };
 
         static Dictionary<string, object> Dict(Dictionary<string, object> d, string k)
         {
@@ -534,14 +534,31 @@ namespace AzerothLedger
                     || s.StartsWith("Vehicle-") || s.StartsWith("GameObject-");
             }
 
-            // "John Smith-PvE-" in the log is "John Smith" on the site. Mobs keep their names as they are.
+            // A player in the log is "Legolars-Grönblad-PvP-EU" (live) or "John Smith-PvE-" (beta): "Legolars Grönblad" and
+            // "John Smith" on the site. Forever names are always first name and surname. Mobs keep their names as they are.
             static string Who(string guid, string name)
             {
                 if (name == "nil") return null;
                 if (!guid.StartsWith("Player-")) return name;
-                string n = name.TrimEnd('-');
-                int cut = n.LastIndexOf('-');
-                return (cut > 0 ? n.Substring(0, cut) : n).Replace('-', ' ');
+                string[] parts = name.Split('-');
+                return parts.Length < 2 || parts[0].Contains(" ") ? parts[0] : parts[0] + " " + parts[1];
+            }
+
+            // An enemy player: hostile (0x40) and a player (0x400).
+            static bool Enemy(long flags) { return (flags & 0x440) == 0x440; }
+
+            // Enemy players I hurt, by guid, and when: their death soon after is a kill I took part in.
+            readonly Dictionary<string, double> hurt = new Dictionary<string, double>();
+            const double AssistSeconds = 60;
+
+            // An enemy player I killed or helped kill, by name, so the website can tell when one of us took down its Most Wanted.
+            void PvPKill(Dictionary<string, object> p, string guid, string name, string stamp)
+            {
+                hurt.Remove(guid);
+                string who = Who(guid, name);
+                double t = Unix(stamp);
+                if (who == null || t <= 0) return;
+                Dict(p, "pvpKills")[guid + "|" + t.ToString("R", CultureInfo.InvariantCulture)] = new Dictionary<string, object> { { "t", t }, { "name", who } };
             }
 
             static bool Long(List<string> f, int i, out long v)
@@ -624,6 +641,12 @@ namespace AzerothLedger
                 else if ((dstFlags & 1) != 0 && dst.StartsWith("Player-")) Me = dst;
                 if (Me == null) return;
                 bool toMe = dst == Me;
+                if (ev == "UNIT_DIED")
+                {
+                    double hit;
+                    if (hurt.TryGetValue(dst, out hit) && Unix(stamp) - hit <= AssistSeconds) PvPKill(For(Me), dst, dstName, stamp);
+                    return;
+                }
                 if (!fromMine && !toMe) return; // everyone else nearby
 
                 string dayKey = DayKey(stamp);
@@ -637,6 +660,7 @@ namespace AzerothLedger
                     Bump(day, "kb", 1);
                     Count(Dict(p, "kills"), Who(dst, dstName), 1, 400);
                     if ((dstFlags & 0x400) != 0) Bump(day, "hk", 1);
+                    if (Enemy(dstFlags)) PvPKill(p, dst, dstName, stamp);
                     return;
                 }
 
@@ -713,6 +737,7 @@ namespace AzerothLedger
                 }
                 if (fromMine && !toMe && !environment)
                 {
+                    if (Enemy(dstFlags)) hurt[dst] = Unix(stamp);
                     string target = Who(dst, dstName);
                     Bump(day, "dmg", dmg);
                     Bump(day, "hits", 1);
@@ -755,7 +780,23 @@ namespace AzerothLedger
             }
             foreach (var pair in new[] { new { k = "spellDmg", cap = 200 }, new { k = "casts", cap = 200 }, new { k = "kills", cap = 400 }, new { k = "healers", cap = 100 } })
                 foreach (var kv in Dict(fresh, pair.k)) Count(Dict(total, pair.k), kv.Key, (double)kv.Value, pair.cap);
+            var kills = Dict(total, "pvpKills");
+            foreach (var kv in Dict(fresh, "pvpKills")) kills[kv.Key] = kv.Value;
+            foreach (var old in kills.OrderBy(kv => Num((Dictionary<string, object>)kv.Value, "t")).Take(Math.Max(0, kills.Count - MaxPvPKills)).ToList()) kills.Remove(old.Key);
             KeepBest(Dict(total, "best"), Dict(fresh, "best"));
+        }
+
+        const int MaxPvPKills = 300; // as the addon keeps
+
+        // App 1.13.2 and older wrote live Forever players as "Hjalle Offside PvP" (the realm's first half): fold those into the real name.
+        static void FixNames(Dictionary<string, object> map)
+        {
+            foreach (var k in map.Keys.Where(k => k.EndsWith(" PvP") || k.EndsWith(" PvE")).ToList())
+            {
+                object v = map[k];
+                map.Remove(k);
+                if (v is double) Bump(map, k.Substring(0, k.Length - 4), (double)v);
+            }
         }
 
         static void KeepBiggestHit(Dictionary<string, object> to, Dictionary<string, object> from)
@@ -786,6 +827,8 @@ namespace AzerothLedger
         // only an estimate from experience messages, so the log's exact count replaces them.
         public static void MergeInto(Dictionary<string, object> c, Dictionary<string, object> log)
         {
+            foreach (var k in new[] { "healers", "kills" }) FixNames(Dict(log, k));
+            MergePvPKills(c, Dict(log, "pvpKills"));
             var days = Dict(c, "days");
             foreach (var d in Dict(log, "days"))
             {
@@ -806,6 +849,20 @@ namespace AzerothLedger
                     if (k == "kills" || (double)kv.Value > Num(map, kv.Key)) map[kv.Key] = kv.Value;
                 }
             KeepBest(Dict(c, "best"), Dict(log, "best"));
+        }
+
+        // The log's PvP kills join the addon's list (oldest first, as the addon keeps it). The addon may have seen the same
+        // kill from the honor count: the same name within a minute is that kill.
+        static void MergePvPKills(Dictionary<string, object> c, Dictionary<string, object> log)
+        {
+            object o;
+            var list = c.TryGetValue("pvpKills", out o) && o is List<object> ? (List<object>)o : new List<object>();
+            Func<object, double> T = x => x is Dictionary<string, object> ? Num((Dictionary<string, object>)x, "t") : 0;
+            Func<object, string> N = x => { object n; return x is Dictionary<string, object> && ((Dictionary<string, object>)x).TryGetValue("name", out n) ? n as string : null; };
+            foreach (var k in log.Values)
+                if (!list.Any(x => N(x) == N(k) && Math.Abs(T(x) - T(k)) < 60)) list.Add(k);
+            if (list.Count == 0) return;
+            c["pvpKills"] = list.OrderBy(T).Skip(Math.Max(0, list.Count - MaxPvPKills)).ToList();
         }
 
         // ---------- saved totals (written as Lua, which LuaReader already reads)
@@ -932,6 +989,7 @@ namespace AzerothLedger
             {
                 var c = kv.Value as Dictionary<string, object>;
                 object guid, stats;
+                if (c != null) foreach (var k in new[] { "healers", "kills" }) { object m; if (c.TryGetValue(k, out m) && m is Dictionary<string, object>) FixNames((Dictionary<string, object>)m); }
                 if (c == null || !c.TryGetValue("guid", out guid) || !(guid is string) || !players.TryGetValue((string)guid, out stats)) continue;
                 var s = stats as Dictionary<string, object>;
                 if (s != null) MergeInto(c, s);

@@ -277,6 +277,34 @@ class CombatLog(unittest.TestCase):
         self.assertNotIn("hits", self.run_app()["days"][DAY])
         self.assertFalse(self.totals.exists())
 
+    def test_live_forever_player_names_drop_the_realm(self):
+        live = other(name="Hjalle-Offside-PvP-EU")
+        self.write(STANDARD + [line(f'SPELL_HEAL,{live},{me()},139,"Renew",0x2,{block(OTHER)},40,40,0,0,nil', 10)])
+        healers = self.run_app()["healers"]
+        self.assertEqual(healers["Hjalle Offside"], 40)
+        self.assertEqual(healers["Eve Lind"], 40)  # the beta's "Eve Lind-PvE-" too
+
+    def test_old_names_with_the_realm_are_folded_in(self):
+        self.save.write_text(SAVE.replace('["kills"] = {', '["healers"] = { ["Hjalle Offside PvP"] = 7 }, ["kills"] = {'), encoding="utf-8")
+        healers = self.run_app()["healers"]
+        self.assertEqual(healers, {"Hjalle Offside": 7})
+
+    def test_enemy_players_killed_or_helped_kill_are_named(self):
+        foe = 'Player-4700-00000C01,"Gank-Alot-PvP-EU",0x548,0x80000000'
+        foe2 = 'Player-4700-00000C02,"Stab-Bob-PvP-EU",0x548,0x80000000'
+        far = 'Player-4700-00000C03,"Far-Away-PvP-EU",0x548,0x80000000'
+        self.write(STANDARD + [
+            line(f"SWING_DAMAGE,{me()},{foe},{block()},50,50,-1,1,0,0,0,nil,nil,nil", 10),
+            line(f"PARTY_KILL,{me()},{foe},0", 11),  # my killing blow
+            line(f"UNIT_DIED,{nobody()},{foe},0", 11),  # the same kill: once
+            line(f"SWING_DAMAGE,{me()},{foe2},{block()},50,50,-1,1,0,0,0,nil,nil,nil", 12),
+            line(f"UNIT_DIED,{nobody()},{foe2},0", 20),  # a friend finished them: still a kill I took part in
+            line(f"UNIT_DIED,{nobody()},{far},0", 21),  # never touched by me
+        ])
+        kills = self.run_app()["pvpKills"]
+        self.assertEqual([k["name"] for k in kills], ["Gank Alot", "Stab Bob"])
+        self.assertEqual(self.run_app()["pvpKills"], kills)  # reading again adds nothing
+
 
 if __name__ == "__main__":
     unittest.main()

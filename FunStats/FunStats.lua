@@ -321,7 +321,7 @@ end
 -- No honor message (it may not exist on every client): a dead enemy player in the target frame is the one we killed.
 local function TargetKill()
   if not (UnitIsPlayer("target") and UnitIsDeadOrGhost("target") and UnitIsEnemy and UnitIsEnemy("player", "target")) then return end
-  RecordPvPKill((UnitName("target")))
+  RecordPvPKill((FullName("target"))) -- first name and surname on Forever, as Most Wanted names them
 end
 
 local function UpdatePvP()
