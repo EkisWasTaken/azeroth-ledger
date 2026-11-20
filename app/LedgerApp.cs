@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.13.3.0")]
+[assembly: AssemblyVersion("1.13.4.0")]
 
 namespace AzerothLedger
 {
@@ -495,6 +495,20 @@ namespace AzerothLedger
         {
             public readonly Dictionary<string, Dictionary<string, object>> Players = new Dictionary<string, Dictionary<string, object>>();
             public bool Supported;
+            public bool PetKills = true; // false: the 1.13.3 rules (PARTY_KILL only), to find what those missed
+
+            // The last hit on a mob or player: the lethal hit and PARTY_KILL both report it, so a unit counts once in 10 s.
+            readonly Dictionary<string, double> lastHit = new Dictionary<string, double>();
+            void KillingBlow(Dictionary<string, object> p, Dictionary<string, object> day, string dst, string dstName, long dstFlags, string stamp)
+            {
+                double t = Unix(stamp), was;
+                if (lastHit.TryGetValue(dst, out was) && Math.Abs(t - was) < 10) return;
+                lastHit[dst] = t;
+                Bump(day, "kb", 1);
+                Count(Dict(p, "kills"), Who(dst, dstName), 1, 400);
+                if ((dstFlags & 0x400) != 0) Bump(day, "hk", 1);
+                if (Enemy(dstFlags)) PvPKill(p, dst, dstName, stamp);
+            }
             public string Me;
             public int Checked, Bad;
             public string Refused;
@@ -657,10 +671,7 @@ namespace AzerothLedger
                 if (ev == "PARTY_KILL")
                 {
                     if (!fromMine || toMe) return;
-                    Bump(day, "kb", 1);
-                    Count(Dict(p, "kills"), Who(dst, dstName), 1, 400);
-                    if ((dstFlags & 0x400) != 0) Bump(day, "hk", 1);
-                    if (Enemy(dstFlags)) PvPKill(p, dst, dstName, stamp);
+                    KillingBlow(p, day, dst, dstName, dstFlags, stamp);
                     return;
                 }
 
@@ -738,6 +749,8 @@ namespace AzerothLedger
                 if (fromMine && !toMe && !environment)
                 {
                     if (Enemy(dstFlags)) hurt[dst] = Unix(stamp);
+                    // overkill is -1 unless the hit was lethal: the last hit, even my pet's, which PARTY_KILL never credits on Forever
+                    if (PetKills && overkill >= 0) KillingBlow(p, day, dst, dstName, dstFlags, stamp);
                     string target = Who(dst, dstName);
                     Bump(day, "dmg", dmg);
                     Bump(day, "hits", 1);
@@ -906,7 +919,7 @@ namespace AzerothLedger
         // ---------- files
 
         // Reads what's new in one log, up to its last complete line. Returns the new position.
-        static long ReadFrom(string path, long offset, Reader reader)
+        static long ReadFrom(string path, long offset, Reader reader, long end = long.MaxValue)
         {
             using (var st = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
             {
@@ -915,7 +928,7 @@ namespace AzerothLedger
                 var line = new MemoryStream();
                 long pos = offset; // just after the last complete line
                 int n;
-                while ((n = st.Read(buf, 0, buf.Length)) > 0)
+                while (st.Position < end && (n = st.Read(buf, 0, (int)Math.Min(buf.Length, end - st.Position))) > 0)
                 {
                     long chunk = st.Position - n;
                     int start = 0;
@@ -943,6 +956,8 @@ namespace AzerothLedger
             var files = Dict(state, "files");
             var finished = new List<string>();
             bool changed = false;
+            // before the new lines, so lines read now with the new rules are never counted again
+            if (!state.ContainsKey("petKills")) { RecountPetKills(logsDir, files, players, log); state["petKills"] = true; changed = true; }
             if (Directory.Exists(logsDir))
             {
                 foreach (var path in Directory.GetFiles(logsDir, "WoWCombatLog*.txt").OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
@@ -993,6 +1008,50 @@ namespace AzerothLedger
                 if (c == null || !c.TryGetValue("guid", out guid) || !(guid is string) || !players.TryGetValue((string)guid, out stats)) continue;
                 var s = stats as Dictionary<string, object>;
                 if (s != null) MergeInto(c, s);
+            }
+        }
+
+        // App 1.13.3 and older only counted PARTY_KILL, which Forever never sends for a pet's last hit. Once, the logs still
+        // on disk are read again with the old and the new rules, and only what the old ones missed is added to the totals.
+        static void RecountPetKills(string logsDir, Dictionary<string, object> files, Dictionary<string, object> players, Action<string> log)
+        {
+            foreach (var kv in files)
+            {
+                var entry = kv.Value as Dictionary<string, object>;
+                object ok;
+                string path = Path.Combine(logsDir, kv.Key);
+                if (entry == null || !entry.TryGetValue("ok", out ok) || !(ok is bool) || !(bool)ok || entry.ContainsKey("refused") || !File.Exists(path)) continue;
+                long upTo = (long)Num(entry, "o");
+                var now = new Reader();
+                var before = new Reader { PetKills = false };
+                try { ReadFrom(path, 0, now, upTo); ReadFrom(path, 0, before, upTo); }
+                catch (IOException) { continue; }
+                if (now.Bad * 20 > now.Checked) continue;
+                int found = 0;
+                foreach (var pl in now.Players)
+                {
+                    Dictionary<string, object> old;
+                    if (!before.Players.TryGetValue(pl.Key, out old)) old = new Dictionary<string, object>();
+                    var total = Dict(players, pl.Key);
+                    foreach (var d in Dict(pl.Value, "days"))
+                    {
+                        var was = Dict(Dict(old, "days"), d.Key);
+                        foreach (var f in new[] { "kb", "hk" })
+                        {
+                            double extra = Num((Dictionary<string, object>)d.Value, f) - Num(was, f);
+                            if (extra > 0) { Bump(Dict(Dict(total, "days"), d.Key), f, extra); if (f == "kb") found += (int)extra; }
+                        }
+                    }
+                    var oldKills = Dict(old, "kills");
+                    foreach (var k in Dict(pl.Value, "kills"))
+                    {
+                        double extra = (double)k.Value - Num(oldKills, k.Key);
+                        if (extra > 0) Count(Dict(total, "kills"), k.Key, extra, 400);
+                    }
+                    var pk = Dict(total, "pvpKills");
+                    foreach (var k in Dict(pl.Value, "pvpKills")) pk[k.Key] = k.Value;
+                }
+                if (found > 0) log("Found " + found + " last hits by pets in " + kv.Key);
             }
         }
 

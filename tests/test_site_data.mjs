@@ -122,8 +122,8 @@ test("character of the week: twice the hours doesn't beat a better week in half 
   assert.equal(scorePotw([p("Main", { played: 30 * h, dmg: 100, quests: 30 }), p("Blip", { played: h, dmg: 10, quests: 3 })], F).best.p.name, "Main");
 });
 
-test("players killed: a day counts the game's honorable kills when they beat the killing blows", () => {
+test("players killed are last hits, kept apart from the game's honorable kills", () => {
   const [ch] = load([{ id: "c:Hero-R", kind: "char", char_key: "Hero-R", updated_at: "2026-11-19T20:00:00Z",
-    data: { name: "Hero", days: { "2026-11-17": { hk: 4, honorKills: 19 }, "2026-11-18": { hk: 3, honorKills: 1 }, "2026-11-19": { honorKills: 2 } } } }]);
-  assert.deepEqual(Object.values(ch.days).map(d => d.hk), [19, 3, 2]);
+    data: { name: "Hero", days: { "2026-11-17": { hk: 4, honorKills: 19 } } } }]);
+  assert.deepEqual(ch.days["2026-11-17"], { hk: 4, honorKills: 19 });
 });

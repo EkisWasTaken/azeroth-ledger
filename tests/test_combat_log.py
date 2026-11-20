@@ -305,6 +305,38 @@ class CombatLog(unittest.TestCase):
         self.assertEqual([k["name"] for k in kills], ["Gank Alot", "Stab Bob"])
         self.assertEqual(self.run_app()["pvpKills"], kills)  # reading again adds nothing
 
+    def test_a_pets_last_hit_counts_once(self):
+        pet = 'Pet-0-4621-0-116-299-0100000001,"Kitty",0x1111,0x80000000'
+        foe = 'Player-4700-00000C01,"Gank-Alot-PvP-EU",0x548,0x80000000'
+        boar = 'Creature-0-4621-0-116-113-00003C82EF,"Old Boar",0x10a48,0x80000000'
+        self.write(STANDARD + [
+            line(f"SWING_DAMAGE,{pet},{foe},{block(OTHER)},80,80,12,1,0,0,0,nil,nil,nil", 20),  # lethal (overkill 12), no PARTY_KILL on Forever
+            line(f"UNIT_DIED,{nobody()},{foe},0", 20),
+            line(f"SWING_DAMAGE,{pet},{boar},{block(OTHER)},30,30,0,1,0,0,0,nil,nil,nil", 21),  # overkill 0: exactly lethal
+        ])
+        d = self.run_app()
+        day = d["days"][DAY]
+        self.assertEqual(day["kb"], 3)  # the wolf once (lethal Fireball and PARTY_KILL), the boar, the player
+        self.assertEqual(day["hk"], 1)
+        self.assertEqual(d["kills"]["Old Boar"], 1)  # the log's exact count replaces the save's estimate
+        self.assertEqual([k["name"] for k in d["pvpKills"]], ["Gank Alot"])
+
+    def test_old_totals_get_the_missed_pet_kills_once(self):
+        pet = 'Pet-0-4621-0-116-299-0100000001,"Kitty",0x1111,0x80000000'
+        foe = 'Player-4700-00000C01,"Gank-Alot-PvP-EU",0x548,0x80000000'
+        self.write(STANDARD + [line(f"SWING_DAMAGE,{pet},{foe},{block(OTHER)},80,80,12,1,0,0,0,nil,nil,nil", 20)])
+        self.run_app()
+        # pretend the totals came from 1.13.3: its rules counted 1 kill, and it had no pet recount yet
+        text = self.totals.read_text(encoding="utf-8")
+        self.assertIn('["petKills"]=true', text)
+        self.assertIn('["kb"]=2,', text)
+        text = text.replace('["petKills"]=true,' + chr(10), "").replace('["kb"]=2,', '["kb"]=1,').replace('["hk"]=1,', "")
+        self.totals.write_text(text, encoding="utf-8")
+        day = self.run_app()["days"][DAY]
+        self.assertEqual((day["kb"], day["hk"]), (2, 1))
+        day = self.run_app()["days"][DAY]
+        self.assertEqual((day["kb"], day["hk"]), (2, 1))  # and never again
+
 
 if __name__ == "__main__":
     unittest.main()

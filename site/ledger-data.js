@@ -104,9 +104,6 @@
         if (a.lastLogin) ch.lastSeen = a.lastLogin;
       }
     }
-    // Players killed: killing blows (hk) only count the kills you finished, the game's honorable kills (honorKills)
-    // count every kill you took part in, so a day's kills are the larger of the two.
-    for (const ch of Object.values(out)) for (const d of Object.values(ch.days)) if (d && d.honorKills > (d.hk || 0)) d.hk = d.honorKills;
     return Object.values(out).sort((a, b) => String(a.name).localeCompare(String(b.name)));
   }
 
