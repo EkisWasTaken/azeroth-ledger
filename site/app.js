@@ -113,7 +113,6 @@
     "open one for its bosses and meters": "öppna en för dess bossar och mätare", "{0} events here": "{0} händelser här", "and {0} more": "och {0} till", "click to zoom in": "klicka för att zooma in", "Talents": "Talanger", "points": "poäng", "{0} of other {1}s take it": "{0} av andra {1}s tar den",
     "Gold rings: talents most other {0}s on the Ledger take ({1} characters). Their average split: {2}.": "Guldringar: talanger som de flesta andra {0}s på Ledger tar ({1} karaktärer). Deras snittfördelning: {2}.",
     "Popular picks show once {0} other {1}s with 10+ points have uploaded their talents.": "Populära val visas när {0} andra {1}s med 10+ poäng har laddat upp sina talanger.", "PvP": "PvP", "Mob": "Mob", "another player": "en annan spelare", "killed in PvP by {0}": "dödad i PvP av {0}",
-    "Pick Deaths, Level-ups or Rare loot above to show them on the map.": "Välj Dödsfall, Level-ups eller Rare loot ovan för att visa dem på kartan.",
     "Who's Clearing What": "Vem klarar vad", "Hardest bosses": "Svåraste bossarna", "most wipes, then most deaths": "flest wipes, sedan flest dödsfall", "Boss hunters": "Bossjägare",
     "Guild progress": "Guildernas progress", "Character": "Karaktär", "Guild": "Guild", "Members": "Medlemmar", "Runs": "Runs", "Bosses": "Bossar",
     "{0} kill rate": "{0} lyckade", "fastest {0}": "snabbast {0}", "bosses killed and dungeon runs in this range": "dödade bossar och dungeon runs i perioden",
@@ -185,10 +184,13 @@
     "Previous page": "Föregående sida", "Next page": "Nästa sida",
     "Gold": "Guld",  "Zoom in": "Zooma in", "Zoom out": "Zooma ut",
     "Show the whole continent": "Visa hela kontinenten", "Map of the Fallen": "De fallnas karta", "Every death, ding and drop, where it happened": "Varje död, ding och drop, där det hände",
-    "Level-ups": "Dings", "Rare loot": "Rare loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
-    "Top killer: {0}": "Värsta mördaren: {0}", "No deaths in this range. Impressive.": "Inga dödsfall här. Imponerande.", "reached level {0}": "dingade {0}",
+    "Level-ups": "Dings", "Highlights": "Höjdpunkter", "click one to find it on the map": "klicka på en för att hitta den på kartan", "Inside instances": "Inne i instanser",
+    "Nothing with a position in this range.": "Inget med en position under den här perioden.", "Pick something above to show on the map.": "Välj något ovan att visa på kartan.",
+    "{0} more PvP kills have no recorded position.": "{0} PvP-kills till har ingen sparad position.", "{0} older deaths have no recorded position.": "{0} äldre dödsfall har ingen sparad position.",
+    "Rare loot": "Rare loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
+    "reached level {0}": "dingade {0}",
     "killed by {0}": "dödad av {0}", "fell to their death": "föll till sin död", "looted": "lootade", "Unknown": "Okänt",
-    "{0} deaths happened before positions were saved (FunStats 1.1), so they're only counted, not placed.": "{0} dödsfall skedde innan positioner sparades (FunStats 1.1), så de räknas men placeras inte ut.", "Animations": "Animationer", "On": "På", "Off": "Av", "New record": "Nytt rekord", "A record fell!": "Ett rekord föll!", "{0} records fell!": "{0} rekord föll!", "last 7 days": "senaste 7 dagarna",
+    "Animations": "Animationer", "On": "På", "Off": "Av", "New record": "Nytt rekord", "A record fell!": "Ett rekord föll!", "{0} records fell!": "{0} rekord föll!", "last 7 days": "senaste 7 dagarna",
     "Beat {0}'s {1} from {2}": "Slog {0}s {1} från {2}", "Topped their own {0} from {1}": "Slog sitt eget {0} från {1}",
     "Characters": "Karaktärer", "Guild Roster": "Guildens roster", "Everyone on this realm with FunStats": "Alla på den här realmen med FunStats",
     "Every member with FunStats": "Alla medlemmar med FunStats", "Get the addon": "Hämta addonen",
@@ -1134,7 +1136,8 @@
   }
 
   function renderMap(people) {
-    const m = (state.map ||= { cont: "", layers: { deaths: false, dings: false, loot: false, pvpkills: false, wanted: false }, who: "" });
+    // Deaths, PvP kills and rare loot show from the start; level-ups (many) and Most Wanted (a repeat of deaths) are picked.
+    const m = (state.map ||= { cont: "", layers: { deaths: true, dings: false, loot: true, pvpkills: true, wanted: false }, who: "" });
     const atlas = pickAtlas(), game = mapGame();
     if (!people.some(p => p.id === m.who)) m.who = "";
     // The Most Wanted layer follows the poster it was opened from, else whoever tops the board.
@@ -1154,7 +1157,15 @@
     const open = m.zone ? zoneById(m.zone) : null;
     const tabs = conts.filter(c => MAP_TABS.includes(c) || !worldOf(c));
     $("mapConts").innerHTML = tabs.map(c => `<button type="button" class="chip" data-cont="${c}" aria-pressed="${c === (worldOf(m.cont) || m.cont)}">${esc(atlas[c].n)}</button>`).join("");
-    document.querySelectorAll("#s-map [data-layer]").forEach(b => b.setAttribute("aria-pressed", String(!!m.layers[b.dataset.layer])));
+    // each layer's count on its chip; a layer with nothing in this range has no chip
+    const counts = {};
+    all.forEach(e => { counts[e.kind] = (counts[e.kind] || 0) + 1; });
+    document.querySelectorAll("#s-map [data-layer]").forEach(b => {
+      const k = b.dataset.layer;
+      b.setAttribute("aria-pressed", String(!!m.layers[k]));
+      b.hidden = !counts[k];
+      b.querySelector("small").textContent = counts[k] ? num(counts[k]) : "";
+    });
     $("mapWho").innerHTML = `<option value="">${tr("Everyone")}</option>` + people.map(p => `<option value="${esc(p.id)}">${esc(nameTxt(p))}</option>`).join("");
     $("mapWho").value = m.who;
 
@@ -1193,25 +1204,69 @@
     $("mapReplay").hidden = shown.length < 2;
     applyMapView();
 
-    // Deadliest zones, counting every death in range (with or without a position).
+    // Beside the map: the most telling events (PvP kills, epics, deaths to players first, then the newest), each one
+    // a close-up that flies the map to it. Then the deadliest zones, and the deaths inside instances, which have no spot.
+    const loud = e => e.kind === "pvpkills" || (e.kind === "loot" && e.d.q >= 4) || (e.kind === "deaths" && e.d.cause === "player") ? 1 : 0;
+    const hl = state.mapHl = all.filter(e => m.layers[e.kind] && e.kind !== "wanted").sort((a, b) => loud(b) - loud(a) || b.t - a.t).slice(0, 5);
     const deaths = (m.who ? people.filter(p => p.id === m.who) : people).flatMap(p => p.deaths).filter(d => d.t && inRange(localKey(d.t)));
-    const byZone = {}, byFoe = {};
-    deaths.forEach(d => { const z = d.inst || d.zone || tr("Unknown"); byZone[z] = (byZone[z] || 0) + 1; if (d.by) byFoe[d.by] = (byFoe[d.by] || 0) + 1; });
-    const top = Object.entries(byZone).sort((a, b) => b[1] - a[1]).slice(0, 6), max = top.length ? top[0][1] : 1;
-    const foe = Object.entries(byFoe).sort((a, b) => b[1] - a[1])[0];
+    const byZone = {}, inside = {};
+    deaths.forEach(d => {
+      const z = d.inst || d.zone || tr("Unknown");
+      byZone[z] = (byZone[z] || 0) + 1;
+      if (d.inst && !contSpot(d, atlas)) inside[d.inst] = (inside[d.inst] || 0) + 1;
+    });
+    const top = Object.entries(byZone).sort((a, b) => b[1] - a[1]).slice(0, 3), max = top.length ? top[0][1] : 1;
     const zoneNamed = n => { for (const [c, a] of Object.entries(atlas)) { const z = a && a.zones && a.zones.find(q => q.n === n); if (z && !MAP_ART[game].includes(String(z.id))) return { c, z }; } return null; };
-    $("mapSide").innerHTML = top.length
-      ? top.map(([z, n]) => {
+    const ins = Object.entries(inside).sort((a, b) => b[1] - a[1]);
+    $("mapSide").innerHTML =
+      (hl.length ? `<div class="hls">${hl.map((e, i) => `<button type="button" class="hl" data-hl="${i}">${spotMap(e.d)}<span>${mapTip(e)}</span></button>`).join("")}</div>`
+        : `<p class="empty">${tr(Object.values(m.layers).some(Boolean) ? "Nothing with a position in this range." : "Pick something above to show on the map.")}</p>`)
+      + (top.length ? `<div class="lh">${tr("Deadliest places")}</div>` + top.map(([z, n]) => {
         const at = zoneNamed(z), row = `<span>${esc(z)}</span><span class="n">${num(n)}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span>`;
         return at ? `<button type="button" class="zl" data-placecont="${at.c}" data-placezone="${at.z.id}" title="${esc(tr("Show on map"))}">${row}</button>` : `<div class="zl">${row}</div>`;
-      }).join("")
-        + (foe ? `<p class="muted" style="margin-top:6px">${tr("Top killer: {0}", `<b style="color:var(--ink)">${esc(foe[0])}</b> (${num(foe[1])})`)}</p>` : "")
-      : `<p class="empty">${tr("No deaths in this range. Impressive.")}</p>`;
-    const unplaced = deaths.filter(d => !contSpot(d, pickAtlas())).length;
+      }).join("") : "")
+      + (ins.length ? `<div class="lh">${tr("Inside instances")}</div><p class="muted inst">${ins.slice(0, 6).map(([z, n]) => `${esc(z)} <b>${num(n)}</b>`).join(" · ")}${ins.length > 6 ? " · " + tr("and {0} more", ins.length - 6) : ""}</p>` : "");
+    // What can't be placed, and why: kills named from the combat log carry no position, and the oldest uploads had none.
+    const pvpLost = (m.who ? people.filter(p => p.id === m.who) : people).flatMap(p => p.chars.flatMap(ch => asArr(ch.pvpKills)))
+      .filter(k => k && k.t && inRange(localKey(k.t)) && !contSpot(k, atlas)).length;
+    const oldLost = deaths.filter(d => !d.inst && !contSpot(d, atlas)).length;
     $("mapNote").textContent = [
-      Object.values(m.layers).some(Boolean) ? "" : tr("Pick Deaths, Level-ups or Rare loot above to show them on the map."),
-      unplaced ? tr("{0} deaths happened before positions were saved (FunStats 1.1), so they're only counted, not placed.", num(unplaced)) : "",
+      pvpLost ? tr("{0} more PvP kills have no recorded position.", num(pvpLost)) : "",
+      oldLost ? tr("{0} older deaths have no recorded position.", num(oldLost)) : "",
     ].filter(Boolean).join(" ");
+  }
+  // A close-up of where something happened: its zone's map (else its continent's) cropped around the spot, with a pin.
+  // shortcut: the maps are the realm picker's game, so a character from another game's realm gets no close-up there.
+  function spotMap(d, big) {
+    const atlas = pickAtlas(), built = (state.mapIndex || {})[mapGame()] || [];
+    let id, x, y;
+    if (d.map != null && d.x != null && built.includes(+d.map)) [id, x, y] = [+d.map, +d.x, +d.y];
+    else {
+      const at = contSpot(d, atlas);
+      if (!at) return "";
+      const z = d.zone && ((atlas[at.cont] || {}).zones || []).find(q => q.n === d.zone && built.includes(q.id));
+      [id, x, y] = z ? [z.id, (at.x - z.x0) / (z.x1 - z.x0) * 100, (at.y - z.y0) / (z.y1 - z.y0) * 100] : [at.cont, at.x, at.y];
+    }
+    // the art at 6x (about its own size in the window): its offset keeps the spot in the middle, or as close as the art's edge allows
+    const Z = 6, off = v => Math.min(100, Math.max(0, (Z * v - 50) / (Z - 1)));
+    const ox = off(x), oy = off(y);
+    return `<span class="spot${big ? " big" : ""}" aria-hidden="true"><img src="${mapSrc(id)}" alt="" loading="lazy" decoding="async" style="left:${-(Z - 1) * ox}%;top:${-(Z - 1) * oy}%"><i style="left:${Z * x - (Z - 1) * ox}%;top:${Z * y - (Z - 1) * oy}%"></i></span>`;
+  }
+  // A highlight's map: on its continent, zoomed in on it, with its details open.
+  async function flyTo(ev) {
+    if (!ev || mapBusy) return;
+    const m = state.map;
+    Object.assign(m, { cont: ev.cont, zone: "", trail: [] });
+    render();
+    const v = mapView(), box = $("map"), z = MAX_ZOOM;
+    box.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
+    await glide(() => { Object.assign(v, { z, x: box.clientWidth / 2 - box.clientWidth * z * ev.x / 100, y: box.clientHeight / 2 - box.clientHeight * z * ev.y / 100 }); applyMapView(); });
+    renderMarks();
+    // render() builds new events, so the highlight is found again by what, when and where
+    const i = (state.mapShown || []).findIndex(s => s.kind === ev.kind && s.t === ev.t && s.x === ev.x && s.y === ev.y);
+    const gi = (state.mapGroups || []).findIndex(g => g.list.includes(i));
+    const btn = gi >= 0 && document.querySelector(`#mapMarks [data-g="${gi}"]`);
+    if (btn) showMapTip(btn);
   }
   function showMapTip(btn) {
     const g = (state.mapGroups || [])[+btn.dataset.g], tip = $("mapTip"), shown = state.mapShown || [];
@@ -1230,6 +1285,8 @@
     if (c) { state.map.cont = c.dataset.cont; state.map.zone = ""; state.map.trail = []; render(); }
     if (e.target.closest("[data-mapup]")) closeZone();
     if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; if (l.dataset.layer === "wanted") state.map.wanted = ""; render(); }
+    const hb = e.target.closest("[data-hl]");
+    if (hb) flyTo((state.mapHl || [])[+hb.dataset.hl]);
     const pz = e.target.closest("[data-placezone]");
     if (pz) {
       Object.assign(state.map, { cont: pz.dataset.placecont, zone: "", trail: [] });
@@ -2287,7 +2344,7 @@
     ].map(tileHTML).join("");
     $("hcFallen").innerHTML = fallen.map(p => `<div class="grave"><span class="gicon">${skullIcon(2)}</span><div>
         <div class="gname">${nameHTML(p)}</div><div class="gwhat">${deathWhat(p.fallen)}.</div>
-        <div class="gwhen">${tr("Level {0}", esc(p.fallen.lvl || "?"))} · ${fullDate(p.fallen.t)}</div></div></div>`).join("")
+        <div class="gwhen">${tr("Level {0}", esc(p.fallen.lvl || "?"))} · ${fullDate(p.fallen.t)}</div></div>${spotMap(p.fallen, true)}</div>`).join("")
       || `<p class="empty">${tr("Nobody has fallen. Yet.")}</p>`;
     $("hcAlive").innerHTML = alive.map(p => `<a class="chip" href="${profileHref(p)}">${classIcon(p.chars[0])}${esc(p.name)} <span class="muted">${tr("Lvl {0}", lvl(p))}</span></a>`).join("")
       || `<p class="empty">${tr("Everyone has fallen.")}</p>`;
@@ -3309,7 +3366,7 @@
     const lastDeaths = p.deaths.slice().sort((a, b) => b.t - a.t).slice(0, 3);
     $("pLately").innerHTML =
       `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.slice(0, 5).map(lootLine).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
-      `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${lastDeaths.map(d => deathLine(p, d, true)).join("") || `<p class="empty">${tr("{0} hasn't died yet. Impressive.", esc(p.name))}</p>`}</div>`;
+      `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${lastDeaths.map(d => `<div class="spotrow">${spotMap(d)}${deathLine(p, d, true)}</div>`).join("") || `<p class="empty">${tr("{0} hasn't died yet. Impressive.", esc(p.name))}</p>`}</div>`;
 
     whRefresh();
   }

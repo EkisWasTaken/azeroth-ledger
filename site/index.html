@@ -349,15 +349,15 @@
   </section>
 
   <section id="s-map" data-pg="atlas" aria-labelledby="h-map">
-    <div class="sec-head"><h2 id="h-map">Map of the Fallen</h2></div>
+    <div class="sec-head"><h2 id="h-map">Atlas of Azeroth</h2></div>
     <div class="mapbar">
       <span class="maptabs" id="mapConts" role="group" aria-label="Continent"></span>
       <span class="maplayers" role="group" aria-label="Show on the map">
-        <button type="button" class="chip" data-layer="deaths" aria-pressed="false">Deaths</button>
-        <button type="button" class="chip" data-layer="dings" aria-pressed="false">Level-ups</button>
-        <button type="button" class="chip" data-layer="loot" aria-pressed="false">Rare loot</button>
-        <button type="button" class="chip" data-layer="pvpkills" aria-pressed="false">PvP kills</button>
-        <button type="button" class="chip" data-layer="wanted" aria-pressed="false">Most Wanted</button>
+        <button type="button" class="chip" data-layer="deaths" aria-pressed="false"><span>Deaths</span> <small></small></button>
+        <button type="button" class="chip" data-layer="pvpkills" aria-pressed="false"><span>PvP kills</span> <small></small></button>
+        <button type="button" class="chip" data-layer="loot" aria-pressed="false"><span>Rare loot</span> <small></small></button>
+        <button type="button" class="chip" data-layer="dings" aria-pressed="false"><span>Level-ups</span> <small></small></button>
+        <button type="button" class="chip" data-layer="wanted" aria-pressed="false"><span>Most Wanted</span> <small></small></button>
       </span>
       <label class="toggle" for="mapWho"><span>Who</span> <select id="mapWho" class="sel"></select></label>
       <button type="button" class="btn" id="mapReplay">Replay</button>
@@ -382,13 +382,24 @@
         </div>
       </div>
       <div class="frame mapside">
-        <div class="frame-title"><span>Deadliest places</span></div>
+        <div class="frame-title"><span>Highlights</span><small>click one to find it on the map</small></div>
         <div id="mapSide"></div>
       </div>
     </div>
     <p class="muted mapnote" id="mapNote"></p>
     <p class="muted mapnote">Click a zone to open its map. Scroll to zoom, drag to move, right-click or scroll out to go back.</p>
     <p class="muted mapnote">Map art © Blizzard Entertainment.</p>
+    <div class="duo even">
+    <div class="frame">
+      <div class="frame-title"><span>When the group plays</span><small>time played, by weekday and hour</small></div>
+      <div class="table-wrap"><div class="heat" id="heat" style="min-width:480px"></div></div>
+      <div class="heat-legend"><span>less</span><span class="ramp"></span><span>more</span></div>
+    </div>
+    <div class="frame">
+      <div class="frame-title"><span>Favorite zones</span><small>hours spent</small></div>
+      <div class="chart tall"><canvas id="cZones"></canvas></div>
+    </div>
+    </div>
   </section>
 
   <section id="s-bosses" data-pg="dungeons" aria-labelledby="h-bosses">
@@ -494,21 +505,6 @@
     <div class="frame">
       <div class="frame-title"><span>Gold held</span><small>all characters combined</small></div>
       <div class="chart"><canvas id="cWealth"></canvas></div>
-    </div>
-  </section>
-
-  <section id="s-world" data-pg="atlas" aria-labelledby="h-world">
-    <div class="sec-head"><h2 id="h-world">Atlas of Azeroth</h2></div>
-    <div class="duo even">
-    <div class="frame">
-      <div class="frame-title"><span>When the group plays</span><small>time played, by weekday and hour</small></div>
-      <div class="table-wrap"><div class="heat" id="heat" style="min-width:480px"></div></div>
-      <div class="heat-legend"><span>less</span><span class="ramp"></span><span>more</span></div>
-    </div>
-    <div class="frame">
-      <div class="frame-title"><span>Favorite zones</span><small>hours spent</small></div>
-      <div class="chart tall"><canvas id="cZones"></canvas></div>
-    </div>
     </div>
   </section>
 
