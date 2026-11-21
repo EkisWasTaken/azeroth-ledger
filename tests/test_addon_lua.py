@@ -263,6 +263,34 @@ class Addon(unittest.TestCase):
         self.assertEqual(c.name, "John Smith")
         self.assertEqual(c.realm, "PvE")
 
+    def test_forever_blank_realm_uses_the_known_one_and_folds_the_copy_back(self):
+        # Seen on the live client from 2026-11-20: GetRealmName is "", and saves split into "Legolars Grönblad-".
+        blank = 'function GetRealmName() return "" end; '
+        save = ('FunStatsDB = { chars = {'
+                ' ["John Smith-PvE"] = { guid = "Player-1-AAA", realm = "PvE", level = 41, lastSeen = 5, firstSeen = 1,'
+                '   days = { ["2026-11-20"] = { dmg = 10, gold = 5 } }, kills = { Boar = 2 }, killNames = 1,'
+                '   deaths = { { t = 100 } }, snap = { v = "old", gone = 1 },'
+                '   bosses = { ["9:1"] = { kills = 1, wipes = 1, fast = 50, dps = 10 } }, best = { rollHi = 90, rollLo = 20 } },'
+                ' ["John Smith-"] = { guid = "Player-1-AAA", realm = "", level = 43, lastSeen = 9, firstSeen = 7,'
+                '   days = { ["2026-11-20"] = { dmg = 5, gold = 9 } }, kills = { Boar = 1, Wolf = 1 }, killNames = 2,'
+                '   deaths = { { t = 200 } }, snap = { v = "new" },'
+                '   bosses = { ["9:1"] = { kills = 2, wipes = 0, fast = 40, dps = 8 } }, best = { rollHi = 70, rollLo = 3 } } },'
+                ' observed = { ["Anna Berg-"] = { name = "Anna Berg", realm = "", days = {} } } }; ')
+        self.start(FOREVER + "\n" + blank + save)
+        self.assertEqual(self.run_lua('(function() local n = 0 for _ in pairs(FunStatsDB.chars) do n = n + 1 end return n end)()'), 1)
+        key, c = self.char()
+        self.assertEqual(key, "John Smith-PvE")
+        self.assertEqual((c.realm, c.level, c.firstSeen), ("PvE", 43, 1))
+        self.assertEqual((c.days["2026-11-20"].dmg, c.days["2026-11-20"].gold), (15, 9))
+        self.assertEqual((c.kills.Boar, c.kills.Wolf, c.killNames), (3, 1, 2))
+        self.assertEqual((len(c.deaths), c.deaths[1].t, c.deaths[2].t), (2, 100, 200))
+        self.assertEqual((c.snap.v, c.snap.gone), ("new", None))  # snapshots: the newer one, whole
+        b = c.bosses["9:1"]
+        self.assertEqual((b.kills, b.wipes, b.fast, b.dps), (3, 1, 40, 10))
+        self.assertEqual((c.best.rollHi, c.best.rollLo), (90, 3))
+        self.assertEqual(self.run_lua('FunStatsDB.observed["Anna Berg-PvE"].realm'), "PvE")
+        self.assertIsNone(self.run_lua('FunStatsDB.observed["Anna Berg-"]'))
+
     def test_forever_chat_counts_only_my_guid(self):
         self.start(FOREVER)
         none = [None] * 8  # the GUID is the event's 12th argument

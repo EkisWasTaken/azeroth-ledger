@@ -33,7 +33,19 @@ local function RealmFromServer(server)
   local region, ruleset = server:match("^.- (%u%u+)%d* Realm %d+ (.+)$")
   return region and (ruleset .. "-" .. region) or server
 end
-local function GetRealmName() return RealmFromServer(_G.GetRealmName()) end
+local function ServerOf(guid) return type(guid) == "string" and guid:match("^Player%-(%d+)%-") end
+
+-- Since 2026-11-20 Forever sometimes reports no realm at all: then use the realm last seen on this server
+-- (the number in the player GUID), so the character doesn't split into a "Name-" copy.
+local function GetRealmName()
+  local realm = RealmFromServer(_G.GetRealmName() or "")
+  local server = ServerOf(UnitGUID("player"))
+  local known = FunStatsDB and FunStatsDB.realms
+  if server and known then
+    if realm ~= "" then known[server] = realm else realm = known[server] or "" end
+  end
+  return realm
+end
 
 local frame = CreateFrame("Frame")
 local C            -- this character's record
@@ -416,6 +428,79 @@ local function MoveServerKeys(list)
   end
 end
 
+-- Folds a newer record of the same character into an older one: tallies add up, history lists join
+-- (oldest first), and anything that is a snapshot (gear, talents, professions, PvP totals) comes from the newer.
+local TALLIES = { days = true, heat = true, zones = true, kills = true, casts = true, spellDmg = true, healers = true, duels = true, bg = true }
+local HISTORY = { deaths = true, runs = true, fights = true, notable = true, pvpKills = true }
+local function AddUp(into, from)
+  for k, v in pairs(from) do
+    local mine = into[k]
+    if type(v) == "number" and type(mine) == "number" and k ~= "gold" then into[k] = mine + v -- a day's gold is a snapshot
+    elseif type(v) == "table" and type(mine) == "table" then AddUp(mine, v)
+    else into[k] = v end
+  end
+end
+
+local function Lowest(a, b) return (a and b) and math.min(a, b) or a or b end
+
+local function MergeRecord(into, from)
+  for k, v in pairs(from) do
+    local mine = into[k]
+    if type(mine) ~= "table" or type(v) ~= "table" then
+      if (k == "level" or k == "peakGold") and type(mine) == "number" and type(v) == "number" then into[k] = math.max(mine, v)
+      elseif k == "firstSeen" then into[k] = Lowest(mine, v)
+      else into[k] = v end
+    elseif TALLIES[k] then AddUp(mine, v)
+    elseif HISTORY[k] then for _, e in ipairs(v) do mine[#mine + 1] = e end -- PushCapped trims to the cap later
+    elseif k == "levels" or k == "levelPlayed" or k == "dingAt" then for lvl, e in pairs(v) do mine[lvl] = e end
+    elseif k == "bosses" then
+      for id, b in pairs(v) do
+        local o = mine[id]
+        if type(o) ~= "table" then mine[id] = b else
+          o.kills, o.wipes = (o.kills or 0) + (b.kills or 0), (o.wipes or 0) + (b.wipes or 0)
+          o.dmg, o.heal = (o.dmg or 0) + (b.dmg or 0), (o.heal or 0) + (b.heal or 0)
+          o.fast, o.first, o.last = Lowest(o.fast, b.fast), Lowest(o.first, b.first), b.last or o.last
+          o.dps, o.hps = math.max(o.dps or 0, b.dps or 0), math.max(o.hps or 0, b.hps or 0)
+        end
+      end
+    elseif k == "best" then
+      for f, b in pairs(v) do
+        local o = mine[f]
+        if f == "rollLo" then mine[f] = Lowest(o, b)
+        elseif type(b) == "number" then mine[f] = math.max(o or b, b)
+        elseif type(o) ~= "table" or (b.amt or 0) > (o.amt or 0) then mine[f] = b end
+      end
+    else into[k] = v end
+  end
+  if into.killNames then
+    local n = 0
+    for _ in pairs(into.kills or {}) do n = n + 1 end
+    into.killNames = n
+  end
+end
+
+-- Records saved while Forever reported no realm ("Name-") go back under the realm, merged with what is there.
+local function MoveBlankKeys(list, realm)
+  local blank = {}
+  for key, entry in pairs(list) do
+    if type(key) == "string" and key:sub(-1) == "-" and type(entry) == "table" then blank[key] = entry end
+  end
+  for key, entry in pairs(blank) do
+    local r = FunStatsDB.realms[ServerOf(entry.guid) or ""] or realm
+    if r ~= "" then
+      local old = list[key .. r]
+      list[key] = nil
+      if type(old) == "table" then
+        if (entry.lastSeen or 0) < (old.lastSeen or 0) then old, entry = entry, old end
+        MergeRecord(old, entry)
+        entry = old
+      end
+      entry.realm = r
+      list[key .. r] = entry
+    end
+  end
+end
+
 local function InitCharacter()
   FunStatsDB = FunStatsDB or {}
   FunStatsDB.v = DB_VERSION
@@ -426,6 +511,15 @@ local function InitCharacter()
   MoveServerKeys(FunStatsDB.chars)
   MoveServerKeys(FunStatsDB.observed)
   MoveServerKeys(FunStatsDB.synced)
+  FunStatsDB.realms = FunStatsDB.realms or {}   -- server number in the GUID -> realm name
+  for _, c in pairs(FunStatsDB.chars) do
+    local server = type(c) == "table" and ServerOf(c.guid)
+    if server and type(c.realm) == "string" and c.realm ~= "" then FunStatsDB.realms[server] = FunStatsDB.realms[server] or c.realm end
+  end
+  local realm = GetRealmName()
+  MoveBlankKeys(FunStatsDB.chars, realm)
+  MoveBlankKeys(FunStatsDB.observed, realm)
+  MoveBlankKeys(FunStatsDB.synced, realm)
   -- Random id for this WoW account, so the website can tell observers apart.
   FunStatsDB.id = FunStatsDB.id or ("a" .. time() .. math.random(100000, 999999))
   -- Private upload code: proves on the website that this install's characters are yours.
