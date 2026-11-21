@@ -1235,9 +1235,46 @@
       oldLost ? tr("{0} older deaths have no recorded position.", num(oldLost)) : "",
     ].filter(Boolean).join(" ");
   }
-  // A close-up of where something happened: its zone's map (else its continent's) cropped around the spot, with a pin.
+  // The game's minimap, where make_maps.py built it (site/maps/mini/<game>.json): which tiles exist (open sea has none)
+  // and each continent's and zone's place in the world, [world map, x0, x1, y0, y1]. Pages redraw once it's in.
+  const miniCache = {};
+  function miniIndex() {
+    const g = mapGame();
+    if (!(g in miniCache)) {
+      miniCache[g] = null;
+      fetch(`maps/mini/${g}.json`).then(r => (r.ok ? r.json() : null)).catch(() => null).then(ix => {
+        if (!ix || !ix.boxes) return;
+        miniCache[g] = { ...ix, has: Object.fromEntries(Object.entries(ix.tiles || {}).map(([w, l]) => [w, new Set(l)])) };
+        render();
+      });
+    }
+    return miniCache[g];
+  }
+  // Where in the world a record happened: from its zone position if it has one (finer), else its continent position.
+  function worldSpot(d, mi) {
+    const on = (id, x, y) => {
+      const b = mi.boxes[id];
+      return b && x != null && y != null ? { w: b[0], wx: b[2] - y / 100 * (b[2] - b[1]), wy: b[4] - x / 100 * (b[4] - b[3]) } : null;
+    };
+    return (d.map != null && on(d.map, d.x, d.y)) || (d.cont != null && on(d.cont, d.cx, d.cy)) || null;
+  }
+  // The close-up on the minimap: a window SW x SH minimap pixels (about 300 x 200 yards) around the spot.
+  const SW = 144, SH = 96;
+  function miniSpot(d, big) {
+    const mi = miniIndex(), at = mi && worldSpot(d, mi), has = at && mi.has[at.w];
+    if (!has) return "";
+    const px = (32 - at.wy / mi.tile) * 256, py = (32 - at.wx / mi.tile) * 256, x0 = px - SW / 2, y0 = py - SH / 2, imgs = [];
+    for (let row = Math.floor(y0 / 256); row <= Math.floor((y0 + SH) / 256); row++)
+      for (let col = Math.floor(x0 / 256); col <= Math.floor((x0 + SW) / 256); col++)
+        if (has.has(row * 64 + col)) imgs.push(`<img src="maps/mini/${mapGame()}-${at.w}/${row * 64 + col}.webp" alt="" loading="lazy" decoding="async" style="left:${(col * 256 - x0) / SW * 100}%;top:${(row * 256 - y0) / SH * 100}%;width:${25600 / SW}%;height:${25600 / SH}%">`);
+    return imgs.length ? `<span class="spot mini${big ? " big" : ""}" aria-hidden="true">${imgs.join("")}<i style="left:50%;top:50%"></i></span>` : "";
+  }
+  // A close-up of where something happened: the minimap around it, else its zone's map (else its continent's) cropped
+  // around the spot, with a pin.
   // shortcut: the maps are the realm picker's game, so a character from another game's realm gets no close-up there.
   function spotMap(d, big) {
+    const mini = miniSpot(d, big);
+    if (mini) return mini;
     const atlas = pickAtlas(), built = (state.mapIndex || {})[mapGame()] || [];
     let id, x, y;
     if (d.map != null && d.x != null && built.includes(+d.map)) [id, x, y] = [+d.map, +d.x, +d.y];

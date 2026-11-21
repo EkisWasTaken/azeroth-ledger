@@ -23,7 +23,12 @@ A zone's map is its own 0-1 map space, the one zone positions (the addon's x, y)
 It also writes design/maps-check/<build>-<continent>.png: the same art with every zone's rectangle from
 UiMapAssignment drawn on top, to check by eye that zones and art agree (git-ignored).
 
-Usage: python design/src/make_maps.py [era] [tbc] [mop] [forever] [map id ...]   (or: make_maps.py hl [builds] for only the zone glows and shapes)
+It can also write the game's minimap (the detailed top-down ground, 256 px per 533 1/3 yards) for the close-ups of where
+something happened: site/maps/mini/<build>-<map>/<tile>.webp, tile = row * 64 + column as the WDT numbers them, and
+site/maps/mini/<build>.json with the tiles that exist and each continent's and zone's place in the world.
+
+Usage: python design/src/make_maps.py [era] [tbc] [mop] [forever] [map id ...]   (or: make_maps.py hl [builds] for only the zone glows and shapes,
+       make_maps.py mini [builds] for only the minimap)
          (all builds and top maps when none is named; needs Pillow: pip install pillow; downloads are cached in design/.map-cache)
 The map art is Blizzard Entertainment's; the site credits it under the map.
 """
@@ -224,12 +229,64 @@ def highlights(build):
     json.dump(shapes, open(os.path.join(OUT, f"{build}-shapes.json"), "w"), separators=(",", ":"))
 
 
+TILE = 1600 / 3  # yards per minimap tile (one ADT)
+
+
+def wdt_minimap(build, wdt_fid):
+    """A WDT's minimap textures: {tile: FileDataID}, from its MAID chunk (eight file ids per tile, the last the minimap)."""
+    path = fetch(f"https://wago.tools/api/casc/{wdt_fid}?version={BUILDS[build]}&download", os.path.join(CACHE, f"{build}_{wdt_fid}.wdt"))
+    d, i = open(path, "rb").read(), 0
+    while i < len(d):
+        tag, n = d[i:i + 4][::-1], int.from_bytes(d[i + 4:i + 8], "little")
+        if tag == b"MAID":
+            v = [int.from_bytes(d[i + 8 + k * 4:i + 12 + k * 4], "little") for k in range(n // 4)]
+            return {t: v[t * 8 + 7] for t in range(n // 32) if v[t * 8 + 7]}
+        i += 8 + n
+    return {}
+
+
+def minimap(build):
+    """The minimap tiles of every continent the site draws (open sea left out: the site paints it), and where each
+    continent and zone sits in the world, so the site can turn a map position into a spot on the tiles."""
+    wdt = {int(r["ID"]): int(r["WdtFileDataID"]) for r in table(build, "Map")}
+    assign = {}
+    for r in table(build, "UiMapAssignment"):
+        assign.setdefault(int(r["UiMapID"]), {k: float(v) for k, v in r.items() if k.startswith(("Ui", "Region")) or k == "MapID"})
+    boxes, tiles = {}, {}
+    for cont, (name, kind) in TOP[build].items():
+        if kind != 3 or cont not in assign:
+            continue  # Azeroth spans two worlds; its continents are drawn on their own
+        for m in [cont] + zone_ids(build, cont, kind):
+            a = assign.get(m)
+            if a and (a["UiMin_0"], a["UiMin_1"], a["UiMax_0"], a["UiMax_1"]) == (0, 0, 1, 1):
+                boxes[m] = [int(a["MapID"]), round(a["Region_0"], 1), round(a["Region_3"], 1), round(a["Region_1"], 1), round(a["Region_4"], 1)]
+        world = int(assign[cont]["MapID"])
+        out = os.path.join(OUT, "mini", f"{build}-{world}")
+        os.makedirs(out, exist_ok=True)
+        kept = []
+        for t, fid in sorted(wdt_minimap(build, wdt[world]).items()):
+            path = os.path.join(out, f"{t}.webp")
+            if not os.path.exists(path):
+                im = blp(build, fid).convert("RGB")
+                if max(hi - lo for lo, hi in im.getextrema()) < 24:
+                    continue  # one flat colour: open sea
+                im.resize((256, 256), Image.LANCZOS).save(path, "WEBP", quality=70, method=6)
+            kept.append(t)
+        tiles[world] = kept
+        print(f"{build} {name}: {len(kept)} minimap tiles")
+    json.dump({"tile": TILE, "boxes": boxes, "tiles": tiles}, open(os.path.join(OUT, "mini", f"{build}.json"), "w"), separators=(",", ":"))
+
+
 def main():
     for d in (CACHE, CHECK, OUT):
         os.makedirs(d, exist_ok=True)
     font = ImageFont.load_default(size=12)
     only = [int(a) for a in sys.argv[1:] if a.isdigit()]
     builds = [b for b in BUILDS if b in sys.argv[1:]] or BUILDS
+    if "mini" in sys.argv[1:]:  # only the minimap: python make_maps.py mini [builds]
+        for build in builds:
+            minimap(build)
+        return
     if "hl" in sys.argv[1:]:  # only the zone glows and shapes: python make_maps.py hl [builds]
         for build in builds:
             highlights(build)

@@ -572,15 +572,16 @@ button.zl:hover span:first-child, button.zl:focus-visible span:first-child { tex
 .mapside .inst { font-size: 13px; line-height: 1.5; }
 .mapside .inst b { color: var(--ink); }
 /* a close-up of where something happened: the zone's art at 6x behind a small window, a pin on the spot */
-.spot { position: relative; display: block; flex: none; width: 88px; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 6px; background: #1a1206;
+.spot { position: relative; display: block; flex: none; width: 96px; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 6px; background: #1a1206;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), inset 0 0 8px rgba(0, 0, 0, .6); }
-.spot.big { width: 120px; }
+.spot.big { width: 144px; }
+.spot.mini { background: #0e2a33; } /* open sea, which has no minimap tiles */
 .spot img { position: absolute; width: 600%; height: 600%; max-width: none; }
 .spot i { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 2px #fff, 0 0 6px #000; }
 .spotrow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; }
 .spotrow > :only-child { grid-column: 1 / -1; }
 .grave { grid-template-columns: auto minmax(0, 1fr) auto; }
-@media (max-width: 480px) { .spot.big { width: 84px; } }
+@media (max-width: 480px) { .spot.big { width: 96px; } }
 @keyframes mkpop { from { opacity: 0; transform: translate(-50%, -50%) scale(0); } }
 .mapmarks.replaying .mk { animation: mkpop .35s steps(3) both; animation-delay: var(--d); }
 
