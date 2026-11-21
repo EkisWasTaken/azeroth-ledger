@@ -580,8 +580,8 @@ button.zl:hover span:first-child, button.zl:focus-visible span:first-child { tex
 .spot i { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 2px #fff, 0 0 6px #000; }
 .spotrow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; }
 .spotrow > :only-child { grid-column: 1 / -1; }
-.grave { grid-template-columns: auto minmax(0, 1fr) auto; }
-@media (max-width: 480px) { .spot.big { width: 96px; } }
+#hcFallen .grave { grid-template-columns: auto minmax(0, 1fr) auto; } /* beats the shared .grave rule further down */
+@media (max-width: 480px) { .spot.big { width: 144px; } #hcFallen .grave { grid-template-columns: auto minmax(0, 1fr); } #hcFallen .grave .spot { grid-column: 2; } }
 @keyframes mkpop { from { opacity: 0; transform: translate(-50%, -50%) scale(0); } }
 .mapmarks.replaying .mk { animation: mkpop .35s steps(3) both; animation-delay: var(--d); }
 
