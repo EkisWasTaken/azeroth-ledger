@@ -1253,10 +1253,11 @@
     for (const e of pool) if (out.length < n && !out.includes(e)) out.push(e); // too few kinds: the cap gives way
     return out;
   }
-  // On the atlas a card flies the map to its spot; elsewhere it's only a picture (no jump to another page).
+  // On the atlas a card flies the map to its spot. Elsewhere only its "Show on map" link opens the atlas there,
+  // so a stray click on the picture doesn't leave the page.
   const hlCards = (list, key) => list.map((e, i) => key === "map"
     ? `<button type="button" class="hlc" data-hl="${key}:${i}">${spotMap(e.d, "card")}<span>${mapTip(e)}</span></button>`
-    : `<div class="hlc">${spotMap(e.d, "card")}<span>${mapTip(e)}</span></div>`).join("");
+    : `<div class="hlc">${spotMap(e.d, "card")}<span>${mapTip(e)}</span><button type="button" class="linkbtn" data-hl="${key}:${i}">${tr("Show on map")} ›</button></div>`).join("");
   // The overview's row of the range's best moments, from everyone and every kind.
   function renderWhere(people) {
     const hl = state.hl.ov = pickHighlights(mapEvents(people, null), 4);
@@ -1354,7 +1355,11 @@
     if (e.target.closest("[data-mapup]")) closeZone();
     if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; if (l.dataset.layer === "wanted") state.map.wanted = ""; render(); }
     const hb = e.target.closest("[data-hl]");
-    if (hb) flyTo(state.hl.map[+hb.dataset.hl.split(":")[1]]);
+    if (hb) {
+      const [k, i] = hb.dataset.hl.split(":");
+      if (k === "ov") setPage("atlas");
+      flyTo(state.hl[k][+i]);
+    }
     const pz = e.target.closest("[data-placezone]");
     if (pz) {
       Object.assign(state.map, { cont: pz.dataset.placecont, zone: "", trail: [] });

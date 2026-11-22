@@ -570,6 +570,7 @@ button.zl:hover span:first-child, button.zl:focus-visible span:first-child { tex
 .hlc { display: grid; gap: 8px; align-content: start; padding: 8px; border: 0; border-radius: var(--r); background: var(--track);
   color: inherit; font: inherit; font-size: 13px; line-height: 1.4; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
 div.hlc { cursor: default; }
+div.hlc .linkbtn { justify-self: start; }
 button.hlc:hover, button.hlc:focus-visible { outline: 1px solid var(--accent); }
 .spot.card { width: 100%; }
 .spot.card i { width: 12px; height: 12px; margin: -6px 0 0 -6px; }
