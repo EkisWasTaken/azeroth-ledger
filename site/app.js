@@ -257,7 +257,7 @@
     "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer", "Boss kills": "Boss-kills",
     "Gold before max level": "Guld innan maxnivå", "looted and spent while levelling": "lootat och spenderat under levlingen",
     "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
-    "Click a zone to open its map. Scroll to zoom, drag to move, right-click or scroll out to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka eller scrolla ut för att gå tillbaka.",
+    "Click a zone to open its map. Scroll to zoom, drag to move, right-click to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka för att gå tillbaka.",
     "Choose a friend": "Välj en vän", "Settings": "Inställningar", "Theme": "Tema", "Overview": "Översikt",
     "Die {0} times": "Dö {0} gånger", "Play {0} without dying": "Spela {0} utan att dö", "Deal {0} damage": "Gör {0} damage", "Heal {0}": "Heala {0}", "Land {0} killing blows": "Ta {0} killing blows", "Land a single hit of {0} or more": "Gör en träff på {0} eller mer", "Crit on {0} of your hits (100+ hits)": "Gör crit på {0} av dina träffar (100+ träffar)", "Deal {0} damage past a kill": "Gör {0} damage efter att målet dött", "Fall to your death {0} times": "Fall ihjäl {0} gånger", "Spend {0} dead": "Var död i {0}", "Take {0} damage": "Ta {0} damage", "Dodge, parry or block {0} attacks": "Dodga, parrya eller blocka {0} attacker", "Get {0} healing from friends": "Få {0} healing från vänner", "Turn in {0} quests": "Lämna in {0} quests", "Jump {0} times": "Hoppa {0} gånger", "Travel {0} yards on foot": "Gå {0} yards", "Loot {0} gold": "Loota {0} guld", "Pay {0} gold for repairs": "Betala {0} guld för reparationer", "Say sorry {0} times in chat": "Säg förlåt {0} gånger i chatten", "Send {0} chat messages": "Skicka {0} chattmeddelanden", "Loot {0} rare or better items": "Loota {0} rare eller bättre", "Loot {0} grey items": "Loota {0} gråa saker", "Average {0} or more on /roll (10+ rolls)": "Ha {0} eller mer i snitt på /roll (10+ rolls)", "Win {0} duels": "Vinn {0} dueller", "Run {0} dungeons": "Kör {0} dungeons", "Spend {0} on flight paths": "Flyg {0} med flight paths", "Spend {0} AFK": "Var AFK i {0}", "Kill {0} bosses": "Döda {0} bossar", "Kill {0} enemy players": "Döda {0} fiendespelare", "Cast {0} spells": "Kasta {0} spells", "Spend {0} in combat": "Var i strid i {0}", "Roll a perfect 100 {0} times": "Slå 100 {0} gånger", "Roll a 1 {0} times": "Slå 1 {0} gånger", "Use your Hearthstone {0} times": "Använd Hearthstone {0} gånger", "Swim for {0}": "Simma i {0}", "Use {0} emotes": "Använd {0} emotes", "Spend {0} gold": "Spendera {0} guld", "Overheal {0}": "Överheala {0}", "Be in {0} boss wipes": "Var med i {0} boss-wipes", "Miss {0} attacks": "Missa {0} attacker", "Lose {0} duels": "Förlora {0} dueller", "Drown {0} times": "Drunkna {0} gånger", "Goals": "Mål", "Achievement tiers": "Achievement-nivåer", "Legendary achievement": "Legendary achievement", "Epic achievement": "Epic achievement", "reached {0} on {1}": "nådde {0} på {1}", "Unlocked by": "Upplåst av", "Locked": "Låst", "Next: {0}": "Nästa: {0}",
     "{0} of {1}": "{0} av {1}", "+{0} more": "+{0} till",
@@ -971,7 +971,7 @@
   // Drag, pinch, scroll and the zoom buttons (wired up once the page helpers exist).
   function initMapZoom() {
     const box = $("map"), pts = new Map();
-    let last = null, moved = false, pinch = 0, wheelHold = 0;
+    let last = null, moved = false, pinch = 0;
     const rel = (x, y) => { const r = box.getBoundingClientRect(); return [x - r.left, y - r.top]; };
     const release = () => { pts.clear(); last = null; pinch = 0; box.classList.remove("dragging"); };
     box.addEventListener("pointerdown", e => {
@@ -1012,15 +1012,13 @@
     // A drag isn't a click on whatever marker it started on. moved is cleared on the next press too, so a drag that
     // ended without a click (released outside the map) can't swallow the next real click.
     box.addEventListener("click", e => { if (moved) { e.stopPropagation(); moved = false; } }, true);
-    // Scrolling over the map zooms it, like the game's map. Scrolling out past fully zoomed out goes up a level (zone to
-    // continent to Azeroth); only on the top map, fully zoomed out, does the page scroll on. A trackpad flick sends many
-    // events, so after a change of map the wheel waits a moment.
+    // Scrolling over the map zooms it within the map that's open, like the game's map. Once fully zoomed out, scrolling
+    // out scrolls the page on: it never leaves for the continent or Azeroth (the back link and a right-click do that).
     box.addEventListener("wheel", e => {
-      const v = mapView(), out = e.deltaY > 0, m = state.map;
-      if (out && v.z <= 1.01 && !m.zone && !worldOf(m.cont)) return;
+      const v = mapView(), out = e.deltaY > 0;
+      if (out && v.z <= 1.01) return;
       e.preventDefault();
-      if (mapBusy || Date.now() < wheelHold) return;
-      if (out && v.z <= 1.01) { wheelHold = Date.now() + 500; closeZone(); return; }
+      if (mapBusy) return;
       const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
       zoomMap(Math.exp(-px * .0025), ...rel(e.clientX, e.clientY));
     }, { passive: false });
