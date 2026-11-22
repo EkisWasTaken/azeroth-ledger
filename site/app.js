@@ -1055,20 +1055,13 @@
     if (window.ResizeObserver) new ResizeObserver(() => { if (state.map) applyMapView(); }).observe(box);
   }
 
-  // Deaths get the game's own corpse skull from its world map (red for PvP, site/maps/icons/); level-ups and loot a
-  // round pin with a game icon (Wowhead). The same few files for every marker, so the browser fetches each once.
-  const MAP_ICON = {
-    pvpkills: () => "ability_dualwield",
-    dings: () => "spell_holy_innerfire",
-    loot: e => (e.d.q >= 4 ? "inv_misc_gem_amethyst_02" : "inv_misc_bag_10"),
-  };
-  const mapIcon = e => e.kind === "deaths" || e.kind === "wanted"
-    ? `<img class="skull${e.kind === "wanted" ? " wanted" : ""}" src="maps/icons/${e.d.cause === "player" ? "skull-red" : "skull"}.png" width="22" height="22" alt="">`
-    : `<span class="pin ${e.kind}"><img src="https://wow.zamimg.com/images/wow/icons/medium/${MAP_ICON[e.kind](e)}.jpg" width="18" height="18" alt=""></span>`;
-  // Markers closer than about one marker's width at the current zoom are one marker with a count; clicking it zooms in.
+  // Markers are small dots coloured by kind (the chips above carry the same colours): pictures with shadows made
+  // hundreds of markers slow to pan and hid where things happened. A wanted kill gets a ringed dot.
+  const mapDot = (e, n) => `<i class="mdot ${e.kind}">${n > 1 ? n : ""}</i>`;
+  // Markers closer than about two dots' width at the current zoom are one marker with a count; clicking it zooms in.
   let markBucket = "";
   function renderMarks() {
-    const shown = state.mapShown || [], v = mapView(), r = 3.2 / v.z, groups = [];
+    const shown = state.mapShown || [], v = mapView(), r = 2 / v.z, groups = [];
     markBucket = mapKey() + ":" + Math.round(Math.log2(v.z) * 3);
     shown.forEach((e, i) => {
       // map space is 3:2, so a step down counts two thirds of a step across
@@ -1081,7 +1074,7 @@
     $("mapMarks").innerHTML = groups.map((g, gi) => {
       const lead = shown[g.list.find(i => shown[i].kind === kindOf(g.list))];
       const label = g.list.length > 1 ? tr("{0} events here", g.list.length) : (lead.d._char || lead.p.name);
-      return `<button type="button" class="mk${g.list.length > 1 ? " group" : ""}" data-g="${gi}" style="left:${g.x}%;top:${g.y}%;--d:${(gi / Math.max(1, groups.length) * 6).toFixed(2)}s" aria-label="${esc(label)}">${mapIcon(lead)}${g.list.length > 1 ? `<b>${g.list.length}</b>` : ""}</button>`;
+      return `<button type="button" class="mk${g.list.length > 1 ? " group" : ""}" data-g="${gi}" style="left:${g.x}%;top:${g.y}%;--d:${(gi / Math.max(1, groups.length) * 6).toFixed(2)}s" aria-label="${esc(label)}">${mapDot(lead, g.list.length)}</button>`;
     }).join("");
   }
   // Where on its continent something happened: the addon's own continent position, or, for records uploaded
@@ -1326,7 +1319,7 @@
     Object.assign(m, { cont: ev.cont, zone: "", trail: [] });
     m.layers[ev.kind] = true;
     if (m.who && m.who !== ev.p.id) m.who = "";
-    render();
+    renderMap(state.people);
     const v = mapView(), box = $("map"), z = MAX_ZOOM;
     box.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
     await glide(() => { Object.assign(v, { z, x: box.clientWidth / 2 - box.clientWidth * z * ev.x / 100, y: box.clientHeight / 2 - box.clientHeight * z * ev.y / 100 }); applyMapView(); });
@@ -1351,9 +1344,9 @@
   }
   document.addEventListener("click", e => {
     const c = e.target.closest("#mapConts [data-cont]"), l = e.target.closest("#s-map [data-layer]"), mk = e.target.closest(".mk");
-    if (c) { state.map.cont = c.dataset.cont; state.map.zone = ""; state.map.trail = []; render(); }
+    if (c) { state.map.cont = c.dataset.cont; state.map.zone = ""; state.map.trail = []; renderMap(state.people); }
     if (e.target.closest("[data-mapup]")) closeZone();
-    if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; if (l.dataset.layer === "wanted") state.map.wanted = ""; render(); }
+    if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; if (l.dataset.layer === "wanted") state.map.wanted = ""; renderMap(state.people); }
     const hb = e.target.closest("[data-hl]");
     if (hb) {
       const [k, i] = hb.dataset.hl.split(":");
@@ -1379,8 +1372,8 @@
     } else if (!e.target.closest("#mapTip")) { const t = document.getElementById("mapTip"); if (t) t.hidden = true; }
     if (e.target.closest("#mapReplay")) { const box = $("mapMarks"); box.classList.remove("replaying"); void box.offsetWidth; box.classList.add("replaying"); }
   });
-  document.addEventListener("mouseover", e => { const mk = e.target.closest(".mk"); if (mk) showMapTip(mk); });
-  document.addEventListener("focusin", e => { const mk = e.target.closest(".mk"); if (mk) showMapTip(mk); });
+  // Details open on a click, or on reaching a marker with the keyboard; never on hover, which popped them up everywhere.
+  document.addEventListener("focusin", e => { const mk = e.target.closest(".mk"); if (mk && mk.matches(":focus-visible")) showMapTip(mk); });
 
   // ---------- charts ----------
   const $ = id => document.getElementById(id);
@@ -4360,7 +4353,7 @@
     });
   }).observe($("pSheet"), { subtree: true, childList: true, attributes: true, attributeFilter: ["data-wh-icon-added"] });
   initMapZoom();
-  $("mapWho").addEventListener("change", e => { state.map.who = e.target.value; render(); });
+  $("mapWho").addEventListener("change", e => { state.map.who = e.target.value; renderMap(state.people); });
   $("realmSel").addEventListener("change", e => {
     state.realm = e.target.value;
     try { localStorage.setItem("ledger-realm-v3", state.realm); } catch (err) { /* remembering is optional */ }
