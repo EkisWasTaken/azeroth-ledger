@@ -1075,6 +1075,16 @@
       return `<button type="button" class="mk${g.list.length > 1 ? " group" : ""}" data-g="${gi}" style="left:${g.x}%;top:${g.y}%;--d:${(gi / Math.max(1, groups.length) * 6).toFixed(2)}s" aria-label="${esc(label)}">${mapDot(lead, g.list.length)}</button>`;
     }).join("");
   }
+  // A PvP kill the app read from the combat log (1.13.7 on) has the world position and map (uiMapID) of where the
+  // enemy fell: here a position on that map, through the map's place in the world (site/maps/mini/<game>.json).
+  function fromWorld(k) {
+    if (k.cx != null || k.wx == null) return k;
+    const mi = miniIndex(), b = mi && mi.boxes[k.um];
+    if (!b) return k;
+    let zone = k.zone;
+    for (const a of Object.values(pickAtlas())) { const z = !zone && a && a.zones && a.zones.find(q => q.id === +k.um); if (z) zone = z.n; }
+    return { ...k, map: +k.um, x: (b[4] - k.wy) / (b[4] - b[3]) * 100, y: (b[2] - k.wx) / (b[2] - b[1]) * 100, zone };
+  }
   // Where on its continent something happened: the addon's own continent position, or, for records uploaded
   // without one, the zone position placed through the zone's rectangle (what C_Map.GetMapRectOnMap does in game).
   function contSpot(d, atlas) {
@@ -1102,8 +1112,8 @@
         out.push({ kind: "deaths", p, t: d.t, ...at, d });
         if (wanted && d.cause === "player" && plainName(d.by) === plainName(wanted)) out.push({ kind: "wanted", p, t: d.t, ...at, d });
       }
-      for (const ch of p.chars) for (const k of asArr(ch.pvpKills)) {
-        const at = k && ok(k.t) && contSpot(k, atlas);
+      for (const ch of p.chars) for (const raw of asArr(ch.pvpKills)) {
+        const k = raw && fromWorld(raw), at = k && ok(k.t) && contSpot(k, atlas);
         if (at) out.push({ kind: "pvpkills", p, t: k.t, ...at, d: { ...k, _char: ch.name } });
       }
       for (const n of p.notable) { const at = n.cx != null && ok(n.t) && onTop(n.cont, n.cx, n.cy, atlas); if (at) out.push({ kind: "loot", p, t: n.t, ...at, d: n }); }
@@ -1219,7 +1229,7 @@
       + (ins.length ? `<div class="lh">${tr("Inside instances")}</div><p class="muted inst">${ins.slice(0, 6).map(([z, n]) => `${esc(z)} <b>${num(n)}</b>`).join(" · ")}${ins.length > 6 ? " · " + tr("and {0} more", ins.length - 6) : ""}</p>` : "");
     // What can't be placed, and why: kills named from the combat log carry no position, and the oldest uploads had none.
     const pvpLost = (m.who ? people.filter(p => p.id === m.who) : people).flatMap(p => p.chars.flatMap(ch => asArr(ch.pvpKills)))
-      .filter(k => k && k.t && inRange(localKey(k.t)) && !contSpot(k, atlas)).length;
+      .filter(k => k && k.t && inRange(localKey(k.t)) && !contSpot(fromWorld(k), atlas)).length;
     const oldLost = deaths.filter(d => !d.inst && !contSpot(d, atlas)).length;
     $("mapNote").textContent = [
       pvpLost ? tr("{0} more PvP kills have no recorded position.", num(pvpLost)) : "",

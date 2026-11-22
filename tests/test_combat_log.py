@@ -5,6 +5,7 @@ Needs Windows and a built site/AzerothLedger.exe; skipped otherwise.
 """
 
 import json
+import re
 import os
 import shutil
 import subprocess
@@ -305,6 +306,35 @@ class CombatLog(unittest.TestCase):
         self.assertEqual([k["name"] for k in kills], ["Gank Alot", "Stab Bob"])
         self.assertEqual(self.run_app()["pvpKills"], kills)  # reading again adds nothing
 
+    def test_enemy_players_killed_keep_where_they_fell(self):
+        foe = 'Player-4700-00000C01,"Gank-Alot-PvP-EU",0x548,0x80000000'
+        foe2 = 'Player-4700-00000C02,"Stab-Bob-PvP-EU",0x548,0x80000000'
+        foe2_block = "Player-4700-00000C02,0000000000000000,300,900,0,0,100,0,0,0,0,0,0,0,-12471.68,120.15,1434,4.7882,38"
+        self.write(STANDARD + [
+            # a melee hit's unit details are mine (block()), a spell's are the target's
+            line(f"SWING_DAMAGE,{me()},{foe},{block()},50,50,-1,1,0,0,0,nil,nil,nil", 10),
+            line(f"UNIT_DIED,{nobody()},{foe},0", 11),
+            line(f'SPELL_DAMAGE,{me()},{foe2},145,"Fireball",0x4,{foe2_block},300,180,20,4,0,0,0,nil,nil,nil,ST', 12),
+            line(f"UNIT_DIED,{nobody()},{foe2},0", 13),
+        ])
+        kills = {k["name"]: k for k in self.run_app()["pvpKills"]}
+        self.assertEqual((kills["Gank Alot"]["wx"], kills["Gank Alot"]["wy"], kills["Gank Alot"]["um"]), (-9253.2, 446.55, 1429))
+        self.assertEqual((kills["Stab Bob"]["wx"], kills["Stab Bob"]["wy"], kills["Stab Bob"]["um"]), (-12471.68, 120.15, 1434))
+
+    def test_kills_counted_before_get_their_place_from_the_logs_still_there(self):
+        foe = 'Player-4700-00000C01,"Gank-Alot-PvP-EU",0x548,0x80000000'
+        self.write(STANDARD + [line(f"SWING_DAMAGE,{me()},{foe},{block()},50,50,-1,1,0,0,0,nil,nil,nil", 10),
+                               line(f"UNIT_DIED,{nobody()},{foe},0", 11)])
+        days = self.run_app()["days"]
+        # pretend the totals came from 1.13.6: kills without a place, counted by rules 3
+        text = self.totals.read_text(encoding="utf-8")
+        text = re.sub(r'\["(wx|wy|um)"\]=[-\d.]+,?', "", text).replace('["killRules"]=4,', '["killRules"]=3,')
+        self.totals.write_text(text, encoding="utf-8")
+        d = self.run_app()
+        kill = d["pvpKills"][0]
+        self.assertEqual((kill["wx"], kill["wy"], kill["um"]), (-9253.2, 446.55, 1429))
+        self.assertEqual(d["days"], days)  # read again for the places, nothing is counted twice
+
     def test_a_pets_last_hit_counts_once(self):
         pet = 'Pet-0-4621-0-116-299-0100000001,"Kitty",0x1111,0x80000000'
         foe = 'Player-4700-00000C01,"Gank-Alot-PvP-EU",0x548,0x80000000'
@@ -330,9 +360,9 @@ class CombatLog(unittest.TestCase):
         self.run_app()
         # pretend the totals came from 1.13.3: its rules counted 1 kill, and it had no pet recount yet
         text = self.totals.read_text(encoding="utf-8")
-        self.assertIn('["killRules"]=3', text)
+        self.assertIn('["killRules"]=4', text)
         self.assertIn('["kb"]=2,', text)
-        text = text.replace('["killRules"]=3,' + chr(10), "").replace('["kb"]=2,', '["kb"]=1,').replace('["hk"]=1,', "")
+        text = text.replace('["killRules"]=4,' + chr(10), "").replace('["kb"]=2,', '["kb"]=1,').replace('["hk"]=1,', "")
         self.totals.write_text(text, encoding="utf-8")
         day = self.run_app()["days"][DAY]
         self.assertEqual((day["kb"], day["hk"]), (2, 1))
@@ -376,8 +406,8 @@ class CombatLog(unittest.TestCase):
         self.run_app()
         # pretend 1.13.4 made these totals: it also counted the pet's hit
         text = self.totals.read_text(encoding="utf-8")
-        self.assertIn('["killRules"]=3', text)
-        text = text.replace('["killRules"]=3,', '["petKills"]=true,').replace('["kb"]=1,', '["kb"]=2,["hk"]=1,')
+        self.assertIn('["killRules"]=4', text)
+        text = text.replace('["killRules"]=4,', '["petKills"]=true,').replace('["kb"]=1,', '["kb"]=2,["hk"]=1,')
         self.totals.write_text(text, encoding="utf-8")
         for _ in range(2):  # taken back once, never again
             day = self.run_app()["days"][DAY]

@@ -24,7 +24,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.13.6.0")]
+[assembly: AssemblyVersion("1.13.7.0")]
 
 namespace AzerothLedger
 {
@@ -495,9 +495,10 @@ namespace AzerothLedger
         {
             public readonly Dictionary<string, Dictionary<string, object>> Players = new Dictionary<string, Dictionary<string, object>>();
             public bool Supported;
-            // How last hits are counted: 1 is app 1.13.3 (PARTY_KILL only), 2 is 1.13.4 (every lethal hit at once), 3 is now.
-            // Old rules stay so the totals they made can be corrected (RecountKills).
-            public const int CurrentRules = 3;
+            // How last hits are counted: 1 is app 1.13.3 (PARTY_KILL only), 2 is 1.13.4 (every lethal hit at once), 3 is 1.13.5,
+            // 4 is now (counted as 3, and PvP kills keep where they happened, so the logs still on disk are read once more to
+            // give the kills already uploaded their place). Old rules stay so the totals they made can be corrected (RecountKills).
+            public const int CurrentRules = 4;
             public int Rules = CurrentRules;
 
             // My lethal hits waiting for the unit's death. PARTY_KILL to me or no PARTY_KILL at all (Forever never sends one for
@@ -574,6 +575,9 @@ namespace AzerothLedger
 
             // Enemy players I hurt, by guid, and when: their death soon after is a kill I took part in.
             readonly Dictionary<string, double> hurt = new Dictionary<string, double>();
+            // ...and where: the world position and map (uiMapID) from the unit details of my last hit on them. Melee hits
+            // describe me, everything else the target; either is within a few yards of where they fell.
+            readonly Dictionary<string, double[]> hurtAt = new Dictionary<string, double[]>();
             const double AssistSeconds = 60;
 
             // An enemy player I killed or helped kill, by name, so the website can tell when one of us took down its Most Wanted.
@@ -583,7 +587,15 @@ namespace AzerothLedger
                 string who = Who(guid, name);
                 double t = Unix(stamp);
                 if (who == null || t <= 0) return;
-                Dict(p, "pvpKills")[guid + "|" + t.ToString("R", CultureInfo.InvariantCulture)] = new Dictionary<string, object> { { "t", t }, { "name", who } };
+                var kill = new Dictionary<string, object> { { "t", t }, { "name", who } };
+                double[] at;
+                if (hurtAt.TryGetValue(guid, out at)) { kill["wx"] = at[0]; kill["wy"] = at[1]; kill["um"] = at[2]; hurtAt.Remove(guid); }
+                Dict(p, "pvpKills")[guid + "|" + t.ToString("R", CultureInfo.InvariantCulture)] = kill;
+            }
+
+            static bool Real(string s, out double v)
+            {
+                return double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v);
             }
 
             static bool Long(List<string> f, int i, out long v)
@@ -713,7 +725,14 @@ namespace AzerothLedger
                     return;
                 }
 
-                if (i < f.Count && IsGuid(f[i])) i += BlockLength;
+                if (i < f.Count && IsGuid(f[i]))
+                {
+                    double x, y, map;
+                    if (fromMine && Enemy(dstFlags) && (f[i] == dst || f[i] == src) && i + 16 < f.Count
+                        && Real(f[i + 14], out x) && Real(f[i + 15], out y) && Real(f[i + 16], out map) && map > 0)
+                        hurtAt[dst] = new[] { x, y, map };
+                    i += BlockLength;
+                }
 
                 if (ev == "SPELL_CAST_SUCCESS")
                 {
@@ -883,7 +902,7 @@ namespace AzerothLedger
         }
 
         // The log's PvP kills join the addon's list (oldest first, as the addon keeps it). The addon may have seen the same
-        // kill from the honor count: the same name within a minute is that kill.
+        // kill from the honor count: the same name within a minute is that kill, and it takes the log's place if it has none.
         static void MergePvPKills(Dictionary<string, object> c, Dictionary<string, object> log)
         {
             object o;
@@ -891,7 +910,13 @@ namespace AzerothLedger
             Func<object, double> T = x => x is Dictionary<string, object> ? Num((Dictionary<string, object>)x, "t") : 0;
             Func<object, string> N = x => { object n; return x is Dictionary<string, object> && ((Dictionary<string, object>)x).TryGetValue("name", out n) ? n as string : null; };
             foreach (var k in log.Values)
-                if (!list.Any(x => N(x) == N(k) && Math.Abs(T(x) - T(k)) < 60)) list.Add(k);
+            {
+                var same = list.FirstOrDefault(x => N(x) == N(k) && Math.Abs(T(x) - T(k)) < 60) as Dictionary<string, object>;
+                var lk = k as Dictionary<string, object>;
+                if (same == null) list.Add(k);
+                else if (lk != null && lk.ContainsKey("wx") && !same.ContainsKey("cx") && !same.ContainsKey("wx"))
+                    foreach (var f in new[] { "wx", "wy", "um" }) same[f] = lk[f];
+            }
             if (list.Count == 0) return;
             c["pvpKills"] = list.OrderBy(T).Skip(Math.Max(0, list.Count - MaxPvPKills)).ToList();
         }
