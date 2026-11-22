@@ -184,7 +184,8 @@
     "Previous page": "Föregående sida", "Next page": "Nästa sida",
     "Gold": "Guld",  "Zoom in": "Zooma in", "Zoom out": "Zooma ut",
     "Show the whole continent": "Visa hela kontinenten", "Map of the Fallen": "De fallnas karta", "Every death, ding and drop, where it happened": "Varje död, ding och drop, där det hände",
-    "Level-ups": "Dings", "Where it happened": "Där det hände", "Open the atlas ›": "Öppna atlasen ›", "Inside instances": "Inne i instanser",
+    "Level-ups": "Dings", "Where it happened": "Där det hände", "Details": "Detaljer", "Click a dot on the map to see what happened there.": "Klicka på en prick på kartan för att se vad som hände där.",
+    "All {0} here": "Alla {0} här", "PvP death": "PvP-död", "Death": "Död", "PvP kill": "PvP-kill", "Level up": "Ding", "Killer": "Mördare", "Killing blow": "Dödande slag", "Where": "Var", "When": "När", "Open the atlas ›": "Öppna atlasen ›", "Inside instances": "Inne i instanser",
     "Nothing with a position in this range.": "Inget med en position under den här perioden.", "Pick something above to show on the map.": "Välj något ovan att visa på kartan.",
     "{0} more PvP kills have no recorded position.": "{0} PvP-kills till har ingen sparad position.", "{0} older deaths have no recorded position.": "{0} äldre dödsfall har ingen sparad position.",
     "Rare loot": "Rare loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
@@ -840,7 +841,6 @@
     const nz = Math.min(MAX_ZOOM, Math.max(1, v.z * f));
     if (nz === v.z) return;
     v.x = cx - (cx - v.x) * nz / v.z; v.y = cy - (cy - v.y) * nz / v.z; v.z = nz;
-    $("mapTip").hidden = true;
     applyMapView();
   }
   // ---------- zones: click one to zoom into its own map, right-click to zoom back out (as the game's map does) ----------
@@ -929,7 +929,7 @@
       return;
     }
     mapBusy = true;
-    $("mapTip").hidden = true; $("mapHover").hidden = true; showGlow(null);
+    $("mapHover").hidden = true; showGlow(null);
     const m = state.map;
     try {
       await loadArt(mapSrc(z.id)); // straight in once its art is ready; the map underneath keeps its view for the way back
@@ -944,7 +944,7 @@
     const m = state.map, up = !m.zone && worldOf(m.cont);
     if (mapBusy || (!m.zone && !up)) return;
     mapBusy = true;
-    $("mapTip").hidden = true; $("mapHover").hidden = true;
+    $("mapHover").hidden = true;
     const from = m.zone || m.cont;
     if (m.zone) m.zone = (m.trail || []).pop() || "";
     else Object.assign(m, { cont: up, trail: [] });
@@ -996,7 +996,7 @@
       const dx = e.clientX - last[0], dy = e.clientY - last[1];
       // a click that wobbles a little is still a click (a mouse 6 px, a finger 10)
       if (!moved && Math.hypot(dx, dy) < (e.pointerType === "mouse" ? 6 : 10)) return;
-      if (!moved) { moved = true; box.setPointerCapture(e.pointerId); box.classList.add("dragging"); $("mapTip").hidden = true; }
+      if (!moved) { moved = true; box.setPointerCapture(e.pointerId); box.classList.add("dragging"); }
       const v = mapView();
       v.x += dx; v.y += dy; last = [e.clientX, e.clientY];
       applyMapView();
@@ -1192,7 +1192,8 @@
     state.mapShown = shown;
     $("mapMarks").classList.remove("replaying");
     renderMarks();
-    $("mapTip").hidden = true;
+    state.mapPick = null;
+    renderDetail();
     showGlow(null);
     $("mapReplay").hidden = shown.length < 2;
     applyMapView();
@@ -1328,19 +1329,67 @@
     const i = (state.mapShown || []).findIndex(s => s.kind === ev.kind && s.t === ev.t && s.x === ev.x && s.y === ev.y);
     const gi = (state.mapGroups || []).findIndex(g => g.list.includes(i));
     const btn = gi >= 0 && document.querySelector(`#mapMarks [data-g="${gi}"]`);
-    if (btn) showMapTip(btn);
+    if (btn) pickMarker(btn, state.mapShown[i]);
   }
-  function showMapTip(btn) {
-    const g = (state.mapGroups || [])[+btn.dataset.g], tip = $("mapTip"), shown = state.mapShown || [];
+  // ---------- the details panel beside the map ----------
+  // A dot's story, in a panel next to the map instead of a tip over it: a single event in full, a cluster as a list
+  // to pick from. It empties whenever the map is drawn again.
+  state.mapPick = null;
+  function pickMarker(btn, one) {
+    const g = (state.mapGroups || [])[+btn.dataset.g], shown = state.mapShown || [];
     if (!g) return;
     const list = g.list.map(i => shown[i]).sort((a, b) => b.t - a.t);
-    tip.innerHTML = list.slice(0, 5).map(mapTip).join("<hr>")
-      + (list.length > 5 ? `<hr><span class="muted">${tr("and {0} more", list.length - 5)}${mapView().z < MAX_ZOOM ? " · " + tr("click to zoom in") : ""}</span>` : "");
-    tip.hidden = false;
-    const box = $("map").getBoundingClientRect(), r = btn.getBoundingClientRect();
-    const x = r.left - box.left + r.width / 2, y = r.top - box.top;
-    tip.style.left = Math.max(4, Math.min(x - tip.offsetWidth / 2, box.width - tip.offsetWidth - 4)) + "px";
-    tip.style.top = (y - tip.offsetHeight - 8 < 4 ? y + r.height + 8 : y - tip.offsetHeight - 8) + "px";
+    state.mapPick = { list, one: one || (list.length === 1 ? list[0] : null) };
+    document.querySelectorAll("#mapMarks .mk.on").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    renderDetail();
+  }
+  // One line per event, for a cluster's list.
+  function mapShort(e) {
+    const d = e.d, pvp = d.cause === "player";
+    const what = e.kind === "pvpkills" ? tr("killed {0}", esc(d.name)) : e.kind === "loot" ? `${tr("looted")} <span class="q${d.q}">[${esc(d.item || "")}]</span>`
+      : e.kind === "dings" ? tr("reached level {0}", esc(d.lvl)) : d.by ? tr(pvp ? "killed in PvP by {0}" : "killed by {0}", esc(d.by)) : tr("died");
+    return `<b>${esc(d._char || e.p.name)}</b> ${what}<small>${[esc(d.zone || ""), shortDate(localKey(e.t))].filter(Boolean).join(" · ")}</small>`;
+  }
+  // One event in full: a close-up, who, what, and the facts worth knowing (the killer, the blow, where and when).
+  function mapDetail(e) {
+    const d = e.d, pvp = d.cause === "player", facts = [];
+    const alt = d._char && d._char !== e.p.name ? ` <span class="muted">(${esc(d._char)})</span>` : "";
+    let tag, what;
+    if (e.kind === "deaths" || e.kind === "wanted") {
+      tag = tr(pvp ? "PvP death" : "Death");
+      what = d.cause === "fall" ? tr("fell to their death") : d.cause === "drown" ? tr("drowned")
+        : d.by ? tr(pvp ? "killed in PvP by {0}" : "killed by {0}", `<b>${esc(d.by)}</b>`) : tr("died");
+      if (pvp) facts.push([tr("Killer"), [d.byLvl && tr("Lvl {0}", esc(d.byLvl)), d.byRace && esc(tr(RACE[d.byRace] || d.byRace)), d.byClass && classOf({ class: d.byClass })[0]].filter(Boolean).join(" ")]);
+      facts.push([tr("Killing blow"), [d.spell && d.spell !== "Melee" ? esc(d.spell) : "", d.amt ? tr("{0} damage", num(d.amt)) : ""].filter(Boolean).join(" · ")]);
+      facts.push([tr("Level"), d.lvl ? esc(d.lvl) : ""]);
+    } else if (e.kind === "pvpkills") {
+      tag = tr("PvP kill");
+      what = tr("killed {0}", `<b>${esc(d.name)}</b>`);
+    } else if (e.kind === "loot") {
+      tag = tr((QUAL[d.q] || QUAL[3])[0]);
+      what = `${tr("looted")} ${itemHTML(d)} ${dropTags(d)}`;
+    } else {
+      tag = tr("Level up");
+      what = tr("reached level {0}", esc(d.lvl));
+    }
+    const where = [...new Set([d.sub, d.inst || d.zone].filter(Boolean))].map(esc).join(", ");
+    const when = new Date(e.t * 1000).toLocaleString(LOC(), { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+    facts.push([tr("Where"), where], [tr("When"), esc(when)]);
+    return `${spotMap(d, "card")}<span class="md-tag"><i class="mdot ${e.kind}"></i>${tag}</span>
+      <div class="md-who">${nameHTML(e.p)}${alt}</div><p class="md-what">${what}</p>
+      <dl class="md-facts">${facts.filter(f => f[1]).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+  }
+  function renderDetail() {
+    const pk = state.mapPick, box = $("mapDetail");
+    if (!pk) { box.innerHTML = `<div class="frame-title"><span>${tr("Details")}</span></div><p class="muted md-hint">${tr("Click a dot on the map to see what happened there.")}</p>`; return; }
+    if (pk.one) {
+      box.innerHTML = (pk.list.length > 1 ? `<button type="button" class="linkbtn md-back" data-mdback>‹ ${tr("All {0} here", pk.list.length)}</button>` : "") + mapDetail(pk.one);
+      whRefresh();
+      return;
+    }
+    box.innerHTML = `<div class="frame-title"><span>${tr("{0} events here", pk.list.length)}</span></div>
+      <div class="md-list">${pk.list.map((e, i) => `<button type="button" class="md-row" data-md="${i}"><i class="mdot ${e.kind}"></i><span>${mapShort(e)}</span></button>`).join("")}</div>`;
   }
   document.addEventListener("click", e => {
     const c = e.target.closest("#mapConts [data-cont]"), l = e.target.closest("#s-map [data-layer]"), mk = e.target.closest(".mk");
@@ -1361,19 +1410,22 @@
       if (z) openZone(z); else render();
     }
     if (mk) {
-      // a group zooms in on itself (up to the closest zoom); a single marker, or a group fully zoomed in, shows its details
+      // a marker's events go in the panel; a cluster also zooms in on itself (up to the closest zoom)
       const g = (state.mapGroups || [])[+mk.dataset.g], v = mapView(), box = $("map");
+      pickMarker(mk);
       if (g && g.list.length > 1 && v.z < MAX_ZOOM) {
         const nz = Math.min(MAX_ZOOM, v.z * 2);
         Object.assign(v, { z: nz, x: box.clientWidth / 2 - box.clientWidth * nz * g.x / 100, y: box.clientHeight / 2 - box.clientHeight * nz * g.y / 100 });
-        $("mapTip").hidden = true;
         glide(() => applyMapView());
-      } else showMapTip(mk);
-    } else if (!e.target.closest("#mapTip")) { const t = document.getElementById("mapTip"); if (t) t.hidden = true; }
+      }
+    }
+    const md = e.target.closest("[data-md]");
+    if (md && state.mapPick) { state.mapPick.one = state.mapPick.list[+md.dataset.md]; renderDetail(); }
+    if (e.target.closest("[data-mdback]") && state.mapPick) { state.mapPick.one = null; renderDetail(); }
     if (e.target.closest("#mapReplay")) { const box = $("mapMarks"); box.classList.remove("replaying"); void box.offsetWidth; box.classList.add("replaying"); }
   });
-  // Details open on a click, or on reaching a marker with the keyboard; never on hover, which popped them up everywhere.
-  document.addEventListener("focusin", e => { const mk = e.target.closest(".mk"); if (mk && mk.matches(":focus-visible")) showMapTip(mk); });
+  // The panel fills on a click, or on reaching a marker with the keyboard; never on hover, which popped tips up everywhere.
+  document.addEventListener("focusin", e => { const mk = e.target.closest(".mk"); if (mk && mk.matches(":focus-visible")) pickMarker(mk); });
 
   // ---------- charts ----------
   const $ = id => document.getElementById(id);
