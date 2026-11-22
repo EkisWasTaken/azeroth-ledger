@@ -564,10 +564,18 @@ button.zl:hover span:first-child, button.zl:focus-visible span:first-child { tex
 .mapnote { font-size: 13px; }
 .mapbar .chip small { font: 700 11px var(--nf); opacity: .75; }
 .mapbar .chip small:empty { display: none; }
-.hls { display: grid; gap: 6px; }
-.hl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; width: 100%; padding: 6px; border: 0; border-radius: var(--r);
-  background: var(--track); color: inherit; font: inherit; font-size: 13px; line-height: 1.35; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
-.hl:hover, .hl:focus-visible { outline: 1px solid var(--accent); }
+/* the best moments as cards: a close-up on top, what happened under it; a row you swipe on a phone */
+.hlcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.hlcards:empty { display: none; }
+.hlc { display: grid; gap: 8px; align-content: start; padding: 8px; border: 0; border-radius: var(--r); background: var(--track);
+  color: inherit; font: inherit; font-size: 13px; line-height: 1.4; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.hlc:hover, .hlc:focus-visible { outline: 1px solid var(--accent); }
+.spot.card { width: 100%; }
+.spot.card i { width: 12px; height: 12px; margin: -6px 0 0 -6px; }
+@media (max-width: 640px) {
+  .hlcards { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .hlc { scroll-snap-align: start; }
+}
 .mapside .lh { font: 600 13px var(--pf); color: var(--muted); margin-top: 10px; }
 .mapside .inst { font-size: 13px; line-height: 1.5; }
 .mapside .inst b { color: var(--ink); }

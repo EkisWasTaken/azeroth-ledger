@@ -184,7 +184,7 @@
     "Previous page": "Föregående sida", "Next page": "Nästa sida",
     "Gold": "Guld",  "Zoom in": "Zooma in", "Zoom out": "Zooma ut",
     "Show the whole continent": "Visa hela kontinenten", "Map of the Fallen": "De fallnas karta", "Every death, ding and drop, where it happened": "Varje död, ding och drop, där det hände",
-    "Level-ups": "Dings", "Highlights": "Höjdpunkter", "click one to find it on the map": "klicka på en för att hitta den på kartan", "Inside instances": "Inne i instanser",
+    "Level-ups": "Dings", "Where it happened": "Där det hände", "Open the atlas ›": "Öppna atlasen ›", "Inside instances": "Inne i instanser",
     "Nothing with a position in this range.": "Inget med en position under den här perioden.", "Pick something above to show on the map.": "Välj något ovan att visa på kartan.",
     "{0} more PvP kills have no recorded position.": "{0} PvP-kills till har ingen sparad position.", "{0} older deaths have no recorded position.": "{0} äldre dödsfall har ingen sparad position.",
     "Rare loot": "Rare loot", "Who": "Vem", "Everyone": "Alla", "Replay": "Spela upp", "Deadliest places": "Dödligaste platserna",
@@ -1204,10 +1204,11 @@
     $("mapReplay").hidden = shown.length < 2;
     applyMapView();
 
-    // Beside the map: the most telling events (PvP kills, epics, deaths to players first, then the newest), each one
-    // a close-up that flies the map to it. Then the deadliest zones, and the deaths inside instances, which have no spot.
-    const loud = e => e.kind === "pvpkills" || (e.kind === "loot" && e.d.q >= 4) || (e.kind === "deaths" && e.d.cause === "player") ? 1 : 0;
-    const hl = state.mapHl = all.filter(e => m.layers[e.kind] && e.kind !== "wanted").sort((a, b) => loud(b) - loud(a) || b.t - a.t).slice(0, 5);
+    // Under the map: the range's best moments on the layers shown, each a close-up that flies the map to it.
+    // Beside it: the deadliest zones, and the deaths inside instances, which have no spot.
+    const hl = state.hl.map = pickHighlights(all.filter(e => m.layers[e.kind]), 8);
+    $("mapHl").innerHTML = hl.length ? hlCards(hl, "map")
+      : `<p class="empty">${tr(Object.values(m.layers).some(Boolean) ? "Nothing with a position in this range." : "Pick something above to show on the map.")}</p>`;
     const deaths = (m.who ? people.filter(p => p.id === m.who) : people).flatMap(p => p.deaths).filter(d => d.t && inRange(localKey(d.t)));
     const byZone = {}, inside = {};
     deaths.forEach(d => {
@@ -1215,16 +1216,14 @@
       byZone[z] = (byZone[z] || 0) + 1;
       if (d.inst && !contSpot(d, atlas)) inside[d.inst] = (inside[d.inst] || 0) + 1;
     });
-    const top = Object.entries(byZone).sort((a, b) => b[1] - a[1]).slice(0, 3), max = top.length ? top[0][1] : 1;
+    const top = Object.entries(byZone).sort((a, b) => b[1] - a[1]).slice(0, 6), max = top.length ? top[0][1] : 1;
     const zoneNamed = n => { for (const [c, a] of Object.entries(atlas)) { const z = a && a.zones && a.zones.find(q => q.n === n); if (z && !MAP_ART[game].includes(String(z.id))) return { c, z }; } return null; };
     const ins = Object.entries(inside).sort((a, b) => b[1] - a[1]);
     $("mapSide").innerHTML =
-      (hl.length ? `<div class="hls">${hl.map((e, i) => `<button type="button" class="hl" data-hl="${i}">${spotMap(e.d)}<span>${mapTip(e)}</span></button>`).join("")}</div>`
-        : `<p class="empty">${tr(Object.values(m.layers).some(Boolean) ? "Nothing with a position in this range." : "Pick something above to show on the map.")}</p>`)
-      + (top.length ? `<div class="lh">${tr("Deadliest places")}</div>` + top.map(([z, n]) => {
+      (top.length ? top.map(([z, n]) => {
         const at = zoneNamed(z), row = `<span>${esc(z)}</span><span class="n">${num(n)}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span>`;
         return at ? `<button type="button" class="zl" data-placecont="${at.c}" data-placezone="${at.z.id}" title="${esc(tr("Show on map"))}">${row}</button>` : `<div class="zl">${row}</div>`;
-      }).join("") : "")
+      }).join("") : `<p class="empty">${tr("No deaths, no dangerous places.")}</p>`)
       + (ins.length ? `<div class="lh">${tr("Inside instances")}</div><p class="muted inst">${ins.slice(0, 6).map(([z, n]) => `${esc(z)} <b>${num(n)}</b>`).join(" · ")}${ins.length > 6 ? " · " + tr("and {0} more", ins.length - 6) : ""}</p>` : "");
     // What can't be placed, and why: kills named from the combat log carry no position, and the oldest uploads had none.
     const pvpLost = (m.who ? people.filter(p => p.id === m.who) : people).flatMap(p => p.chars.flatMap(ch => asArr(ch.pvpKills)))
@@ -1234,6 +1233,32 @@
       pvpLost ? tr("{0} more PvP kills have no recorded position.", num(pvpLost)) : "",
       oldLost ? tr("{0} older deaths have no recorded position.", num(oldLost)) : "",
     ].filter(Boolean).join(" ");
+  }
+  // The moments worth a close-up, best first: legendary and epic drops, PvP kills and deaths to players, level 10s,
+  // then the rest, newest first within each. No kind takes more than half and no character more than a third, so one
+  // player's night of ganks leaves room for the rest of the group.
+  state.hl = { map: [], ov: [] };
+  function pickHighlights(events, n) {
+    const score = e => e.kind === "loot" ? (e.d.q >= 5 ? 6 : e.d.q >= 4 ? 4 : 1) : e.kind === "pvpkills" ? 3
+      : e.kind === "deaths" ? (e.d.cause === "player" ? 3 : 1) : e.kind === "dings" ? (+e.d.lvl % 10 === 0 ? 2 : 0) : -1;
+    const pool = events.filter(e => e.kind !== "wanted").sort((a, b) => score(b) - score(a) || b.t - a.t), out = [], per = {};
+    const who = e => "p:" + e.p.id;
+    for (const e of pool) {
+      if (out.length >= n) break;
+      if ((per[e.kind] || 0) >= Math.ceil(n / 2) || (per[who(e)] || 0) >= Math.max(1, Math.floor(n / 3))) continue;
+      per[e.kind] = (per[e.kind] || 0) + 1;
+      per[who(e)] = (per[who(e)] || 0) + 1;
+      out.push(e);
+    }
+    for (const e of pool) if (out.length < n && !out.includes(e)) out.push(e); // too few kinds: the cap gives way
+    return out;
+  }
+  const hlCards = (list, key) => list.map((e, i) => `<button type="button" class="hlc" data-hl="${key}:${i}">${spotMap(e.d, "card")}<span>${mapTip(e)}</span></button>`).join("");
+  // The overview's row of the range's best moments, from everyone and every kind.
+  function renderWhere(people) {
+    const hl = state.hl.ov = pickHighlights(mapEvents(people, null), 4);
+    $("s-where").classList.toggle("nosec", !hl.length);
+    $("ovHl").innerHTML = hlCards(hl, "ov");
   }
   // The game's minimap, where make_maps.py built it (site/maps/mini/<game>.json): which tiles exist (open sea has none)
   // and each continent's and zone's place in the world, [world map, x0, x1, y0, y1]. Pages redraw once it's in.
@@ -1258,22 +1283,23 @@
     };
     return (d.map != null && on(d.map, d.x, d.y)) || (d.cont != null && on(d.cont, d.cx, d.cy)) || null;
   }
-  // The close-up on the minimap: a window SW x SH minimap pixels (about 300 x 200 yards) around the spot.
-  const SW = 144, SH = 96;
-  function miniSpot(d, big) {
+  // The close-up on the minimap: a window SW x SH minimap pixels around the spot, about 300 x 200 yards (a card: 400 x 270).
+  function miniSpot(d, size) {
     const mi = miniIndex(), at = mi && worldSpot(d, mi), has = at && mi.has[at.w];
     if (!has) return "";
+    const [SW, SH] = size === "card" ? [192, 128] : [144, 96];
     const px = (32 - at.wy / mi.tile) * 256, py = (32 - at.wx / mi.tile) * 256, x0 = px - SW / 2, y0 = py - SH / 2, imgs = [];
     for (let row = Math.floor(y0 / 256); row <= Math.floor((y0 + SH) / 256); row++)
       for (let col = Math.floor(x0 / 256); col <= Math.floor((x0 + SW) / 256); col++)
-        if (has.has(row * 64 + col)) imgs.push(`<img src="maps/mini/${mapGame()}-${at.w}/${row * 64 + col}.webp" alt="" loading="lazy" decoding="async" style="left:${(col * 256 - x0) / SW * 100}%;top:${(row * 256 - y0) / SH * 100}%;width:${25600 / SW}%;height:${25600 / SH}%">`);
-    return imgs.length ? `<span class="spot mini${big ? " big" : ""}" aria-hidden="true">${imgs.join("")}<i style="left:50%;top:50%"></i></span>` : "";
+        if (has.has(row * 64 + col)) imgs.push(`<img src="maps/mini/${mapGame()}-${at.w}/${row * 64 + col}.webp" alt="" loading="lazy" decoding="async" style="left:${(col * 256 - x0) / SW * 100}%;top:${(row * 256 - y0) / SH * 100}%;width:calc(${25600 / SW}% + 1px);height:calc(${25600 / SH}% + 1px)">`);
+    return imgs.length ? `<span class="spot mini ${size || ""}" aria-hidden="true">${imgs.join("")}<i style="left:50%;top:50%"></i></span>` : "";
   }
   // A close-up of where something happened: the minimap around it, else its zone's map (else its continent's) cropped
   // around the spot, with a pin.
   // shortcut: the maps are the realm picker's game, so a character from another game's realm gets no close-up there.
-  function spotMap(d, big) {
-    const mini = miniSpot(d, big);
+  // size: "" (small), "big" or "card" (as wide as its box)
+  function spotMap(d, size) {
+    const mini = miniSpot(d, size);
     if (mini) return mini;
     const atlas = pickAtlas(), built = (state.mapIndex || {})[mapGame()] || [];
     let id, x, y;
@@ -1287,13 +1313,15 @@
     // the art at 6x (about its own size in the window): its offset keeps the spot in the middle, or as close as the art's edge allows
     const Z = 6, off = v => Math.min(100, Math.max(0, (Z * v - 50) / (Z - 1)));
     const ox = off(x), oy = off(y);
-    return `<span class="spot${big ? " big" : ""}" aria-hidden="true"><img src="${mapSrc(id)}" alt="" loading="lazy" decoding="async" style="left:${-(Z - 1) * ox}%;top:${-(Z - 1) * oy}%"><i style="left:${Z * x - (Z - 1) * ox}%;top:${Z * y - (Z - 1) * oy}%"></i></span>`;
+    return `<span class="spot ${size || ""}" aria-hidden="true"><img src="${mapSrc(id)}" alt="" loading="lazy" decoding="async" style="left:${-(Z - 1) * ox}%;top:${-(Z - 1) * oy}%"><i style="left:${Z * x - (Z - 1) * ox}%;top:${Z * y - (Z - 1) * oy}%"></i></span>`;
   }
   // A highlight's map: on its continent, zoomed in on it, with its details open.
   async function flyTo(ev) {
     if (!ev || mapBusy) return;
     const m = state.map;
     Object.assign(m, { cont: ev.cont, zone: "", trail: [] });
+    m.layers[ev.kind] = true;
+    if (m.who && m.who !== ev.p.id) m.who = "";
     render();
     const v = mapView(), box = $("map"), z = MAX_ZOOM;
     box.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
@@ -1323,7 +1351,11 @@
     if (e.target.closest("[data-mapup]")) closeZone();
     if (l) { state.map.layers[l.dataset.layer] = !state.map.layers[l.dataset.layer]; if (l.dataset.layer === "wanted") state.map.wanted = ""; render(); }
     const hb = e.target.closest("[data-hl]");
-    if (hb) flyTo((state.mapHl || [])[+hb.dataset.hl]);
+    if (hb) {
+      const [k, i] = hb.dataset.hl.split(":");
+      if (k === "ov") setPage("atlas");
+      flyTo(state.hl[k][+i]);
+    }
     const pz = e.target.closest("[data-placezone]");
     if (pz) {
       Object.assign(state.map, { cont: pz.dataset.placecont, zone: "", trail: [] });
@@ -2381,7 +2413,7 @@
     ].map(tileHTML).join("");
     $("hcFallen").innerHTML = fallen.map(p => `<div class="grave"><span class="gicon">${skullIcon(2)}</span><div>
         <div class="gname">${nameHTML(p)}</div><div class="gwhat">${deathWhat(p.fallen)}.</div>
-        <div class="gwhen">${tr("Level {0}", esc(p.fallen.lvl || "?"))} · ${fullDate(p.fallen.t)}</div></div>${spotMap(p.fallen, true)}</div>`).join("")
+        <div class="gwhen">${tr("Level {0}", esc(p.fallen.lvl || "?"))} · ${fullDate(p.fallen.t)}</div></div>${spotMap(p.fallen, "big")}</div>`).join("")
       || `<p class="empty">${tr("Nobody has fallen. Yet.")}</p>`;
     $("hcAlive").innerHTML = alive.map(p => `<a class="chip" href="${profileHref(p)}">${classIcon(p.chars[0])}${esc(p.name)} <span class="muted">${tr("Lvl {0}", lvl(p))}</span></a>`).join("")
       || `<p class="empty">${tr("Everyone has fallen.")}</p>`;
@@ -3637,6 +3669,7 @@
     $("pvpBody").innerHTML = pvpHTML(people, false);
     renderDungeons(people);
     renderMap(people);
+    renderWhere(people);
     renderCombat(active);
     renderLoot(active, people);
     renderTable(rows);
