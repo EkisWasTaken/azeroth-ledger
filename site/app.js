@@ -353,6 +353,7 @@
   const pct = v => LANG === "sv" ? `${dec(v * 100, 1)} %` : `${(v * 100).toFixed(1)}%`;
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const classOf = ch => CLASS[ch.class] || ["Adventurer", "#b9b2a6"];
+  const plainName = n => String(n || "").replace(/-.*/, ""); // a name without its "-Realm"
   // Hardcore: a fallen character's class icon becomes a red skull.
   const skullIcon = (px = 1) => `<span class="cicon skullic" title="${tr("Fallen")}" role="img" aria-label="${tr("Fallen")}">${icon("dead", px)}</span>`;
   // The class icon for a character, or the plain colour dot when the class is unknown.
@@ -412,6 +413,7 @@
   const state = {
     data: { chars: {}, days: {}, obs: {}, players: {} },
     potwLocks: {}, // "Game|Realm|week" -> the locked character of the week's key
+    names: {}, // character name -> our character, or { class } for roster names and enemy players (charName)
     bountyPaid: {}, // "Game|Realm|wanted name" -> { with: "gold" | "potion" | "item", on: "YYYY-MM-DD" } (supabase/bounty-paid.sql)
     status: "loading",
     updated: 0,
@@ -1356,9 +1358,9 @@
   // One line per event, for a cluster's list.
   function mapShort(e) {
     const d = e.d, pvp = d.cause === "player";
-    const what = e.kind === "pvpkills" ? tr("killed {0}", esc(d.name)) : e.kind === "loot" ? `${tr("looted")} <span class="q${d.q}">[${esc(d.item || "")}]</span>`
-      : e.kind === "dings" ? tr("reached level {0}", esc(d.lvl)) : d.by ? tr(pvp ? "killed in PvP by {0}" : "killed by {0}", esc(d.by)) : tr("died");
-    return `<b>${esc(d._char || e.p.name)}</b> ${what}<small>${[esc(d.zone || ""), shortDate(localKey(e.t))].filter(Boolean).join(" · ")}</small>`;
+    const what = e.kind === "pvpkills" ? tr("killed {0}", charName(d.name)) : e.kind === "loot" ? `${tr("looted")} <span class="q${d.q}">[${esc(d.item || "")}]</span>`
+      : e.kind === "dings" ? tr("reached level {0}", esc(d.lvl)) : d.by ? tr(pvp ? "killed in PvP by {0}" : "killed by {0}", pvp ? charName(d.by) : esc(d.by)) : tr("died");
+    return `${d._char ? charName(d._char) : nameHTML(e.p)} ${what}<small>${[esc(d.zone || ""), shortDate(localKey(e.t))].filter(Boolean).join(" · ")}</small>`;
   }
   // One event in full: a close-up, who, what, and the facts worth knowing (the killer, the blow, where and when).
   function mapDetail(e) {
@@ -1368,13 +1370,13 @@
     if (e.kind === "deaths" || e.kind === "wanted") {
       tag = tr(pvp ? "PvP death" : "Death");
       what = d.cause === "fall" ? tr("fell to their death") : d.cause === "drown" ? tr("drowned")
-        : d.by ? tr(pvp ? "killed in PvP by {0}" : "killed by {0}", `<b>${esc(d.by)}</b>`) : tr("died");
+        : d.by ? tr(pvp ? "killed in PvP by {0}" : "killed by {0}", pvp ? charName(d.by) : `<b>${esc(d.by)}</b>`) : tr("died");
       if (pvp) facts.push([tr("Killer"), [d.byLvl && tr("Lvl {0}", esc(d.byLvl)), d.byRace && esc(tr(RACE[d.byRace] || d.byRace)), d.byClass && classOf({ class: d.byClass })[0]].filter(Boolean).join(" ")]);
       facts.push([tr("Killing blow"), [d.spell && d.spell !== "Melee" ? esc(d.spell) : "", d.amt ? tr("{0} damage", num(d.amt)) : ""].filter(Boolean).join(" · ")]);
       facts.push([tr("Level"), d.lvl ? esc(d.lvl) : ""]);
     } else if (e.kind === "pvpkills") {
       tag = tr("PvP kill");
-      what = tr("killed {0}", `<b>${esc(d.name)}</b>`);
+      what = tr("killed {0}", charName(d.name));
     } else if (e.kind === "loot") {
       tag = tr((QUAL[d.q] || QUAL[3])[0]);
       what = `${tr("looted")} ${itemHTML(d)} ${dropTags(d)}`;
@@ -1752,6 +1754,13 @@
   const nameHTML = p => p.id
     ? `<a class="plink" href="${profileHref(p)}">${nameMark(p)}<span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span></a>`
     : `${nameMark(p)}<span class="cname" style="--cc:${p.color || classOf(p)[1]}">${esc(p.name)}</span>`;
+  // Any character by name (enemy players, alts, claimers): the class icon when we know the class, the name bold in its
+  // class colour, and a link when it's one of ours. state.names is filled each render (our characters, rosters, who killed us).
+  const charName = name => {
+    const n = state.names[plainName(name)] || {}, cls = CLASS[n.class];
+    const inner = `${cls ? classIcon(n) : ""}<span class="cname" style="--cc:${cls ? cls[1] : "inherit"}">${esc(name)}</span>`;
+    return n.key ? `<a class="plink" href="${charHref(n.key)}">${inner}</a>` : `<span class="charnm">${inner}</span>`;
+  };
   const rangeLabel = () => state.view === "all" ? tr("All time") : tr("Week of {0} – {1}", shortDate(state.week), shortDate(addDays(state.week, 6)));
 
   function renderWeekSelect(people) {
@@ -2260,7 +2269,7 @@
   function deathWhat(d) {
     let what;
     if (d.cause === "mob" || d.cause === "player") {
-      const pvp = d.cause === "player", mob = `<span class="mob">${esc(d.by || tr(pvp ? "another player" : "something"))}</span>`;
+      const pvp = d.cause === "player", mob = pvp && d.by ? charName(d.by) : `<span class="mob">${esc(d.by || tr(pvp ? "another player" : "something"))}</span>`;
       what = `<span class="badge ${pvp ? "pvp" : "pve"}">${tr(pvp ? "PvP" : "Mob")}</span> `
         + (d.spell && d.spell !== "Melee" ? tr("was slain by {0}'s {1}", mob, `<span class="sp">${esc(d.spell)}</span>`) : tr("was slain by {0}", mob))
         + (d.amt ? ` <span class="dmg">(${tr("{0} damage", num(d.amt))})</span>` : "");
@@ -2359,12 +2368,11 @@
     <div class="duo even">
       ${frame("Killing spells", "what players finished us with", bars(count(d => d.spell), "{0} deaths") || empty("No player has killed anyone here yet."))}
       ${frame("Duel record", "by opponent", dl.length ? `<div class="table-wrap"><table><thead><tr>${many ? `<th>${tr("Hero")}</th>` : ""}<th>${tr("Opponent")}</th><th>${tr("Won")}</th><th>${tr("Lost")}</th></tr></thead><tbody>${
-        dl.map(r => `<tr class="${fr(r.p)}">${many ? `<td><span class="nm">${nameHTML(r.p)}</span></td>` : ""}<td>${esc(r.o)}</td><td>${num(r.w)}</td><td>${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("No duels yet."))}
+        dl.map(r => `<tr class="${fr(r.p)}">${many ? `<td><span class="nm">${nameHTML(r.p)}</span></td>` : ""}<td><span class="nm">${charName(r.o)}</span></td><td>${num(r.w)}</td><td>${num(r.l)}</td></tr>`).join("")}</tbody></table></div>` : empty("No duels yet."))}
     </div>`;
   }
 
   // Most Wanted (ledger-data.js): the last 7 days whatever the picked range, so the board resets on its own.
-  const plainName = n => String(n || "").replace(/-.*/, "");
   const mostWanted = people => LedgerData.mostWanted(people.flatMap(p => p.deaths.map(d => ({ p, d }))), Date.now() / 1000);
   // Did one of us take this player down after they started killing us? state.bountyPaid has the day each bounty was
   // paid and with what (the "Paid with" picker): a kill after that day is a new claim, and killing us again reopens the bounty.
@@ -2408,7 +2416,8 @@
     // There's a bounty on every wanted enemy; config.js can name the reward and how to claim it.
     const bounty = (window.LEDGER_CONFIG || {}).bounty || {};
     const reward = [bounty.reward ? tr("Reward: {0}", esc(bounty.reward)) : tr("Bounty: take them down to claim the reward"), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ");
-    const stLine = st => tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t)));
+    const stLine = st => tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", charName(st.who), shortDate(localKey(st.t)));
+    const victims = k => [...k.victims].map(n => (p => p ? nameHTML(p) : charName(n))(people.find(p => p.name === n))).join(", ");
     // what a claimed bounty was paid with, as game icons; clicking the lit one again takes the payment back
     const payPick = (name, st) => `<div class="paypick" role="group" aria-label="${tr("Paid with")}"><span>${tr("Paid with")}</span>${
       [["gold", "Gold", "inv_misc_coin_01"], ["potion", "Potions", "inv_potion_54"], ["item", "Item", "inv_misc_bag_08"]].map(([v, l, ic]) =>
@@ -2432,7 +2441,7 @@
           <div class="bp-name">${esc(name)}</div>${st ? stamp(st) : ""}</div>
         <div class="bounty-file">
           <p class="bf-eye">${tr("Most wanted")}</p>
-          <strong class="bf-name">${esc(name)}</strong>
+          <strong class="bf-name">${charName(name)}</strong>
           ${who ? `<span class="bf-who">${who}</span>` : ""}
           <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}${k.last.zone ? ` · ${esc(k.last.zone)}` : ""}</span></div>
           ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>${payPick(name, st)}` : reward ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
@@ -2441,15 +2450,15 @@
     })(pick) : "";
     // Deaths page: open bounties as posters, claimed ones in a quieter row below.
     const tilt = i => [-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i % 8];
-    $("wanted").innerHTML = open.map(({ name, k }, i) => `<div class="poster" style="--r:${tilt(i)}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
+    $("wanted").innerHTML = open.map(({ name, k }, i) => `<div class="poster" style="--r:${tilt(i)}deg"><div class="w">${tr("Wanted")}</div><div class="m">${charName(name)}</div>
         <div class="f">${killedLine(k)}</div>
-        <div class="f">${tr("Victims: {0}", [...k.victims].map(esc).join(", "))}</div>
+        <div class="f">${tr("Victims: {0}", victims(k))}</div>
         ${k.last.zone ? `<div class="f">${tr("Last seen in {0}", esc(k.last.zone))}</div>` : ""}
         ${reward ? `<div class="r">${reward}</div>` : ""}
         ${mapBtn(name)}</div>`).join("")
       || `<p class="empty">${tr(done.length ? "Every wanted player has been taken down." : "No enemy player has killed us twice in the last 7 days.")}</p>`;
     $("wantedDoneWrap").hidden = !done.length;
-    $("wantedDone").innerHTML = done.map(({ name, k, st }, i) => `<div class="poster done" style="--r:${tilt(i + 3)}deg"><div class="m">${esc(name)}</div>
+    $("wantedDone").innerHTML = done.map(({ name, k, st }, i) => `<div class="poster done" style="--r:${tilt(i + 3)}deg"><div class="m">${charName(name)}</div>
         ${stamp(st)}
         <div class="f">${killedLine(k)}</div>
         <div class="f cl${st.paid ? " paid" : ""}">${stLine(st)}</div>
@@ -3654,6 +3663,10 @@
     // Example characters are only added while nobody has uploaded yet, on their own "Example data" realms.
     const allChars = live ? real : (demoOnly ? [] : real).concat(characters(demoData()));
     state.allChars = allChars;
+    const names = state.names = {};
+    allChars.forEach(c => c.deaths.forEach(d => { if (d && d.cause === "player" && d.by && d.byClass) names[plainName(d.by)] ||= { class: d.byClass }; }));
+    state.rosterOnly.forEach(c => { if (c.name && c.class) names[plainName(c.name)] = { class: c.class }; });
+    allChars.forEach(c => { if (c.name) names[plainName(c.name)] = c; });
     // Hardcore: a character's first death is its last.
     allChars.forEach(c => {
       const hc = /Hardcore/.test(gameName(c.game, c.realm)) || /Hardcore/.test(c.realm || "") || (c.game && c.game.hardcore);
