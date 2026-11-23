@@ -119,7 +119,7 @@
     "{0} death": "{0} dödsfall", "{0} deaths": "{0} dödsfall", "Nobody died. Suspicious.": "Ingen dog. Misstänkt.",
     "Wanted": "Efterlyst",
     "Victims: {0}": "Offer: {0}", "Last seen in {0}": "Senast sedd i {0}",
-    "+{0} more wanted": "+{0} fler efterlysta", "No enemy player has killed us twice in the last 7 days.":"Ingen fiendespelare har dödat oss två gånger de senaste 7 dagarna.", "Enemy players who killed us twice or more in the last 7 days": "Fiendespelare som dödat oss minst två gånger de senaste 7 dagarna", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Also taken down: {0}": "Också nedlagda: {0}", "{0} by {1}": "{0} av {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
+    "+{0} more wanted": "+{0} fler efterlysta", "Paid with": "Betalt med", "Potions": "Drycker", "Item": "Föremål", "Couldn't save the payment. Has supabase/bounty-paid.sql been run?": "Kunde inte spara betalningen. Har supabase/bounty-paid.sql körts?", "Claimed bounties": "Krävda prispengar", "Every wanted player has been taken down.": "Alla efterlysta har tagits ner.", "No enemy player has killed us twice in the last 7 days.":"Ingen fiendespelare har dödat oss två gånger de senaste 7 dagarna.", "Enemy players who killed us twice or more in the last 7 days": "Fiendespelare som dödat oss minst två gånger de senaste 7 dagarna", "Killed {0} of our heroes, {1} times": "Dödade {0} av våra hjältar, {1} gånger", "Killed one of our heroes": "Dödade en av våra hjältar", "Reward: {0}": "Belöning: {0}", "Bounty: take them down to claim the reward": "Prispengar: döda dem för att kräva belöningen", "Bounty claimed by {0} · {1}": "Prispengarna kräves av {0} · {1}", "Bounty paid to {0} · {1}": "Prispengarna betalda till {0} · {1}", "Taken down by {0} · {1}": "Nedlagd av {0} · {1}", "Claimed": "Krävd", "Taken down": "Nedlagd", "Paid": "Betald", "Show on map": "Visa på kartan", "PvP kills": "PvP-kills", "killed {0}": "dödade {0}", "No deaths, no dangerous places.": "Inga dödsfall, inga farliga platser.",
 
     // combat sheet
     "Hits": "Träffar", "Avg hit": "Snittträff", "Biggest": "Största", "Misses": "Missar", "Resisted": "Resists", "Dodges": "Dodges",
@@ -412,6 +412,7 @@
   const state = {
     data: { chars: {}, days: {}, obs: {}, players: {} },
     potwLocks: {}, // "Game|Realm|week" -> the locked character of the week's key
+    bountyPaid: {}, // "Game|Realm|wanted name" -> { with: "gold" | "potion" | "item", on: "YYYY-MM-DD" } (supabase/bounty-paid.sql)
     status: "loading",
     updated: 0,
     demo: false,
@@ -2365,18 +2366,19 @@
   // Most Wanted (ledger-data.js): the last 7 days whatever the picked range, so the board resets on its own.
   const plainName = n => String(n || "").replace(/-.*/, "");
   const mostWanted = people => LedgerData.mostWanted(people.flatMap(p => p.deaths.map(d => ({ p, d }))), Date.now() / 1000);
-  // Did one of us take this player down after they started killing us? config.js bounty.paid has the day each bounty
-  // was paid ({ name: "YYYY-MM-DD" }): a kill after that day is a new claim, and killing us again after it reopens the bounty.
+  // Did one of us take this player down after they started killing us? state.bountyPaid has the day each bounty was
+  // paid and with what (the "Paid with" picker): a kill after that day is a new claim, and killing us again reopens the bounty.
   function bountyState(people, name) {
-    const paidOn = (((window.LEDGER_CONFIG || {}).bounty || {}).paid || {})[name] || "", same = n => plainName(n) === plainName(name);
+    const pay = state.bountyPaid[state.realm + "|" + name], paidOn = pay ? pay.on : "", same = n => plainName(n) === plainName(name);
     const onUs = people.flatMap(p => p.deaths).filter(d => d && d.t && d.cause === "player" && same(d.by));
     if (!onUs.length) return null;
     const first = Math.min(...onUs.map(d => d.t));
     const claim = people.flatMap(p => p.chars.flatMap(c => asArr(c.pvpKills).filter(k => k && k.t > first && same(k.name)).map(k => ({ who: c.name, t: k.t }))))
       .sort((a, b) => b.t - a.t)[0];
-    if (!claim) return null;
+    // they killed us again after we took them down: the bounty is open again
+    if (!claim || onUs.some(d => d.t > claim.t)) return null;
     if (localKey(claim.t) > paidOn) return { ...claim, claimed: true };
-    return onUs.some(d => localKey(d.t) > paidOn) ? null : { ...claim, paid: true };
+    return onUs.some(d => localKey(d.t) > paidOn) ? null : { ...claim, paid: true, with: pay.with };
   }
 
   function renderDeaths(people) {
@@ -2406,44 +2408,53 @@
     // There's a bounty on every wanted enemy; config.js can name the reward and how to claim it.
     const bounty = (window.LEDGER_CONFIG || {}).bounty || {};
     const reward = [bounty.reward ? tr("Reward: {0}", esc(bounty.reward)) : tr("Bounty: take them down to claim the reward"), bounty.claim && esc(bounty.claim)].filter(Boolean).join(" · ");
-    const states = top.map(([name]) => bountyState(people, name));
-    const stLine = st => st ? tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t))) : "";
+    const stLine = st => tr(st.paid ? "Bounty paid to {0} · {1}" : reward ? "Bounty claimed by {0} · {1}" : "Taken down by {0} · {1}", esc(st.who), shortDate(localKey(st.t)));
+    // what a claimed bounty was paid with, as game icons; clicking the lit one again takes the payment back
+    const payPick = (name, st) => `<div class="paypick" role="group" aria-label="${tr("Paid with")}"><span>${tr("Paid with")}</span>${
+      [["gold", "Gold", "inv_misc_coin_01"], ["potion", "Potions", "inv_potion_54"], ["item", "Item", "inv_misc_bag_08"]].map(([v, l, ic]) =>
+        `<button type="button" data-paybounty="${esc(name)}" data-with="${v}" aria-pressed="${st.with === v}" title="${tr(l)}" aria-label="${tr(l)}">${zam(ic, 22)}</button>`).join("")}</div>`;
+    const stamp = st => `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>`;
     const killedLine = k => k.n === 1 ? tr("Killed one of our heroes") : tr("Killed {0} of our heroes, {1} times", num(k.victims.size), num(k.n));
-    // The overview's bounty: a small side quest on the #1 enemy player, a pinned poster with the job beside it.
-    // The rest of the board is on the Deaths page, so the card never grows.
-    $("oWanted").innerHTML = top.slice(0, 1).map(([name, k], i) => {
-      const st = states[i];
-      const stamp = st ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : "";
+    const board = top.map(([name, k]) => ({ name, k, st: bountyState(people, name) }));
+    const open = board.filter(b => !b.st), done = board.filter(b => b.st).sort((a, b) => b.st.t - a.st.t);
+    const mapBtn = name => `<button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button>`;
+    // The overview's bounty: the open one who killed us last, so the card follows whoever is hunting us now
+    // (when every bounty is claimed, the latest claim). The full board is on the Deaths page.
+    const pick = open.slice().sort((a, b) => b.k.last.t - a.k.last.t)[0] || done[0];
+    $("oWanted").innerHTML = pick ? (({ name, k, st }) => {
       // tally marks, bundled in fives like on a cell wall (the rest as a number)
       const n = Math.min(k.n, 15);
       const tally = [...Array(Math.ceil(n / 5))].map((_, i) => `<span class="tally t${Math.min(5, n - i * 5)}"></span>`).join("") + (k.n > 15 ? `<b>+${num(k.n - 15)}</b>` : "");
+      const who = [k.who.byLvl && tr("Lvl {0}", esc(k.who.byLvl.v)), k.who.byRace && esc(RACE[k.who.byRace.v] || k.who.byRace.v), k.who.byClass && classOf({ class: k.who.byClass.v })[0]].filter(Boolean).join(" ");
+      const more = board.length - 1;
       return `<div class="bounty">
         <div class="bounty-poster"><div class="bp-w">${tr("Wanted")}</div><div class="bp-seal">${sprite("skull", 3)}</div>
-          <div class="bp-name">${esc(name)}</div>${stamp}</div>
+          <div class="bp-name">${esc(name)}</div>${st ? stamp(st) : ""}</div>
         <div class="bounty-file">
           <p class="bf-eye">${tr("Most wanted")}</p>
           <strong class="bf-name">${esc(name)}</strong>
-          ${(w => w ? `<span class="bf-who">${w}</span>` : "")([k.who.byLvl && tr("Lvl {0}", esc(k.who.byLvl.v)), k.who.byRace && esc(RACE[k.who.byRace.v] || k.who.byRace.v), k.who.byClass && classOf({ class: k.who.byClass.v })[0]].filter(Boolean).join(" "))}
-          <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}</span></div>
-          ${k.last.zone ? `<span class="bf-seen">${tr("Last seen in {0}", esc(k.last.zone))}</span>` : ""}
-          ${reward && !(st && st.paid) ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
-          ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>` : ""}
-          ${(down => down.length ? `<span class="bf-claim">${tr("Also taken down: {0}", down.join(", "))}</span>` : "")(top.slice(1).map(([n], j) => states[j + 1] && tr("{0} by {1}", esc(n), esc(states[j + 1].who))).filter(Boolean))}
-          <button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button>
-          ${top.length > 1 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(top.length - 1))} ›</button>` : ""}
+          ${who ? `<span class="bf-who">${who}</span>` : ""}
+          <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}${k.last.zone ? ` · ${esc(k.last.zone)}` : ""}</span></div>
+          ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>${payPick(name, st)}` : reward ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
+          <div class="bf-links">${mapBtn(name)}${more > 0 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(more))} ›</button>` : ""}</div>
         </div></div>`;
-    }).join("");
-    $("wanted").innerHTML = top.map(([name, k], i) => {
-      const st = states[i];
-      return `<div class="poster" style="--r:${[-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i]}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
-        ${st ? `<div class="stamp${st.paid ? " paid" : ""}">${tr(st.paid ? "Paid" : reward ? "Claimed" : "Taken down")}</div>` : ""}
+    })(pick) : "";
+    // Deaths page: open bounties as posters, claimed ones in a quieter row below.
+    const tilt = i => [-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i % 8];
+    $("wanted").innerHTML = open.map(({ name, k }, i) => `<div class="poster" style="--r:${tilt(i)}deg"><div class="w">${tr("Wanted")}</div><div class="m">${esc(name)}</div>
         <div class="f">${killedLine(k)}</div>
         <div class="f">${tr("Victims: {0}", [...k.victims].map(esc).join(", "))}</div>
         ${k.last.zone ? `<div class="f">${tr("Last seen in {0}", esc(k.last.zone))}</div>` : ""}
-        ${reward && !(st && st.paid) ? `<div class="r">${reward}</div>` : ""}
-        ${st ? `<div class="f cl">${stLine(st)}</div>` : ""}
-        <button type="button" class="linkbtn" data-wantedmap="${esc(name)}">${tr("Show on map")} ›</button></div>`;
-    }).join("") || `<p class="empty">${tr("No enemy player has killed us twice in the last 7 days.")}</p>`;
+        ${reward ? `<div class="r">${reward}</div>` : ""}
+        ${mapBtn(name)}</div>`).join("")
+      || `<p class="empty">${tr(done.length ? "Every wanted player has been taken down." : "No enemy player has killed us twice in the last 7 days.")}</p>`;
+    $("wantedDoneWrap").hidden = !done.length;
+    $("wantedDone").innerHTML = done.map(({ name, k, st }, i) => `<div class="poster done" style="--r:${tilt(i + 3)}deg"><div class="m">${esc(name)}</div>
+        ${stamp(st)}
+        <div class="f">${killedLine(k)}</div>
+        <div class="f cl${st.paid ? " paid" : ""}">${stLine(st)}</div>
+        ${payPick(name, st)}
+        ${mapBtn(name)}</div>`).join("");
 
     // deadliest zones
     const dz = {};
@@ -3923,7 +3934,9 @@
     const extras = () => Promise.all([
       fetch(`${url}/rest/v1/realm_atlas?select=realm,atlas`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`${url}/rest/v1/potw_locks?select=realm,week,char_key`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([atlas, locks]) => {
+      fetch(`${url}/rest/v1/bounty_paid?select=realm,wanted,paid_with,paid_on`, { headers }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([atlas, locks, paid]) => {
+      if (paid) { const b = {}; for (const x of paid) b[`${x.realm}|${x.wanted}`] = { with: x.paid_with, on: x.paid_on }; state.bountyPaid = b; }
       if (atlas) { const a = {}; for (const x of atlas) if (x.realm && x.atlas && typeof x.atlas === "object") a[x.realm] = x.atlas; state.atlases = a; }
       if (locks) for (const l of locks) state.potwLocks[`${l.realm}|${l.week}`] = l.char_key;
     });
@@ -3935,6 +3948,7 @@
           for (const r of c.rows) knownRows.set(r.id, r);
           state.atlases = c.atlases || {};
           Object.assign(state.potwLocks, c.locks || {});
+          state.bountyPaid = c.paid || {};
           const { src, updated } = LedgerData.mergeRows(knownRows.values());
           state.data = src;
           state.updated = Math.min(updated, c.at || updated);
@@ -3979,7 +3993,7 @@
   }
   function saveCache() {
     if (state.demo) return;
-    ledgerCache.put({ at: state.updated, rows: [...knownRows.values()], atlases: state.atlases || {}, locks: state.potwLocks });
+    ledgerCache.put({ at: state.updated, rows: [...knownRows.values()], atlases: state.atlases || {}, locks: state.potwLocks, paid: state.bountyPaid });
   }
 
   // ---------- navigation ----------
@@ -4101,6 +4115,22 @@
     const m = (state.map ||= { cont: "", layers: {}, who: "" });
     Object.assign(m, { wanted: b.dataset.wantedmap, who: "", layers: { wanted: true } });
     setPage("atlas");
+  });
+  // "Paid with" on a claimed bounty: saved for everyone (supabase/bounty-paid.sql), shown right away.
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-paybounty]");
+    if (!b) return;
+    const sel = { value: b.getAttribute("aria-pressed") === "true" ? "" : b.dataset.with };
+    const name = b.dataset.paybounty, id = state.realm + "|" + name, url = String(CONFIG.supabaseUrl || "").replace(/\/$/, ""), key = String(CONFIG.publishableKey || "");
+    const before = state.bountyPaid[id];
+    if (sel.value) state.bountyPaid[id] = { with: sel.value, on: todayKey() }; else delete state.bountyPaid[id];
+    render();
+    if (state.demo || !url || !key) return; // example data: only in this browser
+    const headers = { apikey: key, "Content-Type": "application/json" };
+    if (!key.startsWith("sb_")) headers.Authorization = "Bearer " + key;
+    fetch(`${url}/rest/v1/rpc/pay_bounty`, { method: "POST", headers, body: JSON.stringify({ p_realm: state.realm, p_wanted: name, p_with: sel.value || null }) })
+      .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); saveCache(); })
+      .catch(() => { if (before) state.bountyPaid[id] = before; else delete state.bountyPaid[id]; render(); alert(tr("Couldn't save the payment. Has supabase/bounty-paid.sql been run?")); });
   });
   document.addEventListener("click", e => {
     const g = e.target.closest("[data-goto]");

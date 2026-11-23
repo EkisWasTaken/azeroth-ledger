@@ -785,6 +785,12 @@ a.mrow:hover .nm { color: var(--accent); }
 .poster .stamp.paid { color: #1f6b2a; border-color: #1f6b2a; }
 .poster .cl { font-weight: 700; color: #a3170c; }
 .poster .linkbtn { justify-self: center; color: #6b4a1e; font-size: 12px; }
+.poster .cl.paid { color: #1f6b2a; }
+/* claimed bounties: smaller, faded posters, the stamp does the talking */
+.wanted.done { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.poster.done { opacity: .78; filter: saturate(.6); }
+.poster.done .m { font-size: 16px; }
+.poster.done .stamp { position: static; justify-self: center; transform: rotate(-8deg); margin: 2px 0; font-size: 16px; }
 
 /* ---------- Tables ---------- */
 .table-wrap { overflow-x: auto; min-width: 0; max-width: 100%; }
@@ -1170,13 +1176,23 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .tally.t5::after { content: ""; position: absolute; left: -3px; right: -3px; top: 50%; height: 2px; background: #ff6a50; transform: rotate(-26deg); }
 .bf-tally b { font: 800 12px var(--nf); color: #ff9a80; }
 .bf-who { font: 700 12px var(--nf); color: #ffd9a8; margin-top: -2px; }
-.bf-seen { font-size: 12px; color: #d9c4a2; }
 .bf-reward { display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; padding: 2px 10px 2px 4px; border-radius: 999px; font: 800 12px var(--nf); color: #5a3a00;
   background: linear-gradient(100deg, #ffe27a, #ffc72e 60%, #f0a818); box-shadow: 0 2px 0 #8a5a10; }
 .bf-reward .sprite { width: 16px; height: 16px; }
 .bf-claim { font: 800 12px var(--nf); color: #ff8a70; }
 .bf-claim.paid { color: #9be08a; }
 .bounty-file .linkbtn { color: #ffd38a; font-size: 12px; padding: 0; }
+.paypick { display: inline-flex; align-items: center; gap: 6px; font: 700 12px var(--nf); }
+.paypick button { padding: 0; border: 2px solid transparent; border-radius: 5px; background: none; cursor: pointer; line-height: 0;
+  filter: grayscale(1) brightness(.75); opacity: .7; transition: filter .15s, opacity .15s; }
+.paypick button:hover, .paypick button:focus-visible { filter: none; opacity: 1; }
+.paypick button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.paypick button[aria-pressed="true"] { filter: none; opacity: 1; border-color: #f2d57e; box-shadow: 0 0 6px rgba(242,213,126,.7); }
+.paypick .wicon { width: 22px; height: 22px; border-radius: 3px; }
+.bounty-file .paypick { color: #e3cfae; }
+.poster .paypick { justify-self: center; flex-wrap: wrap; justify-content: center; color: #6b4a1e; }
+.poster .paypick span { flex-basis: 100%; text-align: center; }
+.bf-links { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; }
 @media (prefers-reduced-motion: reduce) { .bounty *, .bounty *::before, .bounty *::after { animation: none !important; } }
 /* hero standings: a quiet table, each row a link to the character */
 .standings { display: grid; }

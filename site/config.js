@@ -33,8 +33,7 @@ window.LEDGER_CONFIG = {
   modelViewer: "https://ledger-models.eliaspown.workers.dev",
   // The bounty on every Most Wanted enemy player (2+ kills on us in the last 7 days), shown on the overview and the posters. Any text works:
   // reward: "50 gold" or "[Black Lotus]", claim: "Whisper Ekis in game". Empty reward: a generic "claim the reward" line.
-  // When one of us kills a Most Wanted, the poster says "Claimed" and who did it. Once you've paid, add the player
-  // and the day you paid, e.g. paid: { "Gankalot": "2026-11-12" }: the poster says "Paid", and if they kill one of us
-  // again after that day, the bounty is open again.
-  bounty: { reward: "", claim: "", paid: {} },
+  // When one of us kills a Most Wanted, the poster says "Claimed" and who did it. Mark it paid with the poster's
+  // "Paid with" picker (needs supabase/bounty-paid.sql); if they kill one of us again after that day, the bounty is open again.
+  bounty: { reward: "", claim: "" },
 };
