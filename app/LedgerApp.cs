@@ -1204,9 +1204,15 @@ namespace AzerothLedger
                 try
                 {
                     if (drive.DriveType != DriveType.Fixed || !drive.IsReady) continue;
+                    // The registry goes stale when the game is moved or copied, so check every top-level
+                    // folder (D:\WoW) and its "World of Warcraft" child (D:\Spel\World of Warcraft).
                     string r = drive.RootDirectory.FullName;
-                    foreach (var rel in new[] { "World of Warcraft", @"Program Files (x86)\World of Warcraft", @"Program Files\World of Warcraft", @"Games\World of Warcraft", @"Battle.net\World of Warcraft", @"Blizzard\World of Warcraft" })
-                        add(Path.Combine(r, rel));
+                    add(Path.Combine(r, "World of Warcraft"));
+                    foreach (var top in Directory.GetDirectories(r))
+                    {
+                        add(top);
+                        add(Path.Combine(top, "World of Warcraft"));
+                    }
                 }
                 catch { /* drive not ready */ }
             }

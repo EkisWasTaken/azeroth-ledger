@@ -244,7 +244,7 @@
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
-    "Loot quality": "Lootkvalitet", "Most wanted": "Mest efterlyst",
+    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
     "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
     "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
     "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
@@ -1457,8 +1457,8 @@
     C.defaults.resizeDelay = 120;          // don't redraw on every pixel while a window is being resized
     C.defaults.normalized = true;
     Object.assign(C.defaults.plugins.tooltip, {
-      backgroundColor: css("--ink"), borderWidth: 0, cornerRadius: 8, padding: { x: 12, y: 9 },
-      caretSize: 6, caretPadding: 8, titleColor: css("--bg"), bodyColor: css("--bg"), titleMarginBottom: 6,
+      backgroundColor: css("--track"), borderColor: css("--rim"), borderWidth: 1, cornerRadius: 6, padding: { x: 12, y: 9 },
+      caretSize: 6, caretPadding: 8, titleColor: css("--accent"), bodyColor: css("--ink"), titleMarginBottom: 6,
       titleFont: { family: '"DM Sans", sans-serif', weight: "700", size: 12 }, bodyFont: { family: '"DM Sans", sans-serif', size: 12 },
       boxWidth: 8, boxHeight: 8, boxPadding: 6, usePointStyle: true,
       filter: item => item.raw !== 0 && item.raw !== null,   // skip rows with nothing to say
@@ -1492,11 +1492,12 @@
     for (const ds of sets) {
       if (type === "bar") {
         Object.assign(ds, {
-          borderSkipped: stacked ? "start" : false, borderRadius: stacked ? 0 : 6,
+          borderSkipped: stacked ? "start" : false, borderRadius: stacked ? 0 : 4,
           borderWidth: stacked ? 1 : 0, borderColor: css("--panel"),
           maxBarThickness: horizontal ? 16 : 36, categoryPercentage: .7, barPercentage: .9,
         });
         if (!ds.hoverBackgroundColor) ds.hoverBackgroundColor = ds.backgroundColor;
+        ds.backgroundColor = Array.isArray(ds.backgroundColor) ? ds.backgroundColor.map(c => alpha(c, "d9")) : alpha(ds.backgroundColor, "d9");
       } else if (type === "line") {
         ds._c = ds.borderColor;
         const filled = sets.length === 1 || ds.area;
@@ -1590,6 +1591,10 @@
     charts[id] = new window.Chart(canvas, cfg);
   }
 
+  // Charts waiting on a tab that just opened: draw the ones now on screen straight away.
+  function flushCharts() {
+    for (const [id, cfg] of pendingCharts) { const c = $(id); if (c && nearScreen(c)) { pendingCharts.delete(id); paintChart(c, cfg); } }
+  }
   function drawChart(id, config, empty) {
     const canvas = $(id);
     if (!canvas) return;
@@ -1618,7 +1623,7 @@
   // Theme changes need fresh charts (colours are baked in when a chart is created).
   function resetCharts() { Object.keys(charts).forEach(id => { charts[id].destroy(); delete charts[id]; }); }
   const gridX = { grid: { display: false }, border: { display: false }, ticks: { padding: 6 } };
-  const gridY = { grid: { color: "rgba(255,255,255,.05)", drawTicks: false }, border: { display: false }, ticks: { maxTicksLimit: 5, padding: 8 } };
+  const gridY = { grid: { color: "rgba(255,255,255,.07)", drawTicks: false }, border: { display: false, dash: [3, 4] }, ticks: { maxTicksLimit: 5, padding: 8 } };
 
   // ---------- pixel sprites ----------
   // Each string is one row; each character is one pixel, coloured by the palette.
@@ -2065,7 +2070,6 @@
     // Highest tier reached first, then the most characters (the sort keeps the list order among equals).
     claimed.sort((a, b) => b.lvl - a.lvl || b.n - a.n);
     const none = `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
-    $("achievements").innerHTML = claimed.slice(0, OVERVIEW_BADGES).map(c => c.html).join("") || none;
     $("achAll").innerHTML = claimed.length ? claimed.map(c => c.html).concat(open).join("") : none;
     $("achCount").textContent = claimed.length ? tr("{0} of {1} claimed", claimed.length, ACH.length) : "";
   }
@@ -2395,7 +2399,6 @@
     all.sort((a, b) => b.d.t - a.d.t);
     $("clog").innerHTML = all.slice(0, 80).map(({ p, d }) => deathLine(p, d)).join("") || `<p class="empty">${tr("Nobody died. Suspicious.")}</p>`;
     causeChart("cCause", all.map(x => x.d));
-    causeChart("cOCause", all.map(x => x.d));
 
     // deaths by level bracket, stacked by friend
     const brackets = [...Array(state.cap / 10)].map((_, i) => i ? `${i * 10}–${i * 10 + 9}` : "1–9").concat(String(state.cap));
@@ -2447,7 +2450,7 @@
           ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>${payPick(name, st)}` : reward ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
           <div class="bf-links">${mapBtn(name)}${more > 0 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(more))} ›</button>` : ""}</div>
         </div></div>`;
-    })(pick) : "";
+    })(pick) : `<p class="empty">${tr("No bounties right now.")}</p>`;
     // Deaths page: open bounties as posters, claimed ones in a quieter row below.
     const tilt = i => [-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i % 8];
     $("wanted").innerHTML = open.map(({ name, k }, i) => `<div class="poster" style="--r:${tilt(i)}deg"><div class="w">${tr("Wanted")}</div><div class="m">${charName(name)}</div>
@@ -2946,8 +2949,6 @@
     }).join("") || `<p class="empty">${tr("Nobody has been healed by a friend yet.")}</p>`;
   }
 
-  const OVERVIEW_CARDS = 6; // Hall of Fame cards on the overview
-  const OVERVIEW_BADGES = 8; // achievement badges on the overview
   const FAME_CATS = [["all", "All"], ["combat", "Combat"], ["adventure", "Adventure"], ["loot", "Loot"], ["shame", "Shame"]];
   function renderFame(people) {
     const recs = fameRecords(people).sort((a, b) => !!b.fresh - !!a.fresh); // new records first
@@ -2958,8 +2959,6 @@
     $("recNews").innerHTML = fresh.length ? `<summary>${sprite("sulfuras", 1)}${tr(fresh.length === 1 ? "A record fell!" : "{0} records fell!", fresh.length)}</summary><div class="menu"><small>${state.view === "all" ? tr("last 7 days") : rangeLabel()}</small>` +
       fresh.map(r => `<button type="button" class="recchip" data-jump="s-glory-fame">${esc(r.p.name)}${ripHTML(r.p)} · ${r.t} · <b>${r.v}</b></button>`).join("") + `</div>` : "";
     const none = `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
-    // The overview shows a handful; the Hall of Fame page has them all, each with the runners-up.
-    $("fame").innerHTML = recordsHTML(recs.slice(0, OVERVIEW_CARDS)) || none;
     // The Hall of Fame page can be narrowed to one category; only categories with records get a chip.
     const cats = FAME_CATS.filter(([c]) => c === "all" || recs.some(r => r.cat === c));
     if (!cats.some(([c]) => c === state.fameCat)) state.fameCat = "all";
@@ -3610,7 +3609,7 @@
           <small>${[tr("Lvl {0}", esc(ch.level || "?")), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
       </div>`).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
     $("gCount").textContent = tr(list.length === 1 ? "{0} member" : "{0} members", num(list.length));
-    $("oLeads").innerHTML = leadsHTML(rows, LEAD.length, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
+    $("oLeads").innerHTML = leadsHTML(rows, 8, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
     const deaths = people.flatMap(p => p.deaths.filter(d => d.t).map(d => ({ d, p }))).sort((a, b) => b.d.t - a.d.t).slice(0, 4);
@@ -3626,15 +3625,15 @@
   // Hall of Fame card texts and badges wrap instead; only the lines with a character's name shrink, so a name stays whole on one line.
   const FIT = ".tile .foot, .glead .lbl, .sigc .cmp, .sec-head p, .rec .w, .rec .podium .nm, #pName";
   function fitText() {
-    // Deed tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
-    // still spans the full width, on a grid of lcm(cols, last) columns.
-    const tl = $("tiles");
-    if (tl && tl.offsetWidth && tl.children.length) {
+    // Stat tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
+    // still spans the full width, on a grid of lcm(cols, last) columns. Every tile row on the site, not just the deeds.
+    document.querySelectorAll(".tiles").forEach(tl => {
+      if (!tl.offsetWidth || !tl.children.length) return;
       const n = tl.children.length, rows = Math.ceil(n / Math.max(1, Math.floor((tl.clientWidth + 10) / 160)));
       const cols = Math.ceil(n / rows), last = n - cols * (rows - 1), gcd = (a, b) => b ? gcd(b, a % b) : a, lcm = cols * last / gcd(cols, last);
-      tl.style.setProperty("--cols", lcm);
+      tl.style.gridTemplateColumns = `repeat(${lcm}, minmax(0, 1fr))`;
       [...tl.children].forEach((c, i) => { c.style.gridColumn = `span ${i >= cols * (rows - 1) ? lcm / last : lcm / cols}`; });
-    }
+    });
     document.querySelectorAll(FIT).forEach(el => {
       if (!el.offsetWidth) return;
       el.style.fontSize = "";
@@ -3732,12 +3731,10 @@
     const rows = people.map(p => ({ p, s: sumFor(p) }));
     const active = rows.filter(r => Object.keys(r.s).length > 5);
     renderTiles(rows, people);
-    // On the overview Leaders spans the whole top row under the guild card and the tiles; elsewhere it sits beside the tiles.
-    (route.kind === "main" ? document.querySelector(".toprow") : document.querySelector(".deeds-row")).append(document.querySelector(".oleads"));
     if (route.kind === "guild") renderGuildSide(rows, people);
     if (route.kind === "main") {
       renderGuilds(realmChars);
-      $("oLeads").innerHTML = leadsHTML(rows, 7, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
+      $("oLeads").innerHTML = leadsHTML(rows, 8, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
     }
     renderMomentum(people);
     renderStandings(rows);
@@ -4032,7 +4029,8 @@
   state.sub = {};
   function applySubs(pg) {
     const secs = pg && pg !== "overview"
-      ? [...document.querySelectorAll("#app > section[data-pg]")].filter(s => !s.hidden && !s.classList.contains("nosec") && s.querySelector(".sec-head h2"))
+      ? [...document.querySelectorAll("#app > section[data-pg]")].filter(s => !s.hidden && !s.classList.contains("nosec") && s.querySelector(".sec-head h2")
+        && !(s.classList.contains("main-only") && document.body.dataset.route !== "main"))
       : [];
     const box = $("subTabs"), multi = secs.length > 1;
     $("app").classList.toggle("subbed", multi);
@@ -4049,6 +4047,7 @@
     state.sub[state.page] = b.dataset.sub;
     applySubs(state.page);
     fitText();
+    flushCharts();
   });
   function setPage(pg) {
     const profile = pg.startsWith("p-");
