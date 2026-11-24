@@ -1,5 +1,5 @@
-/* Dashboard style. The site name: Jacquard 12 (pixel). Headings and big numbers: Instrument Serif. Text, labels and
-   table numbers: DM Sans. Icons stay pixel sprites. Colours come from the theme tokens below; the picker sets
+/* Dashboard style. The site name: Jacquard 12 (pixel). Headings: Cinzel. Text, labels, names and every number:
+   DM Sans. Icons stay pixel sprites. Colours come from the theme tokens below; the picker sets
    data-theme on <html> (Forever by default; its frames and map are at the end of this file). */
 :root, :root[data-theme="horde"] {
   color-scheme: dark;
@@ -15,7 +15,7 @@
 :root[data-theme="forever"] {
   --bg: #06202a; --grid: rgba(143,214,207,.05); --panel: #0c2c38; --panel2: #123c49; --rim: #2f6670; --track: #041620;
   --ink: #f3eee0; --muted: #a3bfbe; --accent: #e6c26f; --accent2: #2fb3b0; --on-accent: #2b1c05; --good: #8fe6d2; --bad: #ff7a66;
-  --logo: "Cinzel", "Instrument Serif", serif;
+  --logo: "Cinzel", Georgia, serif;
   --r: 5px; --rs: 5px;
 }
 :root[data-theme="fel"] {
@@ -23,9 +23,9 @@
   --ink: #ecf5e8; --muted: #9e9ab0; --accent: #8cff4a; --accent2: #7a2fd6; --on-accent: #0b1a02; --good: #c58cff; --bad: #ff4f8b;
 }
 :root {
-  --logo: "Jacquard 12", "Instrument Serif", serif;
-  --hf: "Cinzel", "Instrument Serif", Georgia, serif; /* headings: carved capitals, like the game's titles */
-  --sf: "Instrument Serif", Georgia, serif; /* the large numbers on stat cards and hero panels */
+  --logo: "Jacquard 12", Georgia, serif;
+  --hf: "Cinzel", Georgia, serif; /* headings: carved capitals, like the game's titles */
+  --sf: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* large numbers and names: bold sans, easy to read */
   --lf: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* stat labels: clear at small sizes */
   --pf: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* small headers, labels and navigation */
   --nf: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; /* table numbers: even-width digits line up */
@@ -83,7 +83,7 @@ button, select, input { font: inherit; color: inherit; }
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-content: start;
 }
 .frame-title {
-  font: 400 21px/1.2 var(--hf); letter-spacing: 0; color: var(--ink);
+  font: 600 19px/1.2 var(--hf); letter-spacing: 0; color: var(--ink);
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px;
 }
 .frame-title > span:first-child { display: inline-flex; align-items: center; gap: 10px; }
@@ -93,7 +93,7 @@ button, select, input { font: inherit; color: inherit; }
 
 section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
 .sec-head { display: flex; align-items: baseline; gap: 2px 12px; min-width: 0; }
-.sec-head h2 { font: 400 32px/1.05 var(--hf); color: var(--ink); letter-spacing: -.01em; white-space: nowrap; }
+.sec-head h2 { font: 600 30px/1.05 var(--hf); color: var(--ink); letter-spacing: -.01em; white-space: nowrap; }
 .brand-name { font: 28px/1 var(--logo); color: var(--accent); text-shadow: 1px 1px 0 var(--accent2), 2px 2px 0 #000; white-space: nowrap; }
 .sec-head p { color: var(--muted); font-size: 13px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sec-head p:empty { display: none; }
@@ -123,7 +123,7 @@ section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-w
 .realm-emblem { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .realm-txt { display: grid; gap: 0; min-width: 0; flex: 1; line-height: 1.1; }
 .realm-txt .nav-lbl { font-size: 10px; }
-.realm-txt .sel { width: 100%; padding: 1px 22px 1px 0; font: 400 18px var(--sf); background-color: transparent; box-shadow: none; background-position: right 2px center; }
+.realm-txt .sel { width: 100%; padding: 1px 22px 1px 0; font: 600 18px var(--sf); background-color: transparent; box-shadow: none; background-position: right 2px center; }
 /* "You are here": the realm's ledger, the guild and the character, top down; levels above the current one link back */
 .scope { display: grid; gap: 4px; }
 .scope .nav-label { margin: 2px 8px 4px; }
@@ -133,7 +133,7 @@ section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-w
 .lvl-ic { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .lvl-t { display: grid; min-width: 0; line-height: 1.2; }
 .lvl-t small { font: 600 11.5px var(--body); color: var(--muted); }
-.lvl-t b { font: 400 18px var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lvl-t b { font: 600 18px var(--sf); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lvl-back { font: 600 12px var(--body); color: var(--muted); white-space: nowrap; }
 a.lvl:hover { background: var(--soft); }
 a.lvl:hover .lvl-back { color: var(--accent); }
@@ -291,8 +291,6 @@ header.hero { display: grid; gap: 16px; }
 .car:hover .car-arrow, .car-arrow:focus-visible { opacity: 1; }
 .car-arrow[hidden] { display: none; }
 @media (hover: none) { .car-arrow { display: none; } }
-/* the overview's top row: one guild at a time beside the Ledger of Deeds */
-.toprow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 /* each column keeps its own height: the guild card and Leaders on the left, the stories and tiles on the right */
 #s-guilds { align-content: start; gap: 12px; }
 #s-guilds .guilds { padding-block: 0; align-items: start; }
@@ -308,17 +306,17 @@ header.hero { display: grid; gap: 16px; }
   #s-guilds .gcard .gfaces { align-self: end; }
 }
 #s-guilds .car-arrow { opacity: 1; }
+/* on the Characters page: two or three guild cards side by side, a page at a time */
+@media (min-width: 640px) { #s-guilds .guilds { grid-auto-columns: calc((100% - 14px) / 2); } }
+@media (min-width: 1200px) { #s-guilds .guilds { grid-auto-columns: calc((100% - 28px) / 3); } }
 /* GUILD-FRAME (generated by a script: a bevelled gold frame with a gem medallion in each corner, the gem in the faction's colour) */
 #app #s-guilds .gcard { border: 16px solid transparent; border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff0b0'/%3E%3Cstop offset='.35' stop-color='%23d9a93a'/%3E%3Cstop offset='.7' stop-color='%239c6a1c'/%3E%3Cstop offset='1' stop-color='%235a3a0c'/%3E%3C/linearGradient%3E%3ClinearGradient id='m' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff2b8'/%3E%3Cstop offset='.5' stop-color='%23c9952c'/%3E%3Cstop offset='1' stop-color='%236a4410'/%3E%3C/linearGradient%3E%3CradialGradient id='gem' cx='.4' cy='.35' r='.7'%3E%3Cstop offset='0' stop-color='%23ffe9a8'/%3E%3Cstop offset='1' stop-color='%23a8741c'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill-rule='evenodd' fill='%23000' d='M0 0H60V60H0ZM14 14V46H46V14Z'/%3E%3Cpath fill-rule='evenodd' fill='url(%23b)' d='M1 1H59V59H1ZM13 13V47H47V13Z'/%3E%3Crect x='2.5' y='2.5' width='55' height='55' fill='none' stroke='%23fff6c8' stroke-opacity='.55'/%3E%3Crect x='5.5' y='5.5' width='49' height='49' fill='none' stroke='%233a2608' stroke-opacity='.7'/%3E%3Crect x='7.5' y='7.5' width='45' height='45' fill='none' stroke='%23ffe08a' stroke-opacity='.45'/%3E%3Crect x='12.5' y='12.5' width='35' height='35' fill='none' stroke='%232a1a06'/%3E%3Crect x='14' y='14' width='32' height='32' fill='none' stroke='%23000' stroke-width='2'/%3E%3Crect x='16.5' y='16.5' width='27' height='27' fill='none' stroke='%23c9952c' stroke-opacity='.8'/%3E%3Cg transform='translate(10 10)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(50 10)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(10 50)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(50 50)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3C/svg%3E") 20 stretch; padding: 10px 12px 12px; }
 #app #s-guilds .gcard.horde { border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff0b0'/%3E%3Cstop offset='.35' stop-color='%23d9a93a'/%3E%3Cstop offset='.7' stop-color='%239c6a1c'/%3E%3Cstop offset='1' stop-color='%235a3a0c'/%3E%3C/linearGradient%3E%3ClinearGradient id='m' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff2b8'/%3E%3Cstop offset='.5' stop-color='%23c9952c'/%3E%3Cstop offset='1' stop-color='%236a4410'/%3E%3C/linearGradient%3E%3CradialGradient id='gem' cx='.4' cy='.35' r='.7'%3E%3Cstop offset='0' stop-color='%23ff8a7a'/%3E%3Cstop offset='1' stop-color='%238a0f0a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill-rule='evenodd' fill='%23000' d='M0 0H60V60H0ZM14 14V46H46V14Z'/%3E%3Cpath fill-rule='evenodd' fill='url(%23b)' d='M1 1H59V59H1ZM13 13V47H47V13Z'/%3E%3Crect x='2.5' y='2.5' width='55' height='55' fill='none' stroke='%23fff6c8' stroke-opacity='.55'/%3E%3Crect x='5.5' y='5.5' width='49' height='49' fill='none' stroke='%233a2608' stroke-opacity='.7'/%3E%3Crect x='7.5' y='7.5' width='45' height='45' fill='none' stroke='%23ffe08a' stroke-opacity='.45'/%3E%3Crect x='12.5' y='12.5' width='35' height='35' fill='none' stroke='%232a1a06'/%3E%3Crect x='14' y='14' width='32' height='32' fill='none' stroke='%23000' stroke-width='2'/%3E%3Crect x='16.5' y='16.5' width='27' height='27' fill='none' stroke='%23c9952c' stroke-opacity='.8'/%3E%3Cg transform='translate(10 10)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(50 10)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(10 50)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(50 50)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3C/svg%3E") 20 stretch; }
 #app #s-guilds .gcard.alliance { border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff0b0'/%3E%3Cstop offset='.35' stop-color='%23d9a93a'/%3E%3Cstop offset='.7' stop-color='%239c6a1c'/%3E%3Cstop offset='1' stop-color='%235a3a0c'/%3E%3C/linearGradient%3E%3ClinearGradient id='m' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff2b8'/%3E%3Cstop offset='.5' stop-color='%23c9952c'/%3E%3Cstop offset='1' stop-color='%236a4410'/%3E%3C/linearGradient%3E%3CradialGradient id='gem' cx='.4' cy='.35' r='.7'%3E%3Cstop offset='0' stop-color='%23a8d0ff'/%3E%3Cstop offset='1' stop-color='%23123e9a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill-rule='evenodd' fill='%23000' d='M0 0H60V60H0ZM14 14V46H46V14Z'/%3E%3Cpath fill-rule='evenodd' fill='url(%23b)' d='M1 1H59V59H1ZM13 13V47H47V13Z'/%3E%3Crect x='2.5' y='2.5' width='55' height='55' fill='none' stroke='%23fff6c8' stroke-opacity='.55'/%3E%3Crect x='5.5' y='5.5' width='49' height='49' fill='none' stroke='%233a2608' stroke-opacity='.7'/%3E%3Crect x='7.5' y='7.5' width='45' height='45' fill='none' stroke='%23ffe08a' stroke-opacity='.45'/%3E%3Crect x='12.5' y='12.5' width='35' height='35' fill='none' stroke='%232a1a06'/%3E%3Crect x='14' y='14' width='32' height='32' fill='none' stroke='%23000' stroke-width='2'/%3E%3Crect x='16.5' y='16.5' width='27' height='27' fill='none' stroke='%23c9952c' stroke-opacity='.8'/%3E%3Cg transform='translate(10 10)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(50 10)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(10 50)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3Cg transform='translate(50 50)'%3E%3Ccircle r='9.5' fill='%23120c08'/%3E%3Ccircle r='8.5' fill='url(%23m)'/%3E%3Ccircle r='8.5' fill='none' stroke='%233a2608'/%3E%3Ccircle r='5.6' fill='%231a0f06'/%3E%3Ccircle r='4.8' fill='url(%23gem)'/%3E%3Cellipse cx='-1.6' cy='-1.8' rx='1.8' ry='1.1' fill='%23fff' opacity='.75'/%3E%3C/g%3E%3C/svg%3E") 20 stretch; }
 /* /GUILD-FRAME */
 #app #s-guilds .gcard { box-shadow: 0 0 0 1px #000, 0 8px 22px rgba(0, 0, 0, .55), 0 0 18px color-mix(in srgb, var(--fac, #d9b45a) 40%, transparent); }
-#app[data-route="main"] .deeds-main { gap: 12px; }
-.toprow > .oleads { grid-column: 1 / -1; }
 
 @media (min-width: 1000px) {
-  #app[data-route="main"] .toprow { grid-template-columns: 400px minmax(0, 1fr); }
   #s-guilds .sec-head p:first-of-type { display: none; }
 }
 .gcard { gap: 10px; }
@@ -327,7 +325,7 @@ header.hero { display: grid; gap: 16px; }
 .ghead > div { display: grid; gap: 2px; min-width: 0; }
 .ghead .muted { font-size: 13px; }
 .gstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; }
-.gstats b { display: block; font: 400 24px/1.1 var(--sf); color: var(--ink); overflow-wrap: anywhere; }
+.gstats b { display: block; font: 600 24px/1.1 var(--sf); color: var(--ink); overflow-wrap: anywhere; }
 .gstats span { font: 600 13px var(--lf); color: color-mix(in srgb, var(--ink) 82%, var(--muted)); }
 .gmvp { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
 .gfaces { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -345,13 +343,14 @@ a.gname:hover { text-decoration: underline; text-underline-offset: 4px; }
 .gcard .btn { justify-self: start; text-decoration: none; }
 a.glink { color: var(--good); text-decoration: none; font-weight: 700; }
 a.glink:hover { text-decoration: underline; }
-/* Guild page, the overview's guild cards and the character sheet: gold WoW-style frames with corner studs, drawn in SVG (no Blizzard art shipped). */
-#app[data-route="guild"] .frame, #app .gcard, #p-sheet {
+/* The guild page's hero, the guild cards and the character sheet: gold WoW-style frames with corner studs, drawn in SVG (no Blizzard art shipped).
+   Every other card on the guild page is a plain card, as on the realm's pages. */
+#app[data-route="guild"] .ghero, #app .gcard, #p-sheet {
   border: 9px solid transparent; border-radius: 0; box-shadow: var(--shadow);
   border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dd8a'/%3E%3Cstop offset='.5' stop-color='%23b8862e'/%3E%3Cstop offset='1' stop-color='%236e4a14'/%3E%3C/linearGradient%3E%3Cpath id='d' d='M5 0 10 5 5 10 0 5Z' fill='url(%23g)' stroke='%23000'/%3E%3C/defs%3E%3Crect x='.5' y='.5' width='29' height='29' fill='none' stroke='%23000'/%3E%3Crect x='2.5' y='2.5' width='25' height='25' fill='none' stroke='%23d9b45a' stroke-width='2'/%3E%3Crect x='4.5' y='4.5' width='21' height='21' fill='none' stroke='%233a2a10'/%3E%3Cuse href='%23d'/%3E%3Cuse href='%23d' x='20'/%3E%3Cuse href='%23d' y='20'/%3E%3Cuse href='%23d' x='20' y='20'/%3E%3C/svg%3E") 10 stretch;
   background-image: linear-gradient(color-mix(in srgb, #d9b45a 5%, transparent), transparent 120px);
 }
-#app[data-route="guild"] .frame-title, #p-sheet > .frame-title, .gcard .gname { color: #f2d57e; text-shadow: 1px 1px 0 #000; }
+#p-sheet > .frame-title, .gcard .gname { color: #f2d57e; text-shadow: 1px 1px 0 #000; }
 .ghero { grid-template-columns: auto minmax(0, 1fr) !important; column-gap: 22px; }
 .ghero > :not(.gcrest) { grid-column: 2; }
 .gcrest { grid-row: 1 / span 3; align-self: center; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
@@ -375,7 +374,7 @@ a.glink:hover { text-decoration: underline; }
 .ghero h2 { font: clamp(40px, 5vw, 60px)/0.95 var(--hf); overflow-wrap: anywhere; }
 .ghero .facts, .phero .facts { display: flex; flex-wrap: wrap; gap: 10px 32px; }
 .ghero .facts div { display: grid; }
-.ghero .facts b { font: 400 30px/1.1 var(--sf); }
+.ghero .facts b { font: 600 30px/1.1 var(--sf); }
 .ghero .facts span { font-size: 13px; font-weight: 600; color: var(--muted); }
 #scopeHead:empty { display: none; }
 
@@ -442,10 +441,6 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 /* deed tiles: fitText picks the column count so every row is full; any height left beside the guild card is shared out,
    and wider tiles get a bigger number */
 #tiles { grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
-#app[data-route="main"] .deeds-main { grid-template-rows: auto auto 1fr; }
-#app[data-route="main"] .deeds-row, #app[data-route="main"] #tiles { height: 100%; }
-#app[data-route="main"] #tiles { grid-auto-rows: minmax(min-content, 1fr); }
-#app[data-route="main"] #tiles > .tile { max-height: 120px; }
 #tiles > .tile { container-type: inline-size; align-content: center; }
 @container (min-width: 230px) { #tiles .tile .val { font-size: 28px; } }
 @container (min-width: 300px) { #tiles .tile .val { font-size: 32px; } }
@@ -458,7 +453,7 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; backgrou
 .tile:nth-child(4n+2) { --tone: var(--accent2); } .tile:nth-child(4n+3) { --tone: var(--good); } .tile:nth-child(4n+4) { --tone: #e8b440; }
 .tbody { display: grid; min-width: 0; }
 .tile .lbl { font: 600 12.5px/1.3 var(--lf); color: var(--muted); overflow-wrap: break-word; hyphens: auto; }
-.tile .val { font: 400 23px/1.15 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.01em; }
+.tile .val { font: 600 23px/1.15 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.01em; }
 .tile .val.red { color: var(--bad); }
 .tile.dead { --tone: var(--bad); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bad) 55%, transparent), var(--shadow); }
 .tile.dead .val { color: var(--bad); }
@@ -556,7 +551,7 @@ body[data-page="atlas"] .page-intro, #s-map > .sec-head { position: absolute; wi
 .map.can-open:not(.dragging) { cursor: pointer; }
 /* the hovered zone's name, at the top of the map like in the game */
 .maphover { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 4; padding: 4px 14px; pointer-events: none;
-  font: 400 22px/1.2 var(--sf); color: #ffd36b; text-shadow: 0 1px 0 #000, 0 0 6px #000, 0 0 12px #000; white-space: nowrap; }
+  font: 600 22px/1.2 var(--sf); color: #ffd36b; text-shadow: 0 1px 0 #000, 0 0 6px #000, 0 0 12px #000; white-space: nowrap; }
 .mapcrumbs { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 13px; color: var(--muted); }
 .mapcrumbs .linkbtn { padding: 6px 0; color: var(--accent); }
 .mapzoom { position: absolute; right: 8px; top: 8px; z-index: 4; display: grid; gap: 4px; }
@@ -637,14 +632,6 @@ button.hlc:hover, button.hlc:focus-visible { outline: 1px solid var(--accent); }
 .pages > * { scroll-snap-align: start; }
 @media (min-width: 640px) { .fame.pages { --cols: 2; } }
 @media (min-width: 1000px) and (max-width: 1199px) { .fame.pages { --cols: 3; } }
-.pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-@media (min-width: 1200px) { .pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
-.deeds-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-/* the stat cards in a row across the page, the leaders in columns under them */
-#app[data-route="main"] .deeds-row { grid-template-rows: none; }
-#oLeads { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 28px; }
-.oleads { gap: 4px; padding: 12px 16px; }
-.oleads .glead { padding: 2px 0; }
 /* achievement badges: a round medal, its ring coloured by tier and filled to --fill percent; locked ones are grey */
 .achievements.badges { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 20px 12px; padding-top: 4px; }
 .abadge { --tc: #e8b440; display: grid; justify-items: center; align-content: start; gap: 2px; min-width: 0; text-align: center; }
@@ -672,7 +659,7 @@ button.hlc:hover, button.hlc:focus-visible { outline: 1px solid var(--accent); }
 .abadge .medal .wicon { width: 32px; height: 32px; border-radius: 4px; box-shadow: none; }
 .abadge.locked .medal::before { background: var(--track); box-shadow: inset 0 0 0 1px var(--line); }
 .abadge.locked .medal > * { filter: grayscale(1) brightness(.75); opacity: .55; }
-.abadge .t { max-width: 100%; font: 400 16px/1.2 var(--sf); color: var(--ink); text-wrap: balance; }
+.abadge .t { max-width: 100%; font: 600 16px/1.2 var(--sf); color: var(--ink); text-wrap: balance; }
 .abadge.shame .t { color: var(--bad); }
 .abadge.locked .t { color: var(--muted); }
 .abadge .who { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 5px; max-width: 100%; font-size: 13px; font-weight: 700; }
@@ -783,7 +770,7 @@ a.mrow:hover .nm { color: var(--accent); }
   transform: rotate(var(--r, -1deg)); display: grid; gap: 4px;
 }
 .poster .w { font: 28px/1 var(--hf); color: #8a1c10; }
-.poster .m { font: 400 20px/1.15 var(--sf); overflow-wrap: anywhere; }
+.poster .m { font: 600 20px/1.15 var(--sf); overflow-wrap: anywhere; }
 .poster .f { font-size: 13px; }
 .poster .r { font: 800 14px var(--nf); border-top: 2px dashed rgba(59,36,18,.45); padding-top: 6px; margin-top: 4px; }
 .poster { position: relative; }
@@ -841,7 +828,7 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .rec > * { position: relative; }
 .rec > .newrec { position: absolute; }
 .rec .t { font: 600 14px/1.3 var(--lf); color: color-mix(in srgb, var(--ink) 82%, var(--muted)); text-wrap: balance; }
-.rec .v { font: 400 30px/1.1 var(--sf); color: #ffd36b; overflow-wrap: anywhere; letter-spacing: -.02em; }
+.rec .v { font: 600 30px/1.1 var(--sf); color: #ffd36b; overflow-wrap: anywhere; letter-spacing: -.02em; }
 /* the holder's line: the name is never cut or wrapped; the date beside it gives way first */
 .rec .w { font-size: 14px; display: flex; gap: 6px; align-items: center; min-width: 0; white-space: nowrap; overflow: hidden; }
 .rec .w > .plink, .rec .w > .cname { flex: none; }
@@ -915,7 +902,7 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .runcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .runcard { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--panel2); box-shadow: inset 0 0 0 1px var(--line); }
 .runcard h3 { font: 600 16px var(--lf); overflow-wrap: anywhere; }
-.runcard .big { font: 400 26px/1.1 var(--sf); color: var(--good); }
+.runcard .big { font: 600 26px/1.1 var(--sf); color: var(--good); }
 .runcard .kv { font-size: 13px; }
 
 /* ---------- Roster ---------- */
@@ -961,7 +948,7 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .phero .known { font-size: 17px; color: var(--good); font-weight: 700; }
 .phero .facts { display: flex; flex-wrap: wrap; gap: 10px 32px; }
 .phero .facts div { display: grid; }
-.phero .facts b { font: 400 32px/1.05 var(--sf); color: var(--ink); }
+.phero .facts b { font: 600 32px/1.05 var(--sf); color: var(--ink); }
 .phero .facts span { font-size: 13px; font-weight: 600; color: var(--muted); }
 /* the labels are written lowercase for use mid-sentence; as a label each starts with a capital */
 :is(.phero, .ghero) .facts span::first-letter, .ilvl span::first-letter, .grow .n small::first-letter { text-transform: uppercase; }
@@ -972,10 +959,8 @@ html[lang="sv"] details.ledger[open] > summary .frame-title::after { content: "D
 .pside-stats { display: grid; gap: 12px; align-content: start; }
 .plately { display: none; }
 #app:not([data-route="guild"]) .guild-only { display: none !important; }
-.deeds-wrap { display: grid; gap: 22px; }
-.deeds-main { display: grid; gap: 14px; align-content: start; }
 /* The guild page leads with its stats; the roster sits closed at the bottom until opened. */
-#app[data-route="guild"] .deeds-main .plately { display: block; contain: none !important; overflow: visible !important; }
+#app[data-route="guild"] .dash-guild .plately { display: block; contain: none !important; overflow: visible !important; }
 .groster .frame-title small { margin-left: auto; }
 details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-shadow: none; }
 .grow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 2px 16px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rim); }
@@ -997,7 +982,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .glead .plink { overflow: hidden; }
 /* The tag reads as part of the name: same font, size and baseline, a dimmer shade of the name colour, and a tighter gap. */
 .glead .gtag a.glink { font-weight: inherit; color: color-mix(in srgb, var(--accent) 50%, var(--muted)); }
-.glead .gtag { font: 400 16px/1.1 var(--sf); letter-spacing: .01em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: baseline; margin-right: -4px; }
+.glead .gtag { font: 600 16px/1.1 var(--sf); letter-spacing: .01em; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: baseline; margin-right: -4px; }
 .glead.wg .plink { align-self: baseline; }
 .glead .cname { color: var(--cc, var(--accent)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plately .lh { font: 600 13.5px var(--pf); color: var(--muted); margin: 4px 0 6px; }
@@ -1022,7 +1007,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 @media (max-width: 520px) { .sig { grid-template-columns: minmax(0, 1fr); } }
 .sigc { padding: 18px 16px 16px; gap: 4px; box-shadow: inset 0 0 0 1px var(--line), inset 0 3px 0 var(--c, var(--accent)), var(--shadow); }
 .sigc .lbl { font-size: 13px; color: var(--muted); }
-.sigc .val { font: 400 32px/1.05 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.02em; }
+.sigc .val { font: 600 32px/1.05 var(--sf); color: var(--ink); overflow-wrap: anywhere; letter-spacing: -.02em; }
 .sigc .tag { color: var(--good); font-weight: 700; }
 .sigc .cmp { color: var(--muted); font-size: 13px; }
 .sigc .cmp > span { white-space: nowrap; } /* rank and ratio break between, never inside */
@@ -1048,7 +1033,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .portrait .face { width: 96px; height: 96px; display: block; image-rendering: pixelated; }
 .portrait .lvl { display: block; min-height: 0; position: absolute; right: -10px; bottom: -10px; z-index: 1; font: 800 16px/1 var(--nf); color: var(--ink); background: var(--track); padding: 4px 7px; box-shadow: inset 0 0 0 2px var(--c); text-shadow: 2px 2px 0 #000; }
 .mid.solo { display: flex; padding: 4px 0 4px 8px; }
-.ilvl b { font: 400 34px var(--sf); color: var(--accent); display: block; line-height: 1; }
+.ilvl b { font: 600 34px var(--sf); color: var(--accent); display: block; line-height: 1; }
 .ilvl span { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
 .weapons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 24px; border-top: 2px solid var(--track); padding-top: 12px; max-width: 900px; width: 100%; justify-self: center; }
 .talents { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1119,7 +1104,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .card { padding: 0; gap: 0; overflow: hidden; }
 .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; min-height: 60px; padding: 14px 20px; box-shadow: inset 0 -1px 0 var(--line); }
 .card-head > div:first-child { display: grid; gap: 2px; min-width: 0; }
-.card-head h2 { font: 400 24px/1.1 var(--hf); }
+.card-head h2 { font: 600 19px/1.2 var(--hf); letter-spacing: .02em; }
 .card > .chart { margin: 16px 20px 14px; }
 /* the momentum chart fills its card when the Fatality report beside it (with its bounty) is taller */
 #s-momentum { grid-template-rows: auto 1fr; align-content: stretch; }
@@ -1142,7 +1127,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .donut canvas { position: absolute; inset: 0; }
 .donut .nochart { position: absolute; inset: 0; display: grid; place-items: center; padding: 0; }
 .donut-mid { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
-.donut-mid strong { font: 400 36px/1 var(--sf); }
+.donut-mid strong { font: 600 36px/1 var(--sf); }
 .donut-mid span { font-size: 11px; color: var(--muted); }
 .donut-legend { display: grid; gap: 9px; min-width: 150px; }
 .donut-legend div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
@@ -1244,11 +1229,11 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .drop.qb4 { --qc: #a335ee; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qc) 70%, var(--line)), inset 3px 0 0 var(--qc), 0 0 18px color-mix(in srgb, var(--qc) 35%, transparent); }
 .drop.qb5 { --qc: #ff8000; box-shadow: inset 0 0 0 1px var(--qc), inset 3px 0 0 var(--qc), 0 0 22px color-mix(in srgb, var(--qc) 45%, transparent); }
 .drop .eyebrow { display: flex; justify-content: flex-start; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--qc); }
-.drop strong { font: 400 19px/1.25 var(--sf); overflow-wrap: anywhere; }
+.drop strong { font: 600 19px/1.25 var(--sf); overflow-wrap: anywhere; }
 .drop strong a { text-decoration: none; }
 .drop p { font-size: 12px; color: var(--muted); }
 .qlegend .hot strong { color: #c06cff; text-shadow: 0 0 10px rgba(163, 53, 238, .6); }
-#s-lootq.has-epic { box-shadow: inset 0 0 0 1px color-mix(in srgb, #a335ee 45%, var(--line)), 0 0 26px rgba(163, 53, 238, .18), var(--shadow); }
+#s-lootq.has-epic > .card { box-shadow: inset 0 0 0 1px color-mix(in srgb, #a335ee 45%, var(--line)), 0 0 26px rgba(163, 53, 238, .18), var(--shadow); }
 /* BoE and world-drop badges next to an item */
 .dtag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font: 700 10px/1.5 var(--body); letter-spacing: .06em; text-transform: uppercase; vertical-align: middle; }
 .dtag.world { color: #1b1206; background: #f2d57e; }
@@ -1269,15 +1254,17 @@ footer { padding: 6px 0 0; }
 /* loading: only the loader shows until the ledger arrives */
 .loader { display: none; }
 body.loading #app > :not(.loader) { display: none; }
-body.loading .loader { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 22vh 0; color: var(--muted); font-family: var(--pf); }
-.loader-dots { display: flex; gap: 10px; }
-.loader-dots i { width: 14px; height: 14px; background: var(--accent); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
-@keyframes loadhop { 0%, 60%, 100% { transform: none; opacity: .45; } 30% { transform: translateY(-12px); opacity: 1; } }
-@media (prefers-reduced-motion: no-preference) {
-  html:not(.calm) .loader-dots i { animation: loadhop 1s steps(6) infinite; }
-  html:not(.calm) .loader-dots i:nth-child(2) { animation-delay: .15s; }
-  html:not(.calm) .loader-dots i:nth-child(3) { animation-delay: .3s; }
-}
+/* grey cards in the dashboard's shape, so the page doesn't jump when the data lands */
+body.loading .loader { display: grid; gap: 18px; color: var(--muted); }
+.skel { display: block; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--line);
+  background: linear-gradient(100deg, var(--panel) 35%, color-mix(in srgb, var(--panel2) 85%, var(--ink)) 50%, var(--panel) 65%) 100% 0 / 300% 100%; }
+.skel-title { width: min(460px, 70%); height: 56px; }
+.skel-dash { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.skel.s-leads { height: 200px; } .skel.s-stand { height: 400px; } .skel.s-bounty { height: 320px; } .skel.s-where { height: 270px; }
+@media (min-width: 1000px) { .skel-dash { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); } .skel.s-leads, .skel.s-where { grid-column: 1 / -1; } }
+#loaderText { font-size: 13px; text-align: center; }
+@keyframes shimmer { to { background-position: 0 0; } }
+@media (prefers-reduced-motion: no-preference) { html:not(.calm) .skel { animation: shimmer 1.6s linear infinite; } }
 
 /* ---------- WoW assets: real icons, crests, factions, renders, journal art ---------- */
 /* Game icons get the in-game look: a dark rim and slightly rounded corners. */
@@ -1419,12 +1406,17 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   background-position: center;
   background-repeat: no-repeat;
 }
-:root[data-theme="forever"] .frame:not(.gcard):not(#p-sheet), :root[data-theme="forever"] .card {
+:root[data-theme="forever"] .frame:not(.gcard):not(#p-sheet):not(.plately), :root[data-theme="forever"] .card {
+  border-radius: 6px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel2) 45%, var(--panel)), var(--panel) 140px);
+  box-shadow: inset 0 0 0 1px rgba(230,194,111,.17), inset 0 1px 0 rgba(255,236,190,.10), 0 12px 28px rgba(0,0,0,.30);
+}
+/* featured panels only (the bounty, the character and guild heroes): the gold-bound frame with gem studs */
+:root[data-theme="forever"] #app :is(.ornate, .phero, .ghero) {
   border: 12px solid transparent; border-image: url("forever-frame.svg") 16 / 12px stretch;
   border-radius: 0; background-clip: padding-box;
   box-shadow: 0 18px 34px rgba(0,0,0,.34);
 }
-:root[data-theme="forever"] #app[data-route="guild"] .frame { border-width: 9px; }
 :root[data-theme="forever"] :is(.tile, .rec, .realm-pick, .lvl, .pagetab, .subtab) { border-radius: 4px; }
 :root[data-theme="forever"] .tile {
   box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(230,194,111,.22), 0 8px 18px rgba(0,0,0,.24);
@@ -1467,7 +1459,41 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   :root[data-theme="forever"] body:not(.menu-open) .sidebar { box-shadow: none; }
 }
 @media (max-width: 640px) {
-  :root[data-theme="forever"] .frame:not(.gcard):not(#p-sheet), :root[data-theme="forever"] .card {
+  :root[data-theme="forever"] #app :is(.ornate, .phero, .ghero) {
     border-width: 8px; border-image-width: 8px;
   }
 }
+
+/* ---------- Overview dashboard: Leaders across the top, standings beside the bounty, then where it happened ---------- */
+.dash { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (min-width: 1000px) {
+  .dash { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); grid-template-areas: "leads leads" "stand bounty" "where where"; }
+  #d-leads { grid-area: leads; } #s-standings { grid-area: stand; } #d-bounty { grid-area: bounty; } #s-where { grid-area: where; }
+}
+#s-where.nosec { display: none; }
+#s-where .hlcards { padding: 18px 20px 20px; }
+/* the bounty card matches the standings beside it; the plank grows with it */
+#d-bounty { align-self: stretch; grid-template-rows: auto 1fr; }
+#d-bounty .bounty { margin: 18px 20px 20px; align-content: center; }
+#d-bounty > .empty { padding: 16px 20px; }
+/* Leaders: one cell per stat, the number large, who holds it under it */
+.leadgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 -1px -1px 0; }
+@media (min-width: 760px) { .leadgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.leadgrid .glead { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ic lbl" "n n" "who who"; gap: 6px 10px; padding: 16px 20px;
+  box-shadow: inset -1px 0 0 var(--line), inset 0 -1px 0 var(--line); }
+.leadgrid .glead > .wicon { grid-area: ic; width: 22px; height: 22px; }
+.leadgrid .glead .lbl { grid-area: lbl; font-size: 13px; }
+.leadgrid .glead .n { grid-area: n; text-align: left; font: 700 28px/1.1 var(--nf); color: var(--ink); letter-spacing: -.02em; }
+.leadgrid .glead .plink { grid-area: who; font-weight: 700; }
+.leadgrid > .empty { padding: 16px 20px; }
+.dash-guild { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1000px) { .dash-guild { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* ---------- Hover: everything you can click answers the same way ---------- */
+.linkbtn:hover, .linkbtn:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+.chip:not([aria-pressed="true"]):hover, .subtab:not([aria-selected="true"]):hover { color: var(--ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, var(--line)); }
+button.hlc, .gcard, .st-row { transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease; }
+button.hlc:hover, button.hlc:focus-visible { outline: 0; transform: translateY(-2px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 65%, transparent), 0 10px 22px rgba(0,0,0,.35); }
+.st-row:hover { box-shadow: inset 3px 0 0 var(--accent), inset 0 1px 0 var(--line); }
+@media (prefers-reduced-motion: reduce) { button.hlc:hover, button.hlc:focus-visible { transform: none; } }

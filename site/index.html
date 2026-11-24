@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://nznnybzrqplsqyhotlnd.supabase.co" crossorigin>
 <link rel="preconnect" href="https://wow.zamimg.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Instrument+Serif:ital@0;1&family=Jacquard+12&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Jacquard+12&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 <!-- Wowhead adds item icons and in-game tooltips to item links on profile pages -->
 <script>const whTooltips = { colorLinks: false, iconizeLinks: true, renameLinks: false };</script>
@@ -80,7 +80,11 @@
   </div>
 </header>
 <div class="wrap" id="app" data-view="week" data-route="main">
-  <div class="loader" role="status" aria-live="polite"><span class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></span><p id="loaderText">Opening the ledger…</p></div>
+  <div class="loader" role="status" aria-live="polite">
+    <i class="skel skel-title" aria-hidden="true"></i>
+    <div class="skel-dash" aria-hidden="true"><i class="skel s-leads"></i><i class="skel s-stand"></i><i class="skel s-bounty"></i><i class="skel s-where"></i></div>
+    <p id="loaderText">Opening the ledger…</p>
+  </div>
   <header class="hero">
     <div class="page-intro">
       <p class="eyebrow" id="subtitle"></p>
@@ -185,85 +189,43 @@
     </div>
   </section>
 
-  <div class="toprow" data-pg="overview">
-  <section id="s-guilds" data-pg="overview" aria-labelledby="h-guilds">
-    <div class="sec-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
-    <div class="car"><div class="guilds" id="guilds"></div></div>
-  </section>
-
-  <section id="s-deeds" data-pg="overview" aria-labelledby="h-deeds">
-    <div class="deeds-wrap">
-    <div class="deeds-main">
-    <div class="sec-head"><h2 id="h-deeds">Ledger of Deeds</h2></div>
-    <div class="headline"><div id="lead"></div><div id="potw"></div></div>
-    <div class="deeds-row">
-      <div class="tiles" id="tiles"></div>
-      <div class="frame oleads">
-        <div class="frame-title"><span>Leaders</span></div>
-        <div id="oLeads"></div>
-      </div>
+  <!-- Overview: a dashboard of four cards, each opening the page with the full story. -->
+  <div class="dash" data-pg="overview">
+    <div class="frame card" id="d-leads">
+      <div class="card-head"><h2>Leaders</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-meter">Details ›</button></div>
+      <div class="leadgrid" id="oLeads"></div>
     </div>
-    <div class="frame plately guild-only">
-      <div class="frame-title"><span>Lately</span><small>newest first</small></div>
-      <div id="gLately"></div>
-    </div>
-    </div>
-    <details class="frame ledger groster guild-only">
-      <summary><div class="frame-title"><span>Roster</span><small id="gCount"></small></div></summary>
-      <div id="gRoster"></div>
-    </details>
-    </div>
-  </section>
-  </div>
-
-  <section id="s-where" data-pg="overview" aria-labelledby="h-where">
-    <div class="sec-head"><h2 id="h-where">Where it happened</h2>
-      <button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>
-    <div class="hlcards" id="ovHl"></div>
-  </section>
-
-  <div class="grid-primary" data-pg="overview">
-    <div class="frame card" id="s-momentum">
-      <div class="card-head"><div><h2>Group momentum</h2></div>
-        <span class="chips" id="momMode">
-          <button type="button" class="chip" data-mode="dmg" aria-pressed="true">Damage</button>
-          <button type="button" class="chip" data-mode="heal" aria-pressed="false">Healing</button>
-        </span></div>
-      <div class="chart"><canvas id="cMomentum"></canvas></div>
-    </div>
-    <div class="frame card" id="s-fatal">
-      <div class="card-head"><div><h2>Fatality report</h2></div>
-        <button type="button" class="linkbtn" data-goto="deaths">Details ›</button></div>
-      <div class="donut-wrap"><div class="donut"><canvas id="cOCause"></canvas><div class="donut-mid" id="cOCauseMid"></div></div><div class="donut-legend" id="cOCauseLegend"></div></div>
-      <div id="oWanted"></div>
-    </div>
-  </div>
-  <div class="grid-secondary" data-pg="overview">
     <div class="frame card" id="s-standings">
-      <div class="card-head"><div><h2>Hero standings</h2></div>
+      <div class="card-head"><h2>Hero standings</h2>
         <button type="button" class="linkbtn" data-goto="characters" id="standAll">View all ›</button></div>
       <div class="standings" id="standings"></div>
     </div>
-    <div class="frame card" id="s-lootq">
-      <div class="card-head"><div><h2>Loot quality</h2></div><span class="muted" id="lootTotal"></span></div>
-      <div id="lootQ"></div>
+    <div class="frame card ornate" id="d-bounty">
+      <div class="card-head"><h2>Bounty board</h2><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
+      <div id="oWanted"></div>
+    </div>
+    <div class="frame card" id="s-where">
+      <div class="card-head"><h2 id="h-where">Where it happened</h2><button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>
+      <div class="hlcards" id="ovHl"></div>
     </div>
   </div>
 
-  <div class="pair" data-pg="overview">
-  <section id="s-ach" data-pg="overview" aria-labelledby="h-ach">
-    <div class="sec-head"><h2 id="h-ach">Achievements Earned</h2>
-      <button type="button" class="linkbtn" data-goto="glory" data-sub="s-glory-ach">View all ›</button></div>
-    <div class="achievements badges" id="achievements"></div>
-  </section>
-
-  <section id="s-fame" data-pg="overview" aria-labelledby="h-fame">
-    <div class="sec-head"><h2 id="h-fame">Hall of Fame</h2>
-      <span class="car-dots" data-for="fame" role="group" aria-label="Pages" hidden></span>
-      <button type="button" class="linkbtn" data-goto="glory" data-sub="s-glory-fame">View all ›</button></div>
-    <div class="car"><div class="fame pages" id="fame"></div></div>
-  </section>
+  <div class="dash-guild guild-only" data-pg="overview">
+    <div class="frame plately">
+      <div class="frame-title"><span>Lately</span><small>newest first</small></div>
+      <div id="gLately"></div>
+    </div>
+    <details class="frame ledger groster" open>
+      <summary><div class="frame-title"><span>Roster</span><small id="gCount"></small></div></summary>
+      <div id="gRoster"></div>
+    </details>
   </div>
+
+  <section id="s-deeds" data-pg="glory" aria-labelledby="h-deeds">
+    <div class="sec-head"><h2 id="h-deeds">Ledger of Deeds</h2></div>
+    <div class="headline"><div id="lead"></div><div id="potw"></div></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
 
   <section id="s-glory-fame" data-pg="glory" aria-labelledby="h-glory-fame">
     <div class="sec-head"><h2 id="h-glory-fame">Hall of Fame</h2><span class="chips" id="fameCats" role="group" aria-label="Category"></span></div>
@@ -292,6 +254,18 @@
         <div class="frame-title"><span id="dailyTitle">Damage per day</span></div>
         <div class="chart"><canvas id="cDaily"></canvas></div>
       </div>
+    </div>
+  </section>
+
+  <section id="s-momentum" data-pg="meters" aria-labelledby="h-momentum">
+    <div class="sec-head"><h2 id="h-momentum">Group momentum</h2></div>
+    <div class="frame card">
+      <div class="card-head"><span class="muted">Damage and healing per day</span>
+        <span class="chips" id="momMode">
+          <button type="button" class="chip" data-mode="dmg" aria-pressed="true">Damage</button>
+          <button type="button" class="chip" data-mode="heal" aria-pressed="false">Healing</button>
+        </span></div>
+      <div class="chart"><canvas id="cMomentum"></canvas></div>
     </div>
   </section>
 
@@ -498,6 +472,11 @@
     </div>
   </section>
 
+  <section id="s-lootq" data-pg="loot" aria-labelledby="h-lootq">
+    <div class="sec-head"><h2 id="h-lootq">Loot quality</h2><span class="muted" id="lootTotal"></span></div>
+    <div class="frame card"><div id="lootQ"></div></div>
+  </section>
+
   <section id="s-wealth" data-pg="loot" aria-labelledby="h-wealth">
     <div class="sec-head"><h2 id="h-wealth">The Treasury</h2></div>
     <div class="duo even">
@@ -539,8 +518,9 @@
   </section>
 
   <section id="s-ledger" data-pg="characters" aria-labelledby="h-ledger">
+    <div class="sec-head"><h2 id="h-ledger">The Full Ledger</h2></div>
     <details class="frame ledger" open>
-      <summary><div class="frame-title"><span id="h-ledger">The Full Ledger</span></div></summary>
+      <summary><div class="frame-title"><span>The Full Ledger</span></div></summary>
       <div class="table-wrap tall"><table id="statTable"><thead></thead><tbody></tbody></table></div>
     </details>
   </section>
@@ -548,6 +528,11 @@
   <section id="group" data-pg="characters" aria-labelledby="charH">
     <div class="sec-head"><h2 id="charH">Characters</h2></div>
     <div class="chars" id="chars"></div>
+  </section>
+
+  <section id="s-guilds" class="main-only" data-pg="characters" aria-labelledby="h-guilds">
+    <div class="sec-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
+    <div class="car"><div class="guilds" id="guilds"></div></div>
   </section>
 
   <section id="join" data-pg="join" aria-labelledby="joinH">

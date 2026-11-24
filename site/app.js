@@ -244,7 +244,7 @@
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
-    "Loot quality": "Lootkvalitet", "Most wanted": "Mest efterlyst",
+    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
     "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
     "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
     "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
@@ -2065,7 +2065,6 @@
     // Highest tier reached first, then the most characters (the sort keeps the list order among equals).
     claimed.sort((a, b) => b.lvl - a.lvl || b.n - a.n);
     const none = `<p class="empty">${tr("No achievements yet. They appear as soon as someone uploads.")}</p>`;
-    $("achievements").innerHTML = claimed.slice(0, OVERVIEW_BADGES).map(c => c.html).join("") || none;
     $("achAll").innerHTML = claimed.length ? claimed.map(c => c.html).concat(open).join("") : none;
     $("achCount").textContent = claimed.length ? tr("{0} of {1} claimed", claimed.length, ACH.length) : "";
   }
@@ -2395,7 +2394,6 @@
     all.sort((a, b) => b.d.t - a.d.t);
     $("clog").innerHTML = all.slice(0, 80).map(({ p, d }) => deathLine(p, d)).join("") || `<p class="empty">${tr("Nobody died. Suspicious.")}</p>`;
     causeChart("cCause", all.map(x => x.d));
-    causeChart("cOCause", all.map(x => x.d));
 
     // deaths by level bracket, stacked by friend
     const brackets = [...Array(state.cap / 10)].map((_, i) => i ? `${i * 10}–${i * 10 + 9}` : "1–9").concat(String(state.cap));
@@ -2447,7 +2445,7 @@
           ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>${payPick(name, st)}` : reward ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
           <div class="bf-links">${mapBtn(name)}${more > 0 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(more))} ›</button>` : ""}</div>
         </div></div>`;
-    })(pick) : "";
+    })(pick) : `<p class="empty">${tr("No bounties right now.")}</p>`;
     // Deaths page: open bounties as posters, claimed ones in a quieter row below.
     const tilt = i => [-1.5, 1, -0.5, 1.5, -1, 0.5, 1.2, -0.8][i % 8];
     $("wanted").innerHTML = open.map(({ name, k }, i) => `<div class="poster" style="--r:${tilt(i)}deg"><div class="w">${tr("Wanted")}</div><div class="m">${charName(name)}</div>
@@ -2946,8 +2944,6 @@
     }).join("") || `<p class="empty">${tr("Nobody has been healed by a friend yet.")}</p>`;
   }
 
-  const OVERVIEW_CARDS = 6; // Hall of Fame cards on the overview
-  const OVERVIEW_BADGES = 8; // achievement badges on the overview
   const FAME_CATS = [["all", "All"], ["combat", "Combat"], ["adventure", "Adventure"], ["loot", "Loot"], ["shame", "Shame"]];
   function renderFame(people) {
     const recs = fameRecords(people).sort((a, b) => !!b.fresh - !!a.fresh); // new records first
@@ -2958,8 +2954,6 @@
     $("recNews").innerHTML = fresh.length ? `<summary>${sprite("sulfuras", 1)}${tr(fresh.length === 1 ? "A record fell!" : "{0} records fell!", fresh.length)}</summary><div class="menu"><small>${state.view === "all" ? tr("last 7 days") : rangeLabel()}</small>` +
       fresh.map(r => `<button type="button" class="recchip" data-jump="s-glory-fame">${esc(r.p.name)}${ripHTML(r.p)} · ${r.t} · <b>${r.v}</b></button>`).join("") + `</div>` : "";
     const none = `<p class="empty">${tr("Records appear after the first upload.")}</p>`;
-    // The overview shows a handful; the Hall of Fame page has them all, each with the runners-up.
-    $("fame").innerHTML = recordsHTML(recs.slice(0, OVERVIEW_CARDS)) || none;
     // The Hall of Fame page can be narrowed to one category; only categories with records get a chip.
     const cats = FAME_CATS.filter(([c]) => c === "all" || recs.some(r => r.cat === c));
     if (!cats.some(([c]) => c === state.fameCat)) state.fameCat = "all";
@@ -3610,7 +3604,7 @@
           <small>${[tr("Lvl {0}", esc(ch.level || "?")), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
       </div>`).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
     $("gCount").textContent = tr(list.length === 1 ? "{0} member" : "{0} members", num(list.length));
-    $("oLeads").innerHTML = leadsHTML(rows, LEAD.length, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
+    $("oLeads").innerHTML = leadsHTML(rows, 8, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
     const deaths = people.flatMap(p => p.deaths.filter(d => d.t).map(d => ({ d, p }))).sort((a, b) => b.d.t - a.d.t).slice(0, 4);
@@ -3732,12 +3726,10 @@
     const rows = people.map(p => ({ p, s: sumFor(p) }));
     const active = rows.filter(r => Object.keys(r.s).length > 5);
     renderTiles(rows, people);
-    // On the overview Leaders spans the whole top row under the guild card and the tiles; elsewhere it sits beside the tiles.
-    (route.kind === "main" ? document.querySelector(".toprow") : document.querySelector(".deeds-row")).append(document.querySelector(".oleads"));
     if (route.kind === "guild") renderGuildSide(rows, people);
     if (route.kind === "main") {
       renderGuilds(realmChars);
-      $("oLeads").innerHTML = leadsHTML(rows, 7, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
+      $("oLeads").innerHTML = leadsHTML(rows, 8, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
     }
     renderMomentum(people);
     renderStandings(rows);
@@ -4032,7 +4024,8 @@
   state.sub = {};
   function applySubs(pg) {
     const secs = pg && pg !== "overview"
-      ? [...document.querySelectorAll("#app > section[data-pg]")].filter(s => !s.hidden && !s.classList.contains("nosec") && s.querySelector(".sec-head h2"))
+      ? [...document.querySelectorAll("#app > section[data-pg]")].filter(s => !s.hidden && !s.classList.contains("nosec") && s.querySelector(".sec-head h2")
+        && !(s.classList.contains("main-only") && document.body.dataset.route !== "main"))
       : [];
     const box = $("subTabs"), multi = secs.length > 1;
     $("app").classList.toggle("subbed", multi);
