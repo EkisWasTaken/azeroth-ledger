@@ -3638,8 +3638,8 @@
       const who = top ? `<a class="plink" href="${profileHref(top.p)}"><span class="cname" style="--cc:${classOf(top.p.chars[0])[1]}">${esc(top.p.name)}</span></a>` : "";
       return `<div class="frame kpi${bad ? " bad" : ""}">
         <div class="kh"><span>${tr(label)}</span>${delta}</div>
-        <b class="kv">${fmt(total)}</b>
-        <div class="kbars" aria-hidden="true">${bars.map((v, i) => `<i class="${!all && i >= sofar ? "fut" : max && v === max ? "hi" : ""}" style="height:${max ? Math.max(6, Math.round(v / max * 100)) : 6}%"></i>`).join("")}</div>
+        <b class="kval">${fmt(total)}</b>
+        <div class="kbars" aria-hidden="true">${bars.map((v, i) => `<i class="${!all && i >= sofar ? "fut" : max && v === max ? "hi" : ""}" style="height:${!all && i >= sofar ? 100 : max ? Math.max(6, Math.round(v / max * 100)) : 6}%"></i>`).join("")}</div>
         <span class="kw">${who ? tr("Most: {0}", who) : "&nbsp;"}</span>
       </div>`;
     }).join("");

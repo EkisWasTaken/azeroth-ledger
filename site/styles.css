@@ -296,15 +296,13 @@ header.hero { display: grid; gap: 16px; }
 #s-guilds .guilds { padding-block: 0; align-items: start; }
 /* More guilds: one card at a time, the arrows always show, each card stands out from the map */
 #s-guilds .guilds:has(> :nth-child(2)) { padding: 4px 4px 10px; scroll-padding-inline: 4px; }
-/* the card fills the column down to the Ledger of Deeds' bottom: name and stats on top, members and the button at the foot */
-@media (min-width: 1000px) {
-  #s-guilds { grid-template-rows: auto minmax(0, 1fr); }
-  #s-guilds .car, #s-guilds .guilds { height: 100%; }
-  #s-guilds .guilds { align-items: stretch; }
-  #s-guilds .gcard { align-content: start; grid-template-rows: auto auto auto auto 1fr auto; }
-  #s-guilds .gcard .gstats { gap: 14px 10px; padding: 14px 0; border-block: 1px solid color-mix(in srgb, #f2d57e 22%, transparent); }
-  #s-guilds .gcard .gfaces { align-self: end; }
-}
+/* side by side the cards share one height: everything sits at the top and only the button drops to the foot */
+#s-guilds .guilds { align-items: stretch; }
+#s-guilds .gcard { align-content: start; grid-template-rows: auto auto auto auto auto 1fr; }
+#s-guilds .gcard .btn { align-self: end; }
+#s-guilds .gcard .gstats { gap: 14px 10px; padding: 14px 0; border-block: 1px solid color-mix(in srgb, #f2d57e 22%, transparent); }
+#s-guilds .gstats { container-type: inline-size; }
+#s-guilds .gstats b { font-size: clamp(15px, 5.8cqi, 22px); white-space: nowrap; } /* "12 h 47 min" stays on one line in a third of the card */
 #s-guilds .car-arrow { opacity: 1; }
 /* on the Characters page: two or three guild cards side by side, a page at a time */
 @media (min-width: 640px) { #s-guilds .guilds { grid-auto-columns: calc((100% - 14px) / 2); } }
@@ -1488,20 +1486,21 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .kpi .kh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; font-size: 13px; color: var(--muted); }
 .kd { font-size: 12px; font-weight: 700; white-space: nowrap; }
 .kd.up { color: var(--good); } .kd.down { color: var(--bad); }
-.kpi .kv { font: 800 clamp(22px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; }
-.kpi.bad .kv { color: var(--bad); }
+.kpi .kval { font: 800 clamp(22px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.kpi.bad .kval { color: var(--bad); }
 .kbars { display: flex; align-items: flex-end; gap: 3px; height: 26px; }
 .kbars i { flex: 1; min-width: 3px; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--rim) 85%, transparent); }
 .kbars i.hi { background: var(--accent); }
-.kbars i.fut { background: color-mix(in srgb, var(--rim) 30%, transparent); } /* days still to come */
+.kbars i.fut { background: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rim) 45%, transparent); } /* days still to come: empty slots */
 .kpi.bad .kbars i.hi { background: var(--bad); }
 .kpi .kw { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--muted); }
 
 /* the race to max level as a podium; the bars stand on the card's bottom edge */
-.podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; min-height: 220px; padding: 18px 16px 0; }
+#podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; min-height: 220px; padding: 18px 16px 0; }
 .pod { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; color: var(--ink); text-decoration: none; }
 .pod .emblem { width: 44px; height: 44px; border-radius: 10px; font-size: 16px; }
-.pod .portrait .face { width: 44px; height: 44px; }
+.pod .portrait :is(.face, .wicon) { width: 44px; height: 44px; } /* class icons stand in for faces without a portrait */
+.pod .cicon { display: block; margin: 0; }
 .pod .portrait .lvl { display: none; }
 .pod .cname { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 700; }
 .pod:hover .cname { text-decoration: underline; text-underline-offset: 3px; }
@@ -1509,10 +1508,13 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .p1 .pbar { height: 128px; color: var(--on-accent); text-shadow: none; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #000)); }
 .p2 .pbar { height: 94px; background: linear-gradient(180deg, #8d9aa3, #46525a); }
 .p3 .pbar { height: 70px; background: linear-gradient(180deg, #b07a48, #5a3a1e); }
-.podium > .empty { grid-column: 1 / -1; align-self: center; padding-bottom: 18px; }
+#podium > .empty { grid-column: 1 / -1; align-self: center; padding-bottom: 18px; }
 /* standings in five twelfths: slimmer number columns so the names keep their room */
 .c-stand :is(.st-head, .st-row) { grid-template-columns: minmax(0, 1fr) 42px 62px 50px 12px; gap: 8px; padding: 0 16px; }
 .c-stand .st-row { min-height: 56px; }
+/* rows a touch taller than the base list, so six of them fill the card the bounty sets */
+.c-stand { grid-template-rows: auto 1fr; }
+.c-stand .standings { grid-template-rows: auto; grid-auto-rows: 64px; align-content: start; }
 .c-stand .st-hero { gap: 10px; }
 .c-stand .st-av { width: 34px; height: 34px; }
 @media (max-width: 560px) { .c-stand :is(.st-head, .st-row) { grid-template-columns: minmax(0, 1fr) 62px 44px 12px; padding: 0 14px; } }
