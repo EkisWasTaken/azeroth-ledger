@@ -1025,6 +1025,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .slots { display: grid; gap: 8px; min-width: 0; }
 .slot { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 42px; }
 .slot .ic { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 9px; overflow: hidden; background: var(--track); box-shadow: inset 0 0 0 2px var(--qc, var(--rim)); font: 400 11px var(--pf); color: var(--muted); text-transform: uppercase; image-rendering: pixelated; }
+.slot .ic, .lic { background-position: center; background-size: 118%; background-repeat: no-repeat; }
 .slot .it { min-width: 0; display: grid; line-height: 1.25; }
 .slot .it a, .slot .it .nm { font-weight: 700; font-size: 14px; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--qc, var(--ink)); }
 /* item links are only as wide as their name: Wowhead puts its tooltip at the link's right edge, so a full-width link pushed it far away */
@@ -1053,7 +1054,7 @@ details.groster:not([open]) > summary .frame-title { margin-bottom: -14px; box-s
 .tgrid .arr { stroke: var(--line); stroke-width: 3; }
 .tgrid .arr.on { stroke: var(--good); }
 .tn { position: absolute; width: 46px; height: 46px; line-height: 0; border-radius: 6px; box-shadow: 0 0 0 2px #333; }
-.tn img { border-radius: 6px; filter: grayscale(1) brightness(.55); }
+.tn img { transform: scale(1.18); clip-path: inset(7.6% round 5px); border-radius: 6px; filter: grayscale(1) brightness(.55); }
 .tn.on { box-shadow: 0 0 0 2px var(--good); }
 .tn.on img { filter: none; }
 .tn.max { box-shadow: 0 0 0 2px #ffd100; }
@@ -1267,7 +1268,8 @@ body.loading .loader { display: grid; gap: 18px; color: var(--muted); }
 
 /* ---------- WoW assets: real icons, crests, factions, renders, journal art ---------- */
 /* Game icons get the in-game look: a dark rim and slightly rounded corners. */
-.wicon { display: inline-block; flex: none; vertical-align: middle; border-radius: 4px; box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(255,255,255,.12); background: #000; }
+/* Blizzard icons carry a dark bevel and black frame; zoom ~18% so only the art shows, then give it our own rim */
+.wicon { display: inline-block; flex: none; vertical-align: middle; width: var(--s, 32px); height: var(--s, 32px); border-radius: 4px; background: var(--track) center / 118% no-repeat; box-shadow: 0 0 0 1px color-mix(in srgb, var(--rim) 70%, transparent); }
 .ticon .wicon { width: 38px; height: 38px; }
 .glead .wicon { width: 18px; height: 18px; border-radius: 3px; }
 .cicon .wicon { border-radius: 3px; }
@@ -1563,7 +1565,7 @@ button.hlc:hover, button.hlc:focus-visible { outline: 0; transform: translateY(-
 .lcard.qb3 { --qc: #3d9bff; } .lcard.qb4 { --qc: #c06cff; } .lcard.qb5 { --qc: #ff8000; }
 .lcard.qb4, .lcard.qb5 { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qc) 60%, var(--line)), 0 0 16px color-mix(in srgb, var(--qc) 25%, transparent); }
 /* the icon frame: a bag until Wowhead hands over the item's own icon */
-.lic { width: 44px; height: 44px; border-radius: 6px; background: var(--track) url("https://wow.zamimg.com/images/wow/icons/medium/inv_misc_bag_10.jpg") center / cover;
+.lic { width: 44px; height: 44px; border-radius: 6px; background: var(--track) url("https://wow.zamimg.com/images/wow/icons/medium/inv_misc_bag_10.jpg") center / 118% no-repeat;
   box-shadow: inset 0 0 0 2px var(--qc), 0 0 10px color-mix(in srgb, var(--qc) 35%, transparent); }
 .lbody { display: grid; gap: 2px; min-width: 0; }
 .lbody strong { font: 700 14.5px/1.25 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

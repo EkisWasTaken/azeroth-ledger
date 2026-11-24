@@ -1703,7 +1703,8 @@
     bunny: "spell_magic_polymorphrabbit", anvil: "trade_blacksmithing", map: "inv_misc_map_01", meat: "inv_misc_food_14",
     horde: "inv_bannerpvp_01", alliance: "inv_bannerpvp_02",
   };
-  const zam = (file, size) => `<img class="wicon" src="https://wow.zamimg.com/images/wow/icons/large/${file}.jpg" width="${size}" height="${size}" alt="" loading="lazy">`;
+  // a background, not an <img>, so CSS can zoom past the black frame baked into Blizzard's icons
+  const zam = (file, size) => `<span class="wicon" style="--s:${size}px;background-image:url(https://wow.zamimg.com/images/wow/icons/large/${file}.jpg)" aria-hidden="true"></span>`;
   const icon = (name, px = 2) => WOWICON[name] ? zam(WOWICON[name], px * 16) : sprite(name, px);
 
   // Horde or Alliance, from Blizzard's crest when there is one, else from the members' races (most of them wins).
@@ -4514,7 +4515,7 @@
       const box = a.closest(".slot, .lcard").querySelector(".ic, .lic");
       if (!ins || !box || !ins.style.backgroundImage) return;
       box.style.backgroundImage = ins.style.backgroundImage.replace("/icons/small/", "/icons/medium/");
-      box.style.backgroundSize = "cover";
+      box.style.backgroundSize = "";
       box.textContent = "";
       small.remove();
     });
