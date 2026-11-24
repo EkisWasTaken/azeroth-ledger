@@ -1457,8 +1457,8 @@
     C.defaults.resizeDelay = 120;          // don't redraw on every pixel while a window is being resized
     C.defaults.normalized = true;
     Object.assign(C.defaults.plugins.tooltip, {
-      backgroundColor: css("--ink"), borderWidth: 0, cornerRadius: 8, padding: { x: 12, y: 9 },
-      caretSize: 6, caretPadding: 8, titleColor: css("--bg"), bodyColor: css("--bg"), titleMarginBottom: 6,
+      backgroundColor: css("--track"), borderColor: css("--rim"), borderWidth: 1, cornerRadius: 6, padding: { x: 12, y: 9 },
+      caretSize: 6, caretPadding: 8, titleColor: css("--accent"), bodyColor: css("--ink"), titleMarginBottom: 6,
       titleFont: { family: '"DM Sans", sans-serif', weight: "700", size: 12 }, bodyFont: { family: '"DM Sans", sans-serif', size: 12 },
       boxWidth: 8, boxHeight: 8, boxPadding: 6, usePointStyle: true,
       filter: item => item.raw !== 0 && item.raw !== null,   // skip rows with nothing to say
@@ -1492,11 +1492,12 @@
     for (const ds of sets) {
       if (type === "bar") {
         Object.assign(ds, {
-          borderSkipped: stacked ? "start" : false, borderRadius: stacked ? 0 : 6,
+          borderSkipped: stacked ? "start" : false, borderRadius: stacked ? 0 : 4,
           borderWidth: stacked ? 1 : 0, borderColor: css("--panel"),
           maxBarThickness: horizontal ? 16 : 36, categoryPercentage: .7, barPercentage: .9,
         });
         if (!ds.hoverBackgroundColor) ds.hoverBackgroundColor = ds.backgroundColor;
+        ds.backgroundColor = Array.isArray(ds.backgroundColor) ? ds.backgroundColor.map(c => alpha(c, "d9")) : alpha(ds.backgroundColor, "d9");
       } else if (type === "line") {
         ds._c = ds.borderColor;
         const filled = sets.length === 1 || ds.area;
@@ -1590,6 +1591,10 @@
     charts[id] = new window.Chart(canvas, cfg);
   }
 
+  // Charts waiting on a tab that just opened: draw the ones now on screen straight away.
+  function flushCharts() {
+    for (const [id, cfg] of pendingCharts) { const c = $(id); if (c && nearScreen(c)) { pendingCharts.delete(id); paintChart(c, cfg); } }
+  }
   function drawChart(id, config, empty) {
     const canvas = $(id);
     if (!canvas) return;
@@ -1618,7 +1623,7 @@
   // Theme changes need fresh charts (colours are baked in when a chart is created).
   function resetCharts() { Object.keys(charts).forEach(id => { charts[id].destroy(); delete charts[id]; }); }
   const gridX = { grid: { display: false }, border: { display: false }, ticks: { padding: 6 } };
-  const gridY = { grid: { color: "rgba(255,255,255,.05)", drawTicks: false }, border: { display: false }, ticks: { maxTicksLimit: 5, padding: 8 } };
+  const gridY = { grid: { color: "rgba(255,255,255,.07)", drawTicks: false }, border: { display: false, dash: [3, 4] }, ticks: { maxTicksLimit: 5, padding: 8 } };
 
   // ---------- pixel sprites ----------
   // Each string is one row; each character is one pixel, coloured by the palette.
@@ -3620,15 +3625,15 @@
   // Hall of Fame card texts and badges wrap instead; only the lines with a character's name shrink, so a name stays whole on one line.
   const FIT = ".tile .foot, .glead .lbl, .sigc .cmp, .sec-head p, .rec .w, .rec .podium .nm, #pName";
   function fitText() {
-    // Deed tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
-    // still spans the full width, on a grid of lcm(cols, last) columns.
-    const tl = $("tiles");
-    if (tl && tl.offsetWidth && tl.children.length) {
+    // Stat tiles: as many columns as fit at 150px, evened out over the rows (8 → 4 + 4); a shorter last row (9 → 5 + 4)
+    // still spans the full width, on a grid of lcm(cols, last) columns. Every tile row on the site, not just the deeds.
+    document.querySelectorAll(".tiles").forEach(tl => {
+      if (!tl.offsetWidth || !tl.children.length) return;
       const n = tl.children.length, rows = Math.ceil(n / Math.max(1, Math.floor((tl.clientWidth + 10) / 160)));
       const cols = Math.ceil(n / rows), last = n - cols * (rows - 1), gcd = (a, b) => b ? gcd(b, a % b) : a, lcm = cols * last / gcd(cols, last);
-      tl.style.setProperty("--cols", lcm);
+      tl.style.gridTemplateColumns = `repeat(${lcm}, minmax(0, 1fr))`;
       [...tl.children].forEach((c, i) => { c.style.gridColumn = `span ${i >= cols * (rows - 1) ? lcm / last : lcm / cols}`; });
-    }
+    });
     document.querySelectorAll(FIT).forEach(el => {
       if (!el.offsetWidth) return;
       el.style.fontSize = "";
@@ -4042,6 +4047,7 @@
     state.sub[state.page] = b.dataset.sub;
     applySubs(state.page);
     fitText();
+    flushCharts();
   });
   function setPage(pg) {
     const profile = pg.startsWith("p-");
