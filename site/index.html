@@ -191,7 +191,8 @@
 
   <!-- Overview: a dashboard of four cards, each opening the page with the full story. -->
   <div class="dash" data-pg="overview">
-    <div class="frame card" id="d-leads">
+    <div class="headline wide"><div id="lead"></div><div id="potw"></div></div>
+    <div class="frame card wide" id="d-leads">
       <div class="card-head"><h2>Leaders</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-meter">Details ›</button></div>
       <div class="leadgrid" id="oLeads"></div>
     </div>
@@ -204,7 +205,11 @@
       <div class="card-head"><h2>Bounty board</h2><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
       <div id="oWanted"></div>
     </div>
-    <div class="frame card" id="s-where">
+    <div class="frame card wide main-only" id="s-guilds">
+      <div class="card-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
+      <div class="car"><div class="guilds" id="guilds"></div></div>
+    </div>
+    <div class="frame card wide" id="s-where">
       <div class="card-head"><h2 id="h-where">Where it happened</h2><button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>
       <div class="hlcards" id="ovHl"></div>
     </div>
@@ -223,7 +228,6 @@
 
   <section id="s-deeds" data-pg="glory" aria-labelledby="h-deeds">
     <div class="sec-head"><h2 id="h-deeds">Ledger of Deeds</h2></div>
-    <div class="headline"><div id="lead"></div><div id="potw"></div></div>
     <div class="tiles" id="tiles"></div>
   </section>
 
@@ -528,11 +532,6 @@
   <section id="group" data-pg="characters" aria-labelledby="charH">
     <div class="sec-head"><h2 id="charH">Characters</h2></div>
     <div class="chars" id="chars"></div>
-  </section>
-
-  <section id="s-guilds" class="main-only" data-pg="characters" aria-labelledby="h-guilds">
-    <div class="sec-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
-    <div class="car"><div class="guilds" id="guilds"></div></div>
   </section>
 
   <section id="join" data-pg="join" aria-labelledby="joinH">

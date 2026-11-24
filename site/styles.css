@@ -292,7 +292,7 @@ header.hero { display: grid; gap: 16px; }
 .car-arrow[hidden] { display: none; }
 @media (hover: none) { .car-arrow { display: none; } }
 /* each column keeps its own height: the guild card and Leaders on the left, the stories and tiles on the right */
-#s-guilds { align-content: start; gap: 12px; }
+#s-guilds { align-content: start; }
 #s-guilds .guilds { padding-block: 0; align-items: start; }
 /* More guilds: one card at a time, the arrows always show, each card stands out from the map */
 #s-guilds .guilds:has(> :nth-child(2)) { padding: 4px 4px 10px; scroll-padding-inline: 4px; }
@@ -1412,7 +1412,7 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   box-shadow: inset 0 0 0 1px rgba(230,194,111,.17), inset 0 1px 0 rgba(255,236,190,.10), 0 12px 28px rgba(0,0,0,.30);
 }
 /* featured panels only (the bounty, the character and guild heroes): the gold-bound frame with gem studs */
-:root[data-theme="forever"] #app :is(.ornate, .phero, .ghero) {
+:root[data-theme="forever"] #app :is(.ornate, .phero, .ghero, .potw) {
   border: 12px solid transparent; border-image: url("forever-frame.svg") 16 / 12px stretch;
   border-radius: 0; background-clip: padding-box;
   box-shadow: 0 18px 34px rgba(0,0,0,.34);
@@ -1459,17 +1459,19 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   :root[data-theme="forever"] body:not(.menu-open) .sidebar { box-shadow: none; }
 }
 @media (max-width: 640px) {
-  :root[data-theme="forever"] #app :is(.ornate, .phero, .ghero) {
+  :root[data-theme="forever"] #app :is(.ornate, .phero, .ghero, .potw) {
     border-width: 8px; border-image-width: 8px;
   }
 }
 
-/* ---------- Overview dashboard: Leaders across the top, standings beside the bounty, then where it happened ---------- */
+/* ---------- Overview dashboard: the week's story and player first, then Leaders, standings beside the bounty,
+   the guilds and where it happened. Cards marked .wide span the row; a card that's hidden leaves no gap. ---------- */
 .dash { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (min-width: 1000px) {
-  .dash { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); grid-template-areas: "leads leads" "stand bounty" "where where"; }
-  #d-leads { grid-area: leads; } #s-standings { grid-area: stand; } #d-bounty { grid-area: bounty; } #s-where { grid-area: where; }
+  .dash { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+  .dash > .wide { grid-column: 1 / -1; }
 }
+#s-guilds .car { margin: 18px 20px 20px; }
 #s-where.nosec { display: none; }
 #s-where .hlcards { padding: 18px 20px 20px; }
 /* the bounty card matches the standings beside it; the plank grows with it */
