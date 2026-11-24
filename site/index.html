@@ -189,29 +189,35 @@
   </section>
 
   <!-- Overview: a dashboard of four cards, each opening the page with the full story. -->
+  <!-- Overview cockpit: the whole week on one screen. Tiles size to what's in them; the layout follows the
+       width the overview gets (container queries), not the window. -->
   <div class="dash" data-pg="overview">
-    <div class="headline wide"><div id="lead"></div><div id="potw"></div></div>
-    <div class="frame card wide" id="d-leads">
-      <div class="card-head"><h2>Leaders</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-meter">Details ›</button></div>
-      <div class="leadgrid" id="oLeads"></div>
-    </div>
-    <div class="frame card" id="s-standings">
+  <div class="cockpit">
+    <div class="c-potw" id="potw"></div>
+    <div class="c-kpis" id="kpis"></div>
+    <div class="c-lead" id="lead"></div>
+    <div class="frame card c-stand" id="s-standings">
       <div class="card-head"><h2>Hero standings</h2>
         <button type="button" class="linkbtn" data-goto="characters" id="standAll">View all ›</button></div>
       <div class="standings" id="standings"></div>
     </div>
-    <div class="frame card ornate" id="d-bounty">
+    <div class="frame card c-race" id="d-race">
+      <div class="card-head"><h2 id="raceH">The Race to 60</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-race">Full race ›</button></div>
+      <div class="podium" id="podium"></div>
+    </div>
+    <div class="frame card ornate c-bounty" id="d-bounty">
       <div class="card-head"><h2>Bounty board</h2><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
       <div id="oWanted"></div>
     </div>
-    <div class="frame card wide main-only" id="s-guilds">
-      <div class="card-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
-      <div class="car"><div class="guilds" id="guilds"></div></div>
-    </div>
-    <div class="frame card wide" id="s-where">
+    <div class="frame card c-wide" id="s-where">
       <div class="card-head"><h2 id="h-where">Where it happened</h2><button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>
       <div class="hlcards" id="ovHl"></div>
     </div>
+    <div class="frame card c-wide main-only" id="s-guilds">
+      <div class="card-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
+      <div class="car"><div class="guilds" id="guilds"></div></div>
+    </div>
+  </div>
   </div>
 
   <div class="dash-guild guild-only" data-pg="overview">

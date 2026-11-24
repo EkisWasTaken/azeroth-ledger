@@ -1455,30 +1455,78 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   }
 }
 
-/* ---------- Overview dashboard: the week's story and player first, then Leaders, standings beside the bounty,
-   the guilds and where it happened. Cards marked .wide span the row; a card that's hidden leaves no gap. ---------- */
-.dash { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
-@media (min-width: 1000px) {
-  .dash { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
-  .dash > .wide { grid-column: 1 / -1; }
+/* ---------- Overview cockpit: the whole week on one screen ----------
+   12 columns once the overview itself is 1000px wide (measured on the overview, so the sidebar is counted),
+   6 from 640px, one column below. Rows grow to fit their tiles; nothing has a fixed height to spill out of. */
+.dash { container-type: inline-size; }
+.cockpit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: stretch; }
+@container (min-width: 640px) {
+  .cockpit { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .cockpit > * { grid-column: span 6; }
+  .cockpit > .c-race, .cockpit > .c-bounty { grid-column: span 3; }
 }
+@container (min-width: 1000px) {
+  .cockpit { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: row dense; }
+  .cockpit > .c-potw { grid-column: span 4; grid-row: span 2; }
+  .cockpit > .c-kpis, .cockpit > .c-lead { grid-column: span 8; }
+  .cockpit > .c-stand { grid-column: span 5; }
+  .cockpit > .c-race { grid-column: span 4; }
+  .cockpit > .c-bounty { grid-column: span 3; }
+  .cockpit > .c-wide { grid-column: span 12; }
+  /* a week without a story or a character of the week: the others take the room */
+  .cockpit:has(#lead:empty) > .c-potw { grid-row: span 1; }
+  .cockpit:has(#potw:empty) > :is(.c-kpis, .c-lead) { grid-column: span 12; }
+}
+.c-potw > .frame, .c-lead > .frame { height: 100%; }
+.potw-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.potw-big b { font: 800 clamp(40px, 5.2cqi, 64px)/1 var(--nf); letter-spacing: -.03em; color: var(--good); text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+.potw-big span { font-weight: 600; }
+
+/* stat tiles: the total, the change since last week, a bar per day, who did the most */
+.c-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 16px; }
+.kpi { container-type: inline-size; gap: 8px; padding: 14px 16px; align-content: space-between; }
+.kpi .kh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; font-size: 13px; color: var(--muted); }
+.kd { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.kd.up { color: var(--good); } .kd.down { color: var(--bad); }
+.kpi .kv { font: 800 clamp(22px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.kpi.bad .kv { color: var(--bad); }
+.kbars { display: flex; align-items: flex-end; gap: 3px; height: 26px; }
+.kbars i { flex: 1; min-width: 3px; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--rim) 85%, transparent); }
+.kbars i.hi { background: var(--accent); }
+.kbars i.fut { background: color-mix(in srgb, var(--rim) 30%, transparent); } /* days still to come */
+.kpi.bad .kbars i.hi { background: var(--bad); }
+.kpi .kw { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--muted); }
+
+/* the race to max level as a podium; the bars stand on the card's bottom edge */
+.podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; min-height: 220px; padding: 18px 16px 0; }
+.pod { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; color: var(--ink); text-decoration: none; }
+.pod .emblem { width: 44px; height: 44px; border-radius: 10px; font-size: 16px; }
+.pod .portrait .face { width: 44px; height: 44px; }
+.pod .portrait .lvl { display: none; }
+.pod .cname { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 700; }
+.pod:hover .cname { text-decoration: underline; text-underline-offset: 3px; }
+.pbar { width: 100%; display: grid; place-items: center; border-radius: 6px 6px 0 0; font: 800 22px var(--nf); text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.p1 .pbar { height: 128px; color: var(--on-accent); text-shadow: none; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #000)); }
+.p2 .pbar { height: 94px; background: linear-gradient(180deg, #8d9aa3, #46525a); }
+.p3 .pbar { height: 70px; background: linear-gradient(180deg, #b07a48, #5a3a1e); }
+.podium > .empty { grid-column: 1 / -1; align-self: center; padding-bottom: 18px; }
+/* standings in five twelfths: slimmer number columns so the names keep their room */
+.c-stand :is(.st-head, .st-row) { grid-template-columns: minmax(0, 1fr) 42px 62px 50px 12px; gap: 8px; padding: 0 16px; }
+.c-stand .st-row { min-height: 56px; }
+.c-stand .st-hero { gap: 10px; }
+.c-stand .st-av { width: 34px; height: 34px; }
+@media (max-width: 560px) { .c-stand :is(.st-head, .st-row) { grid-template-columns: minmax(0, 1fr) 62px 44px 12px; padding: 0 14px; } }
+
 #s-guilds .car { margin: 18px 20px 20px; }
 #s-where.nosec { display: none; }
 #s-where .hlcards { padding: 18px 20px 20px; }
-/* the bounty card matches the standings beside it; the plank grows with it */
-#d-bounty { align-self: stretch; grid-template-rows: auto 1fr; }
-#d-bounty .bounty { margin: 18px 20px 20px; align-content: center; }
+/* the bounty in a quarter of the width: the poster above its file, centred, filling the card's height */
+#d-bounty { grid-template-rows: auto 1fr; }
+#d-bounty .bounty { margin: 16px; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; text-align: center; }
+#d-bounty .bounty-poster { width: 124px; }
+#d-bounty .bounty-file { justify-items: center; }
+#d-bounty :is(.bf-tally, .bf-links, .paypick) { justify-content: center; }
 #d-bounty > .empty { padding: 16px 20px; }
-/* Leaders: one cell per stat, the number large, who holds it under it */
-.leadgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 -1px -1px 0; }
-@media (min-width: 760px) { .leadgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.leadgrid .glead { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ic lbl" "n n" "who who"; gap: 6px 10px; padding: 16px 20px;
-  box-shadow: inset -1px 0 0 var(--line), inset 0 -1px 0 var(--line); }
-.leadgrid .glead > .wicon { grid-area: ic; width: 22px; height: 22px; }
-.leadgrid .glead .lbl { grid-area: lbl; font-size: 13px; }
-.leadgrid .glead .n { grid-area: n; text-align: left; font: 700 28px/1.1 var(--nf); color: var(--ink); letter-spacing: -.02em; }
-.leadgrid .glead .plink { grid-area: who; font-weight: 700; }
-.leadgrid > .empty { padding: 16px 20px; }
 .dash-guild { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 1000px) { .dash-guild { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 

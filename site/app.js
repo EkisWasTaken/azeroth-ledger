@@ -244,7 +244,7 @@
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
-    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
+    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "same as last week": "samma som förra veckan", "new": "ny", "vs last week": "jämfört med förra veckan", "vs the same days last week": "jämfört med samma dagar förra veckan", "Most: {0}": "Mest: {0}", "Full race ›": "Hela racet ›", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
     "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
     "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
     "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
@@ -1946,7 +1946,9 @@
     const res = potwOf(people, wk, state.realmWide);
     if (!res) return void ($("potw").innerHTML = "");
     const { best, top, share } = res;
-    const why = POTW.filter(([f]) => best.s[f]).sort((a, b) => share(best, b[0]) - share(best, a[0])).slice(0, 3)
+    const ranked = POTW.filter(([f]) => best.s[f]).sort((a, b) => share(best, b[0]) - share(best, a[0]));
+    const big = ranked[0];
+    const why = ranked.slice(0, 3)
       .map(([f, l, fmt]) => `<span class="chip">${best.s[f] === top[f] ? `<span class="rank1">#1</span>` : ""}${tr(l)} <b>${fmt(best.s[f])}</b></span>`);
     const ch = best.p.chars[0];
     const render = blizzImg(ch.render);
@@ -1955,6 +1957,7 @@
       <div class="ghead">${portraitHTML(ch)}<div>
         <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(best.p.name)}</a>
         <span class="muted">${tr("Lvl {0}", esc(ch.level || "?"))} ${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}${ch.guild ? ` · ${guildLink(ch)}` : ""}</span></div></div>
+      ${big ? `<div class="potw-big"><b>${big[2](best.s[big[0]])}</b><span>${tr(big[1])}</span></div>` : ""}
       <div class="chips">${why.join("")}</div>
     </div>`;
     drawFaces($("potw"));
@@ -3579,17 +3582,6 @@
   }
 
   // Guild overview: the roster beside the deeds, plus the guild's newest loot and deaths.
-  // Who leads each stat in the chosen range.
-  const LEAD = [["sword", "Damage dealt", "dmg", compact], ["heart", "Healing done", "heal", compact], ["axe", "Killing blows", "kb", num],
-    ["skull", "Deaths", "deaths", num], ["scroll", "Quests completed", "quests", num], ["coin", "Gold looted", "goldIn", goldHTML],
-    ["clock", "Time played", "played", dur], ["spring", "Jumps", "jumps", num], ["boot", "Distance", "dist", yards]];
-  // The guild page leaves out the <guild> tag, since everyone there shares it.
-  const leadsHTML = (rows, n = LEAD.length, guilds = true) => LEAD.slice(0, n).map(([icon, label, f, fmt]) => {
-    const best = rows.slice().sort((a, b) => (b.s[f] || 0) - (a.s[f] || 0))[0];
-    const g = guilds && best && best.p.chars[0] && best.p.chars[0].guild ? guildLink(best.p.chars[0]) : "";
-    return best && best.s[f] ? `<div class="glead${guilds ? " wg" : ""}" title="${tr(label)}">${zam(WOWICON[icon], 18)}<span class="lbl">${tr(label)}</span>${guilds ? `<span class="gtag">${g}</span>` : ""}<a class="plink" href="${profileHref(best.p)}"><span class="cname" style="--cc:${classOf(best.p.chars[0])[1]}">${esc(best.p.name)}</span></a><span class="n">${fmt(best.s[f])}</span></div>` : "";
-  }).join("");
-
   function renderGuildSide(rows, people) {
     const list = rows.slice().sort((a, b) => (b.s.dmg || 0) - (a.s.dmg || 0) || (b.p.chars[0].level || 0) - (a.p.chars[0].level || 0));
     const route = parseRoute();
@@ -3609,13 +3601,60 @@
           <small>${[tr("Lvl {0}", esc(ch.level || "?")), classOf(ch)[0]].filter(Boolean).join(" ")}</small></span>
       </div>`).join("") || `<p class="empty">${tr("Nobody here yet. Characters appear once their stats have been uploaded.")}</p>`;
     $("gCount").textContent = tr(list.length === 1 ? "{0} member" : "{0} members", num(list.length));
-    $("oLeads").innerHTML = leadsHTML(rows, 8, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
 
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
     const deaths = people.flatMap(p => p.deaths.filter(d => d.t).map(d => ({ d, p }))).sort((a, b) => b.d.t - a.d.t).slice(0, 4);
     $("gLately").innerHTML =
       `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.map(({ n, p }) => `<div>${itemHTML(n)}${dropTags(n)} <span class="muted">${tr("on {0}", esc(n._char || p.name))}</span></div>`).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
       `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${deaths.map(({ d, p }) => deathLine(p, d, true)).join("") || `<p class="empty">${tr("No deaths yet.")}</p>`}</div>`;
+  }
+
+  // ---------- overview cockpit ----------
+  // Four stat tiles: the range's total, the change since the week before, one bar per day (per week for all time)
+  // and who did the most. Killing blows give way to healing on realms where the addon can't count them.
+  const KPIS = [["dmg", "Damage dealt", compact], ["kb", "Killing blows", num], ["deaths", "Deaths", num, true], ["goldIn", "Gold looted", goldHTML]];
+  function renderKpis(rows, people) {
+    if (!$("kpis")) return;
+    const all = state.view === "all";
+    const week = w => [0, 1, 2, 3, 4, 5, 6].map(i => addDays(w, i));
+    const sumDays = (keys, f) => keys.reduce((a, k) => a + people.reduce((b, p) => b + ((p.days[k] || {})[f] || 0), 0), 0);
+    const slots = all ? weeksAvailable(people).slice(-7).map(week) : week(state.week).map(k => [k]);
+    const today = todayKey(), sofar = all ? 7 : Math.min(7, Math.max(1, week(state.week).filter(k => k <= today).length));
+    const kpis = rows.some(r => r.s.kb) ? KPIS : KPIS.map(k => k[0] === "kb" ? ["heal", "Healing done", compact] : k);
+    $("kpis").innerHTML = kpis.map(([f, label, fmt, bad]) => {
+      const total = rows.reduce((a, r) => a + (r.s[f] || 0), 0);
+      const bars = slots.map(ks => sumDays(ks, f)), max = Math.max(...bars, 0);
+      let delta = "";
+      if (!all) {
+        // a week still under way is compared with the same days of last week, not all seven
+        const prev = sumDays(week(addDays(state.week, -7)).slice(0, sofar), f);
+        if (prev || total) {
+          const up = total > prev, txt = total === prev ? tr("same as last week") : prev ? `${up ? "▲" : "▼"} ${Math.round(Math.abs(total - prev) / prev * 100)}%` : tr("new");
+          const tone = total === prev ? "" : up === !bad ? " up" : " down"; // more deaths is the bad direction
+          delta = `<span class="kd${tone}" title="${esc(tr(sofar < 7 ? "vs the same days last week" : "vs last week"))}">${txt}</span>`;
+        }
+      }
+      const top = rows.filter(r => r.s[f]).sort((a, b) => b.s[f] - a.s[f])[0];
+      const who = top ? `<a class="plink" href="${profileHref(top.p)}"><span class="cname" style="--cc:${classOf(top.p.chars[0])[1]}">${esc(top.p.name)}</span></a>` : "";
+      return `<div class="frame kpi${bad ? " bad" : ""}">
+        <div class="kh"><span>${tr(label)}</span>${delta}</div>
+        <b class="kv">${fmt(total)}</b>
+        <div class="kbars" aria-hidden="true">${bars.map((v, i) => `<i class="${!all && i >= sofar ? "fut" : max && v === max ? "hi" : ""}" style="height:${max ? Math.max(6, Math.round(v / max * 100)) : 6}%"></i>`).join("")}</div>
+        <span class="kw">${who ? tr("Most: {0}", who) : "&nbsp;"}</span>
+      </div>`;
+    }).join("");
+  }
+
+  // The race to max level as a podium: the highest character in the middle, second on the left, third on the right.
+  function renderPodium(people) {
+    if (!$("podium")) return;
+    $("raceH").textContent = tr("The Race to {0}", state.cap);
+    const top = people.filter(p => p.chars[0] && p.chars[0].level).sort((a, b) => b.chars[0].level - a.chars[0].level).slice(0, 3);
+    $("podium").innerHTML = top.length ? [[top[1], 2], [top[0], 1], [top[2], 3]].filter(x => x[0]).map(([p, place]) => {
+      const ch = p.chars[0];
+      return `<a class="pod p${place}" href="${profileHref(p)}" style="--c:${classOf(ch)[1]}" title="${esc(p.name)}">${portraitHTML(ch)}<span class="cname" style="--cc:${classOf(ch)[1]}">${esc(p.name)}</span><span class="pbar"><b>${esc(ch.level)}</b></span></a>`;
+    }).join("") : `<p class="empty">${tr("No stats yet.")}</p>`;
+    drawFaces($("podium"));
   }
 
   const profileRoute = () => { const r = parseRoute(); return r.kind === "char" ? r.key : null; };
@@ -3734,10 +3773,11 @@
     if (route.kind === "guild") renderGuildSide(rows, people);
     if (route.kind === "main") {
       renderGuilds(realmChars);
-      $("oLeads").innerHTML = leadsHTML(rows, 8, false) || `<p class="empty">${tr("No stats yet.")}</p>`;
     }
     renderMomentum(people);
     renderStandings(rows);
+    renderKpis(rows, people);
+    renderPodium(people);
     renderLootQuality(rows, people);
     renderAchievements(people);
     renderMeter(active.length ? active : rows);
