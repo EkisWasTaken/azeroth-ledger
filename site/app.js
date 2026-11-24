@@ -4069,8 +4069,8 @@
     if (kind === "profile" && !pages.some(x => x[0] === state.ppage)) state.ppage = pages[0][0];
     if (kind !== "profile" && !pages.some(x => x[0] === state.page)) state.page = pages[0][0];
     const cur = kind === "profile" ? state.ppage : state.page;
-    $("pageTabs").innerHTML = pages.map(([id, label, icon]) =>
-      `<button type="button" class="pagetab" role="tab" data-pg="${id}" aria-selected="${id === cur}">${sprite(icon, 1)}${esc(tr(label))}</button>`).join("");
+    $("pageTabs").innerHTML = pages.map(([id, label, ic]) =>
+      `<button type="button" class="pagetab" role="tab" data-pg="${id}" aria-selected="${id === cur}">${icon(ic, 1.25)}${esc(tr(label))}</button>`).join("");
     $("pageSel").innerHTML = pages.map(([id, label]) => `<option value="${id}">${esc(tr(label))}</option>`).join("");
     $("pageSel").value = cur;
     $("realmIcon").innerHTML = crestHTML(2);
@@ -4463,53 +4463,9 @@
     if (parseRoute().kind !== "main") { location.hash = ""; return; }
     render();
   });
-  // ---------- ambient motes ----------
-  // Small pixel squares drifting up behind the page in the theme's two highlight colours.
-  // Paused while the tab is hidden, and off with reduced motion or Settings > Animations.
-  const ambient = (() => {
-    const cv = $("ambient"), g = cv.getContext("2d"), calmQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let motes = [], w = 0, h = 0, cols = [], last = 0, raf = 0;
-    const spawn = anywhere => ({ x: Math.random() * w, y: anywhere ? Math.random() * h : h + 8, s: Math.random() < .3 ? 3 : 2,
-      v: 6 + Math.random() * 16, ph: Math.random() * 6.28, a: .12 + Math.random() * .2, c: Math.random() < .7 ? 0 : 1, age: anywhere ? 9 : 0 });
-    const size = () => {
-      w = cv.width = innerWidth; h = cv.height = innerHeight;
-      const n = Math.min(36, Math.round(w * h / 40000)); // a few faint motes; enough to feel alive, not enough to distract
-      motes = motes.slice(0, n);
-      while (motes.length < n) motes.push(spawn(true));
-    };
-    function frame(t) {
-      raf = requestAnimationFrame(frame);
-      const dt = last ? Math.min(.05, (t - last) / 1000) : 0;
-      last = t;
-      g.clearRect(0, 0, w, h);
-      for (const m of motes) {
-        m.y -= m.v * dt; m.ph += dt; m.age += dt;
-        if (m.y < -8) Object.assign(m, spawn(false));
-        const y = Math.round(m.y);
-        g.globalAlpha = m.a * Math.min(1, m.age / 2, y / 140) * (.65 + .35 * Math.sin(m.ph * 2.3));
-        g.fillStyle = cols[m.c];
-        g.fillRect(Math.round(m.x + Math.sin(m.ph * .7) * 6), y, m.s, m.s);
-      }
-    }
-    function sync() {
-      cancelAnimationFrame(raf);
-      g.clearRect(0, 0, w, h);
-      if (calmQuery.matches || document.documentElement.classList.contains("calm") || document.hidden) return;
-      cols = [css("--accent"), css("--good")];
-      last = 0;
-      raf = requestAnimationFrame(frame);
-    }
-    window.addEventListener("resize", size);
-    document.addEventListener("visibilitychange", sync);
-    calmQuery.addEventListener("change", sync);
-    size();
-    sync();
-    return sync;
-  })();
   const setAnimations = on => {
     document.documentElement.classList.toggle("calm", !on);
     document.querySelectorAll(".anim-btn").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.anim === "on") === on)));
-    ambient();
   };
   setAnimations(!document.documentElement.classList.contains("calm"));
   document.querySelectorAll(".anim-btn").forEach(b => b.addEventListener("click", () => {
@@ -4523,7 +4479,6 @@
     applyChartTheme();
     resetCharts();
     render();
-    ambient(); // new theme colours for the motes (the map redraws in render())
   }));
   $("pCharPick").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.profileChar = b.dataset.key; render(); });
   const pageKey = () => /^#\//.test(location.hash) ? location.hash : "";
