@@ -125,7 +125,8 @@
     const share = (r, f) => top[f] ? (Math.sqrt((r.s[f] || 0) / top[f]) + rate(r, f) / topRate[f]) / 2 : 0;
     rows.forEach(r => r.score = fields.reduce((a, f) => a + share(r, f), 0));
     const best = rows.slice().sort((a, b) => b.score - a.score)[0];
-    return best && best.score && rows.length > 1 ? { best, top, share } : null;
+    // at least two who did something that week: a guild of ten where one played has no contest
+    return best && rows.filter(r => r.score).length > 1 ? { best, top, share } : null;
   }
 
   // Most Wanted: enemy players with at least 2 kills on our heroes in the 7 days before `now` (unix seconds), so the

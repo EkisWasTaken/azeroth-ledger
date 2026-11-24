@@ -255,7 +255,7 @@
     "{0}'s pages": "{0}s sidor", "Change realm": "Byt realm",
     "Map of {0}": "Karta över {0}", "Map art © Blizzard Entertainment.": "Kartbilder © Blizzard Entertainment.",
     "Atlas": "Atlas", "Loot & Gold": "Loot & guld",
-    "Character of the week": "Veckans karaktär", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer", "Boss kills": "Boss-kills",
+    "Character of the week": "Veckans karaktär", "Guildmate of the week": "Veckans guildkamrat", "Most times guildmate of the week": "Flest gånger veckans guildkamrat", "times character of the week": "gånger veckans karaktär", "best in the group": "bäst i gruppen", "Levels gained": "Nivåer", "Boss kills": "Boss-kills",
     "Gold before max level": "Guld innan maxnivå", "looted and spent while levelling": "lootat och spenderat under levlingen",
     "Reached {0} on {1}": "Nådde {0} den {1}", "Still levelling": "Levlar fortfarande", "Back to {0}": "Tillbaka till {0}",
     "Click a zone to open its map. Scroll to zoom, drag to move, right-click to go back.": "Klicka på en zon för att öppna dess karta. Scrolla för att zooma, dra för att flytta, högerklicka för att gå tillbaka.",
@@ -1955,7 +1955,7 @@
     const ch = best.p.chars[0];
     const render = blizzImg(ch.render);
     $("potw").innerHTML = `<div class="frame gcard potw${render ? " has-render" : ""}" style="--c:${classOf(ch)[1]}${render ? `;--render:url('${render}')` : ""}">
-      <span class="eyebrow">${icon("sulfuras", 1)} ${tr("Character of the week")} · ${shortDate(wk)} – ${shortDate(addDays(wk, 6))}</span>
+      <span class="eyebrow">${icon("sulfuras", 1)} ${tr(state.realmWide ? "Character of the week" : "Guildmate of the week")} · ${shortDate(wk)} – ${shortDate(addDays(wk, 6))}</span>
       <div class="ghead">${portraitHTML(ch)}<div>
         <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(best.p.name)}</a>
         <span class="muted">${tr("Lvl {0}", esc(ch.level || "?"))} ${esc(RACE[ch.race] || ch.race || "")} ${classOf(ch)[0]}${ch.guild ? ` · ${guildLink(ch)}` : ""}</span></div></div>
@@ -3066,7 +3066,7 @@
       const wins = potwWins(people, state.realmWide), times = n => tr(n === 1 ? "{0} time" : "{0} times", num(n));
       const ranked = people.map(p => ({ p, w: wins[p.id] || [] })).filter(x => x.w.length)
         .sort((a, b) => b.w.length - a.w.length || b.w.at(-1).localeCompare(a.w.at(-1)));
-      if (ranked.length) recs.push({ cat: "adventure", i: "sulfuras", t: tr("Most times character of the week"), v: times(ranked[0].w.length), p: ranked[0].p,
+      if (ranked.length) recs.push({ cat: "adventure", i: "sulfuras", t: tr(state.realmWide ? "Most times character of the week" : "Most times guildmate of the week"), v: times(ranked[0].w.length), p: ranked[0].p,
         top: ranked.slice(0, 3).map(x => ({ p: x.p, v: times(x.w.length) })), when: tr("last crowned the week of {0}", shortDate(ranked[0].w.at(-1))) });
     }
     // Lucky looters: bind-on-equip drops anywhere, and rare or better loot in dungeons and raids (recorded from FunStats 1.5).

@@ -79,6 +79,7 @@ test("leading many stats beats topping one; nobody wins alone or with nothing do
   assert.equal(scorePotw([p("A", { dmg: 100 }), p("B", { dmg: 90, quests: 5, xp: 5 })], FIELDS).best.p.name, "B");
   assert.equal(scorePotw([p("A", { dmg: 100 })], FIELDS), null);
   assert.equal(scorePotw([p("A", {}), p("B", {})], FIELDS), null);
+  assert.equal(scorePotw([p("A", { dmg: 100 }), p("B", {}), p("C", {})], FIELDS), null); // one of three played: no contest
 });
 
 test("Most Wanted: everyone with 2+ kills on us in the last 7 days, older kills drop off", () => {
