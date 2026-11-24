@@ -10,11 +10,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -24,7 +26,7 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Azeroth Ledger")]
 [assembly: AssemblyProduct("Azeroth Ledger")]
 [assembly: AssemblyDescription("Uploads FunStats addon stats to the Azeroth Ledger website")]
-[assembly: AssemblyVersion("1.13.7.0")]
+[assembly: AssemblyVersion("1.13.8.0")]
 
 namespace AzerothLedger
 {
@@ -1261,6 +1263,169 @@ namespace AzerothLedger
         }
     }
 
+    // ------------------------------------------------------------------ look: the website's Forever colours
+
+    static class Look
+    {
+        public static readonly Color Bg = Color.FromArgb(0x06, 0x20, 0x2a), Panel = Color.FromArgb(0x0c, 0x2c, 0x38), Hover = Color.FromArgb(0x12, 0x3c, 0x49),
+            Rim = Color.FromArgb(0x2f, 0x66, 0x70), Ink = Color.FromArgb(0xf3, 0xee, 0xe0), Muted = Color.FromArgb(0xa3, 0xbf, 0xbe),
+            Gold = Color.FromArgb(0xe6, 0xc2, 0x6f), OnGold = Color.FromArgb(0x2b, 0x1c, 0x05), Bad = Color.FromArgb(0xff, 0x9a, 0x86);
+        public static readonly Font Body = new Font("Segoe UI", 9.75f), Strong = new Font("Segoe UI Semibold", 9.75f),
+            Title = new Font("Segoe UI Semibold", 13f), Mono = new Font("Consolas", 9.75f);
+
+        [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+        [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)] static extern int SetWindowTheme(IntPtr hwnd, string app, string idList);
+
+        // Dark scrollbars on a control (Windows 10 1809 and later; older Windows keeps its usual ones).
+        public static void DarkScroll(Control c)
+        {
+            c.HandleCreated += (s, e) => { try { SetWindowTheme(c.Handle, "DarkMode_Explorer", null); } catch { /* not on this Windows */ } };
+        }
+
+        // Windows 10/11: a dark title bar, and on 11 rounded corners (older Windows ignores both).
+        public static void Dress(IntPtr hwnd)
+        {
+            try { int on = 1, round = 2; DwmSetWindowAttribute(hwnd, 20, ref on, 4); DwmSetWindowAttribute(hwnd, 33, ref round, 4); }
+            catch { /* not on this Windows */ }
+        }
+
+        public static Button Button(string text, bool primary, Action click)
+        {
+            var b = new Button { Text = text, AutoSize = true, Padding = new Padding(12, 4, 12, 4), Margin = new Padding(8, 0, 0, 0), Cursor = Cursors.Hand,
+                FlatStyle = FlatStyle.Flat, Font = Strong, BackColor = primary ? Gold : Panel, ForeColor = primary ? OnGold : Ink, UseVisualStyleBackColor = false };
+            b.FlatAppearance.BorderColor = primary ? Gold : Rim;
+            b.FlatAppearance.MouseOverBackColor = primary ? Color.FromArgb(0xf4, 0xd6, 0x8e) : Hover;
+            b.FlatAppearance.MouseDownBackColor = primary ? Gold : Rim;
+            b.Click += (s, e) => click();
+            return b;
+        }
+    }
+
+    class MenuColors : ProfessionalColorTable
+    {
+        public override Color ToolStripDropDownBackground { get { return Look.Panel; } }
+        public override Color ImageMarginGradientBegin { get { return Look.Panel; } }
+        public override Color ImageMarginGradientMiddle { get { return Look.Panel; } }
+        public override Color ImageMarginGradientEnd { get { return Look.Panel; } }
+        public override Color MenuBorder { get { return Look.Rim; } }
+        public override Color MenuItemBorder { get { return Look.Hover; } }
+        public override Color MenuItemSelected { get { return Look.Hover; } }
+        public override Color CheckBackground { get { return Look.Panel; } }
+        public override Color CheckSelectedBackground { get { return Look.Hover; } }
+        public override Color CheckPressedBackground { get { return Look.Hover; } }
+    }
+
+    // The tray menu in the site's colours: cream text on dark teal, a gold edge on the item under the pointer, a gold tick.
+    class MenuLook : ToolStripProfessionalRenderer
+    {
+        public MenuLook() : base(new MenuColors()) { RoundedEdges = false; }
+
+        protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+        {
+            var c = "title".Equals(e.Item.Tag) ? Look.Gold : e.Item.Enabled ? Look.Ink : Look.Muted;
+            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, e.TextRectangle, c, e.TextFormat);
+        }
+
+        protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
+        {
+            if (!e.Item.Selected || !e.Item.Enabled) return;
+            using (var b = new SolidBrush(Look.Hover)) e.Graphics.FillRectangle(b, 4, 1, e.Item.Width - 8, e.Item.Height - 2);
+            using (var b = new SolidBrush(Look.Gold)) e.Graphics.FillRectangle(b, 4, 1, 2, e.Item.Height - 2);
+        }
+
+        protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
+        {
+            int y = e.Item.Height / 2;
+            using (var p = new Pen(Color.FromArgb(110, Look.Rim))) e.Graphics.DrawLine(p, 12, y, e.Item.Width - 12, y);
+        }
+
+        protected override void OnRenderItemCheck(ToolStripItemImageRenderEventArgs e)
+        {
+            var r = e.ImageRectangle;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (var p = new Pen(Look.Gold, 2f))
+                e.Graphics.DrawLines(p, new[] { new PointF(r.Left + r.Width * .2f, r.Top + r.Height * .52f),
+                    new PointF(r.Left + r.Width * .42f, r.Top + r.Height * .74f), new PointF(r.Left + r.Width * .82f, r.Top + r.Height * .28f) });
+        }
+    }
+
+    // The log in a window of the app's own instead of Notepad: the status on top, the newest lines first.
+    class LogWindow : Form
+    {
+        readonly Label status = new Label { AutoSize = true, ForeColor = Look.Muted, Font = Look.Body, Margin = new Padding(0, 2, 0, 0) };
+        readonly RichTextBox box = new RichTextBox { Dock = DockStyle.Fill, ReadOnly = true, BorderStyle = BorderStyle.None, BackColor = Look.Bg,
+            ForeColor = Look.Ink, Font = Look.Mono, DetectUrls = false, WordWrap = true };
+        readonly string logPath;
+        readonly Func<string> statusText;
+
+        public LogWindow(string logPath, Func<string> statusText, Icon icon, Action openSite, Action upload)
+        {
+            this.logPath = logPath;
+            this.statusText = statusText;
+            SuspendLayout();
+            AutoScaleDimensions = new SizeF(96f, 96f);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            Text = Config.AppName;
+            Icon = icon;
+            BackColor = Look.Bg;
+            ForeColor = Look.Ink;
+            Font = Look.Body;
+            StartPosition = FormStartPosition.CenterScreen;
+            ClientSize = new Size(720, 480);
+            MinimumSize = new Size(520, 340);
+
+            var head = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false,
+                BackColor = Look.Panel, Padding = new Padding(18, 14, 18, 14) };
+            head.Controls.Add(new Label { AutoSize = true, Text = Config.AppName, ForeColor = Look.Gold, Font = Look.Title, Margin = Padding.Empty });
+            head.Controls.Add(status);
+            var body = new Panel { Dock = DockStyle.Fill, Padding = new Padding(18, 12, 10, 12), BackColor = Look.Bg };
+            body.Controls.Add(box);
+            Look.DarkScroll(box);
+            var foot = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, FlowDirection = FlowDirection.RightToLeft, WrapContents = false,
+                BackColor = Look.Panel, Padding = new Padding(18, 12, 18, 12) };
+            if (Config.SiteUrl != "") foot.Controls.Add(Look.Button("Open the Ledger", true, openSite));
+            foot.Controls.Add(Look.Button("Upload now", false, () => { upload(); Reload(); }));
+            foot.Controls.Add(Look.Button("Open log file", false, () => { try { Process.Start(new ProcessStartInfo(logPath) { UseShellExecute = true }); } catch { } }));
+            Controls.Add(body);
+            Controls.Add(foot);
+            Controls.Add(head);
+            ResumeLayout(false);
+            PerformLayout();
+            HandleCreated += (s, e) => Look.Dress(Handle);
+            Activated += (s, e) => Reload();
+        }
+
+        public void Reload()
+        {
+            status.Text = "Version " + Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + "  ·  " + statusText();
+            string[] lines;
+            try
+            {
+                using (var fs = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                using (var r = new StreamReader(fs, Encoding.UTF8))
+                    lines = r.ReadToEnd().Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+            catch { lines = new string[0]; }
+            box.Clear();
+            if (lines.Length == 0) { box.SelectionColor = Look.Muted; box.AppendText("Nothing logged yet."); }
+            foreach (var raw in lines.Reverse().Take(400))
+            {
+                var line = raw.TrimEnd('\r');
+                // "2026-11-24 15:48:37  message": the time quiet, the message bright, trouble in red
+                bool stamped = line.Length > 21 && line[4] == '-' && line[13] == ':';
+                var low = line.ToLowerInvariant();
+                bool trouble = low.Contains("failed") || low.Contains("error") || low.Contains("couldn't") || low.Contains("refused");
+                box.SelectionColor = Look.Muted;
+                box.AppendText(stamped ? line.Substring(0, 19) + "   " : "");
+                box.SelectionColor = trouble ? Look.Bad : Look.Ink;
+                box.AppendText((stamped ? line.Substring(21) : line) + "\n");
+            }
+            box.SelectionStart = 0;
+            box.ScrollToCaret();
+        }
+    }
+
     // ------------------------------------------------------------------ the app
 
     class App : ApplicationContext
@@ -1273,6 +1438,7 @@ namespace AzerothLedger
 
         readonly NotifyIcon tray;
         readonly ToolStripMenuItem statusItem, autoItem;
+        LogWindow logWindow;
         readonly System.Windows.Forms.Timer timer;
         readonly Dictionary<string, string> sent = new Dictionary<string, string>();  // row id -> digest
         readonly Dictionary<string, DateTime> seen = new Dictionary<string, DateTime>(); // file -> last write handled
@@ -1355,7 +1521,9 @@ namespace AzerothLedger
             using (var mutex = new Mutex(true, "AzerothLedgerUploader", out first))
             {
                 if (!first) return; // already running
+                try { Look.SetProcessDPIAware(); } catch { /* older Windows */ } // sharp text on scaled screens, not a blurry bitmap
                 Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
                 if (args.Contains("--updated")) Log("Updated to version " + Assembly.GetExecutingAssembly().GetName().Version);
                 Application.Run(new App(args.Contains("--welcome")));
             }
@@ -1364,13 +1532,14 @@ namespace AzerothLedger
         App(bool welcome)
         {
             LoadState();
-            var menu = new ContextMenuStrip();
+            var menu = new ContextMenuStrip { Renderer = new MenuLook(), Font = Look.Body, ShowImageMargin = false, ShowCheckMargin = true, Padding = new Padding(0, 6, 0, 6) };
+            menu.Items.Add(new ToolStripMenuItem(Config.AppName) { Enabled = false, Tag = "title", Font = Look.Strong });
             statusItem = new ToolStripMenuItem("Starting…") { Enabled = false };
             menu.Items.Add(statusItem);
             menu.Items.Add(new ToolStripSeparator());
             if (Config.SiteUrl != "") menu.Items.Add("Open the Ledger", null, (s, e) => Open(Config.SiteUrl));
-            menu.Items.Add("Upload now", null, (s, e) => { seen.Clear(); Tick(true); });
-            menu.Items.Add("Show log", null, (s, e) => { if (File.Exists(LogPath)) Open(LogPath); });
+            menu.Items.Add("Upload now", null, (s, e) => UploadNow());
+            menu.Items.Add("Show log", null, (s, e) => ShowLog());
             autoItem = new ToolStripMenuItem("Start with Windows", null, (s, e) => { SetAutostart(!autoItem.Checked); autoItem.Checked = IsAutostart(); });
             autoItem.Checked = IsAutostart();
             menu.Items.Add(autoItem);
@@ -1378,9 +1547,10 @@ namespace AzerothLedger
             menu.Items.Add(new ToolStripMenuItem("Version " + Assembly.GetExecutingAssembly().GetName().Version.ToString(3)) { Enabled = false });
             if (Config.SiteUrl != "") menu.Items.Add("Check for updates", null, (s, e) => ThreadPool.QueueUserWorkItem(_ => CheckForUpdate(true)));
             menu.Items.Add("Quit", null, (s, e) => { tray.Visible = false; ExitThread(); });
+            foreach (ToolStripItem it in menu.Items) if (!(it is ToolStripSeparator)) it.Padding = new Padding(4, 5, 12, 5);
 
             tray = new NotifyIcon { Icon = MakeIcon(), Text = Config.AppName, ContextMenuStrip = menu, Visible = true };
-            tray.DoubleClick += (s, e) => { if (File.Exists(LogPath)) Open(LogPath); };
+            tray.DoubleClick += (s, e) => ShowLog();
             if (Config.SiteUrl != "") tray.BalloonTipClicked += (s, e) => Open(Config.SiteUrl);
             // Status and notices reach the menu through BeginInvoke, which needs a handle even before the menu is first opened.
             var unused = menu.Handle;
@@ -1398,6 +1568,18 @@ namespace AzerothLedger
                           : "Couldn't find World of Warcraft yet. It will keep looking; your stats upload by themselves once it's installed.",
                     ToolTipIcon.Info);
             }
+        }
+
+        void UploadNow() { seen.Clear(); Tick(true); }
+
+        void ShowLog()
+        {
+            if (logWindow == null || logWindow.IsDisposed)
+                logWindow = new LogWindow(LogPath, () => statusItem.Text, tray.Icon, () => Open(Config.SiteUrl), UploadNow);
+            logWindow.Show();
+            if (logWindow.WindowState == FormWindowState.Minimized) logWindow.WindowState = FormWindowState.Normal;
+            logWindow.Activate();
+            logWindow.Reload();
         }
 
         void Tick(bool manual)
