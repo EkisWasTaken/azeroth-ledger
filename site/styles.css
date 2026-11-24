@@ -1553,3 +1553,35 @@ button.hlc:hover, button.hlc:focus-visible { outline: 0; transform: translateY(-
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 65%, transparent), 0 10px 22px rgba(0,0,0,.35); }
 .st-row:hover { box-shadow: inset 3px 0 0 var(--accent), inset 0 1px 0 var(--line); }
 @media (prefers-reduced-motion: reduce) { button.hlc:hover, button.hlc:focus-visible { transform: none; } }
+
+/* ---------- Loot cards: a drop as the game's loot window shows it ---------- */
+.lcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 10px; }
+.lcards.one { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.lcard { --qc: #1eff00; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; min-width: 0; padding: 10px 12px; border-radius: 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--qc) 10%, transparent), transparent 75%), color-mix(in srgb, var(--ink) 3%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qc) 28%, var(--line)); }
+.lcard.qb3 { --qc: #3d9bff; } .lcard.qb4 { --qc: #c06cff; } .lcard.qb5 { --qc: #ff8000; }
+.lcard.qb4, .lcard.qb5 { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qc) 60%, var(--line)), 0 0 16px color-mix(in srgb, var(--qc) 25%, transparent); }
+/* the icon frame: a bag until Wowhead hands over the item's own icon */
+.lic { width: 44px; height: 44px; border-radius: 6px; background: var(--track) url("https://wow.zamimg.com/images/wow/icons/medium/inv_misc_bag_10.jpg") center / cover;
+  box-shadow: inset 0 0 0 2px var(--qc), 0 0 10px color-mix(in srgb, var(--qc) 35%, transparent); }
+.lbody { display: grid; gap: 2px; min-width: 0; }
+.lbody strong { font: 700 14.5px/1.25 var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lbody strong a { text-decoration: none; }
+.lbody strong a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lbody small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ltags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.ltags .dtag { margin-left: 0; }
+
+/* character sheet: rare and better worn gear glows a little, items far below the level get a nudge, looted items say where from */
+.slot.q3 .ic, .slot.q4 .ic, .slot.q5 .ic { box-shadow: inset 0 0 0 2px var(--qc), 0 0 10px color-mix(in srgb, var(--qc) 40%, transparent); }
+.slot .it small.story { color: color-mix(in srgb, var(--accent) 70%, var(--muted)); }
+.slot .it small.story::before { content: "✦ "; }
+.slot .up { color: #ffb347; font-weight: 700; }
+.slot.old .ic { filter: saturate(.55) brightness(.85); }
+.wornq { display: grid; gap: 8px; width: 100%; }
+.wornq .qbar { height: 8px; margin: 0; }
+.wq { display: grid; gap: 3px; font-size: 12px; color: var(--muted); justify-items: start; }
+.wq span { display: inline-flex; align-items: center; gap: 6px; }
+.wq i { width: 8px; height: 8px; border-radius: 2px; }
+.wold { font-size: 12px; font-weight: 700; color: #ffb347; }

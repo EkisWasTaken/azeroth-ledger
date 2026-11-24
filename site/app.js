@@ -244,7 +244,8 @@
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
-    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "same as last week": "samma som förra veckan", "new": "ny", "vs last week": "jämfört med förra veckan", "vs the same days last week": "jämfört med samma dagar förra veckan", "Most: {0}": "Mest: {0}", "{0} last week": "{0} förra v.", "Full race ›": "Hela racet ›", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
+    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "same as last week": "samma som förra veckan", "new": "ny", "vs last week": "jämfört med förra veckan", "vs the same days last week": "jämfört med samma dagar förra veckan", "Most: {0}": "Mest: {0}", "Looted in {0}": "Lootad i {0}", "Looted": "Lootad", "Time for an upgrade": "dags att byta", "Far below level {0}": "Långt under level {0}",
+    "1 item to replace": "1 föremål att byta ut", "{0} items to replace": "{0} föremål att byta ut", "{0} last week": "{0} förra v.", "Full race ›": "Hela racet ›", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
     "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
     "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
     "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
@@ -2855,9 +2856,10 @@
     const feed = [];
     people.forEach(p => p.notable.forEach(n => { if (n.t && inRange(localKey(n.t)) && n.q >= 3) feed.push({ p, n }); }));
     feed.sort((a, b) => b.n.t - a.n.t);
-    $("lootFeed").innerHTML = feed.slice(0, 24).map(({ p, n }) =>
-      `<div class="${n.q >= 4 ? "epic-row" : ""}">${nameHTML(p)} ${tr("receives loot:")} ${itemHTML(n)}${dropTags(n)} <span class="muted" style="font-size:13px">${new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" })}</span></div>`).join("")
+    const worn = new Map(people.map(p => [p, wornIds(p)]));
+    $("lootFeed").innerHTML = feed.slice(0, 24).map(({ p, n }) => lootCard(n, nameHTML(p), worn.get(p).has(n.id))).join("")
       || `<p class="empty">${tr("No rare drops yet. Keep rolling Need.")}</p>`;
+    whRefresh();
   }
 
   function renderWealth(people) {
@@ -3129,6 +3131,12 @@
   const worldDrop = n => n.world && n.boe;
   const dropTags = n => (worldDrop(n) ? `<span class="dtag world">${tr("World drop")}</span>` : "") + (n.quest ? `<span class="dtag quest">${tr("Quest reward")}</span>` : "") + (n.inst ? `<span class="dtag inst">${esc(n.inst)}</span>` : "") + (n.boe ? `<span class="dtag boe">${tr("BoE")}</span>` : "");
   const dropRank = n => n.q * 10 + (n.world && n.boe ? 5 : n.boe ? 2 : 0);
+  // A drop as a loot-window card: the icon in a quality frame (Wowhead fills it in), the name, who got it where and when.
+  const lootCard = (n, who, worn) => `<div class="lcard qb${n.q}"><span class="lic" aria-hidden="true"></span><div class="lbody">
+      <strong>${n.id ? `<a class="q${n.q}" ${whItem(n.id)} data-wh-icon-size="small" target="_blank" rel="noopener">${esc(n.item)}</a>` : `<span class="q${n.q}">${esc(n.item)}</span>`}</strong>
+      <small>${[who, n.inst || n.zone ? esc(n.inst || n.zone) : "", n.t ? shortDate(localKey(n.t)) : ""].filter(Boolean).join(" · ")}</small>
+      ${dropTags(n) || worn ? `<span class="ltags">${worn ? `<span class="dtag worn">${tr("Equipped")}</span>` : ""}${dropTags(n)}</span>` : ""}</div></div>`;
+  const wornIds = p => new Set(p.chars.flatMap(ch => Object.values(ch.gear && typeof ch.gear === "object" ? ch.gear : {}).map(g => g && g.id).filter(Boolean)));
   const whRefresh = () => { if (window.$WowheadPower && window.$WowheadPower.refreshLinks) { try { window.$WowheadPower.refreshLinks(); } catch (e) { /* tooltips are optional */ } } };
 
   function gameName(g, realm) {
@@ -3217,7 +3225,7 @@
   const SLOT_NAMES = { 1: "Head", 2: "Neck", 3: "Shoulder", 4: "Shirt", 5: "Chest", 6: "Waist", 7: "Legs", 8: "Feet", 9: "Wrist", 10: "Hands",
     11: "Finger", 12: "Finger", 13: "Trinket", 14: "Trinket", 15: "Back", 16: "Main Hand", 17: "Off Hand", 18: "Ranged", 19: "Tabard" };
   const QCOL = ["#9d9d9d", "#ffffff", "#1eff00", "#3d9bff", "#c06cff", "#ff8000"];
-  function slotHTML(gear, slot) {
+  function slotHTML(gear, slot, ch, from) {
     const it = gear["s" + slot];
     const slotName = tr(SLOT_NAMES[slot]);
     if (!it || !it.n) return `<div class="slot empty"><span class="ic">${slotName.slice(0, 2)}</span><span class="it"><span class="nm">${slotName}</span></span></div>`;
@@ -3225,7 +3233,20 @@
     const name = it.id
       ? `<a ${whItem(it.id)} data-wh-icon-size="small" target="_blank" rel="noopener">${esc(it.n)}</a>`
       : `<span class="nm">${esc(it.n)}</span>`;
-    return `<div class="slot" style="--qc:${qc}"><span class="ic">${slotName.slice(0, 2)}</span><span class="it">${name}<small>${slotName}${it.il ? " · " + tr("item level {0}", esc(it.il)) : ""}</small></span></div>`;
+    const d = it.id && from && from.get(it.id);
+    const story = d ? (d.quest ? tr("Quest reward") : d.inst || d.zone ? tr("Looted in {0}", esc(d.inst || d.zone)) : tr("Looted")) + (d.t ? ` · ${shortDate(localKey(d.t))}` : "") : "";
+    const old = oldGear(ch, slot, it);
+    return `<div class="slot q${it.q}${old ? " old" : ""}" style="--qc:${qc}"><span class="ic">${slotName.slice(0, 2)}</span><span class="it">${name}<small>${slotName}${it.il ? " · " + tr("item level {0}", esc(it.il)) : ""}${old ? ` · <span class="up" title="${esc(tr("Far below level {0}", esc(ch.level)))}">${tr("Time for an upgrade")}</span>` : ""}</small>${story ? `<small class="story">${story}</small>` : ""}</span></div>`;
+  }
+  // worn gear ten or more levels below the character (shirt and tabard don't count)
+  const oldGear = (ch, slot, it) => !!(ch && ch.level >= 20 && it && it.il && it.il > 1 && slot !== 4 && slot !== 19 && it.il <= ch.level - 10);
+  function wornQualityHTML(ch, gear) {
+    const its = Object.entries(gear).filter(([s, it]) => it && it.n && s !== "s4" && s !== "s19");
+    const qs = [5, 4, 3, 2, 1, 0].map(q => ({ q, n: its.filter(([, it]) => (it.q || 0) === q).length })).filter(x => x.n);
+    const old = its.filter(([s, it]) => oldGear(ch, +s.slice(1), it)).length;
+    return its.length ? `<div class="wornq"><div class="qbar">${qs.map(x => `<i style="width:${x.n / its.length * 100}%;background:${QUAL[x.q][1]}" title="${tr(QUAL[x.q][0])}: ${x.n}"></i>`).join("")}</div>
+      <div class="wq">${qs.map(x => `<span><i style="background:${QUAL[x.q][1]}"></i>${num(x.n)} ${tr(QUAL[x.q][0])}</span>`).join("")}</div>
+      ${old ? `<span class="wold">${tr(old === 1 ? "1 item to replace" : "{0} items to replace", num(old))}</span>` : ""}</div>` : "";
   }
 
   // ---------- 3D model: Wowhead's viewer, its files through our worker (proxy/modelviewer-worker.js) ----------
@@ -3347,7 +3368,8 @@
     return `<div class="talenttrees"><div class="frame-title"><span>${tr("Talents")}</span><small>${num(spent(mine))} ${tr("points")}</small></div><div class="tspecs">${specs}</div><p class="muted" style="font-size:13px">${note}</p></div>`;
   }
 
-  function sheetHTML(ch, color) {
+  function sheetHTML(ch, color, notable) {
+    const from = new Map((notable || []).filter(n => n.id && (!n._char || n._char === ch.name)).map(n => [n.id, n]));
     const gear = ch.gear && typeof ch.gear === "object" ? ch.gear : {};
     const items = Object.entries(gear).filter(([s, it]) => it && it.il && s !== "s4" && s !== "s19");
     const avgIlvl = items.length ? Math.round(items.reduce((a, [, it]) => a + it.il, 0) / items.length) : 0;
@@ -3365,11 +3387,11 @@
     }
     const left = [1, 2, 3, 15, 5, 4, 19, 9], right = [10, 6, 7, 8, 11, 12, 13, 14];
     return head + `<div class="doll" style="--c:${color}">
-        <div class="slots">${left.map(s => slotHTML(gear, s)).join("")}</div>
-        <div class="mid">${portraitHTML(ch)}<div class="ilvl"><b>${avgIlvl || ch.ilvl || "–"}</b><span>${tr("avg item level")}</span></div></div>
-        <div class="slots">${right.map(s => slotHTML(gear, s)).join("")}</div>
+        <div class="slots">${left.map(s => slotHTML(gear, s, ch, from)).join("")}</div>
+        <div class="mid">${portraitHTML(ch)}<div class="ilvl"><b>${avgIlvl || ch.ilvl || "–"}</b><span>${tr("avg item level")}</span></div>${wornQualityHTML(ch, gear)}</div>
+        <div class="slots">${right.map(s => slotHTML(gear, s, ch, from)).join("")}</div>
       </div>
-      <div class="weapons">${[16, 17, 18].map(s => slotHTML(gear, s)).join("")}</div>
+      <div class="weapons">${[16, 17, 18].map(s => slotHTML(gear, s, ch, from)).join("")}</div>
       ${ch.armory ? `<p class="muted" style="font-size:13px">${tr("Gear from the Blizzard armory. Fun stats need the FunStats addon.")}</p>` : ""}
       ${talentsHTML(ch)}
       ${profs.length ? `<div class="profs">${profs.map(x => `<div class="prof"><span>${esc(x.n)}</span><span class="track"><span class="fill" style="width:${Math.min(100, (x.r / Math.max(1, x.m || 300)) * 100)}%"></span></span><span class="num">${num(x.r)} / ${num(x.m || 300)}</span></div>`).join("")}</div>` : ""}`;
@@ -3439,7 +3461,7 @@
     if (!p.chars.some(ch => ch.key === state.profileChar)) state.profileChar = main && main.key;
     $("pCharPick").innerHTML = p.chars.length > 1 ? p.chars.map(ch => `<button type="button" class="chip" data-key="${esc(ch.key)}" aria-pressed="${ch.key === state.profileChar}">${classIcon(ch)}${esc(ch.name)}</button>`).join("") : "";
     const ch = p.chars.find(c => c.key === state.profileChar);
-    $("pSheet").innerHTML = ch ? sheetHTML(ch, p.color) : `<p class="empty">${tr("No characters yet.")}</p>`;
+    $("pSheet").innerHTML = ch ? sheetHTML(ch, p.color, p.notable) : `<p class="empty">${tr("No characters yet.")}</p>`;
     drawFaces($("pSheet"));
 
     // Their collection: highest tiers first, then the rest by how close they are to their next tier.
@@ -3510,14 +3532,13 @@
       || `<p class="empty">${tr("Zones appear once {0} has played with the addon.", esc(p.name))}</p>`;
     $("pGold").innerHTML = goldSourcesHTML(s) || `<p class="empty">${tr("Spending by vendor, auction house, trades and more shows up after {0} plays with FunStats 1.9.", esc(p.name))}</p>`;
     const loot = p.notable.filter(n => n.q >= 3).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 30);
-    const lootLine = n => {
-      return `<div>${itemHTML(n)}${dropTags(n)}${n._char && n._char !== p.name ? ` <span class="muted">${tr("on {0}", esc(n._char))}</span>` : ""} <span class="muted" style="font-size:13px">${n.t ? new Date(n.t * 1000).toLocaleDateString(LOC(), { month: "short", day: "numeric" }) : ""}</span></div>`;
-    };
-    $("pLoot").innerHTML = loot.map(lootLine).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`;
+    const worn = wornIds(p);
+    const lootLine = n => lootCard(n, n._char && n._char !== p.name ? esc(n._char) : "", worn.has(n.id));
+    $("pLoot").innerHTML = loot.length ? `<div class="lcards">${loot.map(lootLine).join("")}</div>` : `<p class="empty">${tr("No rare drops yet.")}</p>`;
     // Lately: fills the space beside the gear with the newest loot and deaths.
     const lastDeaths = p.deaths.slice().sort((a, b) => b.t - a.t).slice(0, 3);
     $("pLately").innerHTML =
-      `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.slice(0, 5).map(lootLine).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
+      `<div class="lh">${tr("Best loot")}</div><div class="lcards one">${loot.slice(0, 4).map(lootLine).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
       `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${lastDeaths.map(d => `<div class="spotrow">${spotMap(d)}${deathLine(p, d, true)}</div>`).join("") || `<p class="empty">${tr("{0} hasn't died yet. Impressive.", esc(p.name))}</p>`}</div>`;
 
     whRefresh();
@@ -3609,8 +3630,9 @@
     const loot = people.flatMap(p => p.notable.filter(n => n.q >= 3).map(n => ({ n, p }))).sort((a, b) => (b.n.t || 0) - (a.n.t || 0)).slice(0, 5);
     const deaths = people.flatMap(p => p.deaths.filter(d => d.t).map(d => ({ d, p }))).sort((a, b) => b.d.t - a.d.t).slice(0, 4);
     $("gLately").innerHTML =
-      `<div class="lh">${tr("Best loot")}</div><div class="loot">${loot.map(({ n, p }) => `<div>${itemHTML(n)}${dropTags(n)} <span class="muted">${tr("on {0}", esc(n._char || p.name))}</span></div>`).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
+      `<div class="lh">${tr("Best loot")}</div><div class="lcards one">${loot.map(({ n, p }) => lootCard(n, nameHTML(p), false)).join("") || `<p class="empty">${tr("No rare drops yet.")}</p>`}</div>` +
       `<div class="lh">${tr("Recent deaths")}</div><div class="clog">${deaths.map(({ d, p }) => deathLine(p, d, true)).join("") || `<p class="empty">${tr("No deaths yet.")}</p>`}</div>`;
+    whRefresh();
   }
 
   // ---------- overview cockpit ----------
@@ -4486,17 +4508,17 @@
   $("spellWho").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; state.spellWho = b.dataset.pid; render(); });
   // When Wowhead finds an item, move its icon into the slot's square, like the in-game character sheet.
   new MutationObserver(() => {
-    document.querySelectorAll("#pSheet .slot a[data-wh-icon-added]").forEach(a => {
+    document.querySelectorAll(":is(.slot, .lcard) a[data-wh-icon-added]").forEach(a => {
       const small = a.querySelector(".iconsmall");
       const ins = small && small.querySelector("ins");
-      const box = a.closest(".slot").querySelector(".ic");
+      const box = a.closest(".slot, .lcard").querySelector(".ic, .lic");
       if (!ins || !box || !ins.style.backgroundImage) return;
       box.style.backgroundImage = ins.style.backgroundImage.replace("/icons/small/", "/icons/medium/");
       box.style.backgroundSize = "cover";
       box.textContent = "";
       small.remove();
     });
-  }).observe($("pSheet"), { subtree: true, childList: true, attributes: true, attributeFilter: ["data-wh-icon-added"] });
+  }).observe($("app"), { subtree: true, childList: true, attributes: true, attributeFilter: ["data-wh-icon-added"] });
   initMapZoom();
   $("mapWho").addEventListener("change", e => { state.map.who = e.target.value; renderMap(state.people); });
   $("realmSel").addEventListener("change", e => {
