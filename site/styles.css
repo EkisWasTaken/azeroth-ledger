@@ -1461,15 +1461,12 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 @container (min-width: 640px) {
   .cockpit { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .cockpit > * { grid-column: span 6; }
-  .cockpit > .c-race, .cockpit > .c-bounty { grid-column: span 3; }
 }
 @container (min-width: 1000px) {
   .cockpit { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: row dense; }
   .cockpit > .c-potw { grid-column: span 4; grid-row: span 2; }
   .cockpit > .c-kpis, .cockpit > .c-lead { grid-column: span 8; }
-  .cockpit > .c-stand { grid-column: span 5; }
-  .cockpit > .c-race { grid-column: span 4; }
-  .cockpit > .c-bounty { grid-column: span 3; }
+  .cockpit > .c-stand, .cockpit > .c-leads { grid-column: span 6; }
   .cockpit > .c-wide { grid-column: span 12; }
   /* a week without a story or a character of the week: the others take the room */
   .cockpit:has(#lead:empty) > .c-potw { grid-row: span 1; }
@@ -1480,35 +1477,42 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .potw-big b { font: 800 clamp(40px, 5.2cqi, 64px)/1 var(--nf); letter-spacing: -.03em; color: var(--good); text-shadow: 0 2px 12px rgba(0,0,0,.6); }
 .potw-big span { font-weight: 600; }
 
-/* stat tiles: the total, the change since last week, a bar per day, who did the most */
-.c-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 16px; }
-.kpi { container-type: inline-size; gap: 8px; padding: 14px 16px; align-content: space-between; }
-.kpi .kh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; font-size: 13px; color: var(--muted); }
-.kd { font-size: 12px; font-weight: 700; white-space: nowrap; }
-.kd.up { color: var(--good); } .kd.down { color: var(--bad); }
-.kpi .kval { font: 800 clamp(22px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; }
+/* stat tiles: icon and label, the total, this week against the same days of last week, who did the most */
+.c-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 16px; }
+.kpi { container-type: inline-size; gap: 10px; padding: 14px 16px; align-content: space-between; }
+.kpi .kh { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--muted); }
+.kpi .kh .wicon { width: 22px; height: 22px; border-radius: 4px; flex: none; }
+.kpi .kh > span:not(.kd) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kd { margin-left: auto; flex: none; padding: 1px 7px; border-radius: 99px; font: 800 11.5px var(--nf); white-space: nowrap; }
+.kd.up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.kd.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.kpi .kval { font: 800 clamp(24px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; }
 .kpi.bad .kval { color: var(--bad); }
-.kbars { display: flex; align-items: flex-end; gap: 3px; height: 26px; }
-.kbars i { flex: 1; min-width: 3px; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--rim) 85%, transparent); }
-.kbars i.hi { background: var(--accent); }
-.kbars i.fut { background: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rim) 45%, transparent); } /* days still to come: empty slots */
-.kpi.bad .kbars i.hi { background: var(--bad); }
+.kcmp { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 5px 8px; font-size: 11.5px; }
+.kcmp .kl { color: var(--muted); white-space: nowrap; }
+.kcmp .kn { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.kcmp .kb { height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--rim) 30%, transparent); overflow: hidden; }
+.kcmp .kb i { display: block; height: 100%; border-radius: inherit; }
+.kcmp i.now { background: var(--accent); }
+.kcmp i.was { background: color-mix(in srgb, var(--muted) 60%, transparent); }
+.kpi.bad .kcmp i.now { background: var(--bad); }
+.kcmp .coin .sprite { width: 11px; height: 11px; }
 .kpi .kw { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--muted); }
 
-/* the race to max level as a podium; the bars stand on the card's bottom edge */
-#podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; min-height: 220px; padding: 18px 16px 0; }
-.pod { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; color: var(--ink); text-decoration: none; }
-.pod .emblem { width: 44px; height: 44px; border-radius: 10px; font-size: 16px; }
-.pod .portrait :is(.face, .wicon) { width: 44px; height: 44px; } /* class icons stand in for faces without a portrait */
-.pod .cicon { display: block; margin: 0; }
-.pod .portrait .lvl { display: none; }
-.pod .cname { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 700; }
-.pod:hover .cname { text-decoration: underline; text-underline-offset: 3px; }
-.pbar { width: 100%; display: grid; place-items: center; border-radius: 6px 6px 0 0; font: 800 22px var(--nf); text-shadow: 0 1px 2px rgba(0,0,0,.5); }
-.p1 .pbar { height: 128px; color: var(--on-accent); text-shadow: none; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 50%, #000)); }
-.p2 .pbar { height: 94px; background: linear-gradient(180deg, #8d9aa3, #46525a); }
-.p3 .pbar { height: 70px; background: linear-gradient(180deg, #b07a48, #5a3a1e); }
-#podium > .empty { grid-column: 1 / -1; align-self: center; padding-bottom: 18px; }
+/* Leaders: who tops each stat, three across, the runner-up under each */
+.c-leads { grid-template-rows: auto 1fr; }
+.leaders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.ldr { display: grid; align-content: center; gap: 3px; min-width: 0; padding: 12px 18px; box-shadow: inset -1px -1px 0 var(--line); }
+.ldr .lh { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ldr .lh .wicon { width: 20px; height: 20px; border-radius: 4px; flex: none; }
+.ldr .n { font: 800 22px/1.15 var(--nf); color: var(--ink); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ldr > .plink, .ldr .r2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ldr > .plink { font-size: 13.5px; font-weight: 700; }
+.ldr .r2 { font-size: 12px; color: var(--muted); }
+.ldr .r2 .cname { font-weight: 600; }
+.leaders > .empty { grid-column: 1 / -1; padding: 16px 20px; }
+@media (max-width: 560px) { .leaders { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* standings in five twelfths: slimmer number columns so the names keep their room */
 .c-stand :is(.st-head, .st-row) { grid-template-columns: minmax(0, 1fr) 42px 62px 50px 12px; gap: 8px; padding: 0 16px; }
 .c-stand .st-row { min-height: 56px; }
@@ -1522,12 +1526,21 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 #s-guilds .car { margin: 18px 20px 20px; }
 #s-where.nosec { display: none; }
 #s-where .hlcards { padding: 18px 20px 20px; }
-/* the bounty in a quarter of the width: the poster above its file, centred, filling the card's height */
-#d-bounty { grid-template-rows: auto 1fr; }
-#d-bounty .bounty { margin: 16px; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; text-align: center; }
-#d-bounty .bounty-poster { width: 124px; }
-#d-bounty .bounty-file { justify-items: center; }
-#d-bounty :is(.bf-tally, .bf-links, .paypick) { justify-content: center; }
+/* Fatality report: causes of death, the latest deaths and the most wanted side by side; stacked in a narrow overview */
+.fatal { display: grid; grid-template-columns: minmax(0, 1fr); }
+.fatal > * { min-width: 0; }
+.fatal .donut-wrap { padding: 18px 20px; }
+.flog { display: grid; align-content: start; gap: 8px; padding: 18px 20px; }
+.flog .lh { font: 600 12px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.flog .clog { font-size: 13px; }
+#oWanted { display: grid; align-content: center; }
+#oWanted .bounty { margin: 16px 20px; }
+.bf-fact { font-size: 12px; color: #e3cfae; overflow-wrap: anywhere; }
+@container (min-width: 1000px) {
+  .fatal { grid-template-columns: 240px minmax(0, 1fr) minmax(0, 1.1fr); }
+  .fatal .donut-wrap { flex-direction: column; }
+  .fatal > * + * { box-shadow: inset 1px 0 0 var(--line); }
+}
 #d-bounty > .empty { padding: 16px 20px; }
 .dash-guild { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 1000px) { .dash-guild { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }

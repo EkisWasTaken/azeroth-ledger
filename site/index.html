@@ -201,13 +201,17 @@
         <button type="button" class="linkbtn" data-goto="characters" id="standAll">View all ›</button></div>
       <div class="standings" id="standings"></div>
     </div>
-    <div class="frame card c-race" id="d-race">
-      <div class="card-head"><h2 id="raceH">The Race to 60</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-race">Full race ›</button></div>
-      <div class="podium" id="podium"></div>
+    <div class="frame card c-leads" id="d-leads">
+      <div class="card-head"><h2>Leaders</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-meter">Details ›</button></div>
+      <div class="leaders" id="oLeads"></div>
     </div>
-    <div class="frame card ornate c-bounty" id="d-bounty">
-      <div class="card-head"><h2>Bounty board</h2><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
-      <div id="oWanted"></div>
+    <div class="frame card ornate c-wide" id="d-bounty">
+      <div class="card-head"><h2>Fatality report</h2><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
+      <div class="fatal">
+        <div class="donut-wrap"><div class="donut"><canvas id="cOCause"></canvas><div class="donut-mid" id="cOCauseMid"></div></div><div class="donut-legend" id="cOCauseLegend"></div></div>
+        <div class="flog"><div class="lh">Recent deaths</div><div class="clog" id="oDeaths"></div></div>
+        <div id="oWanted"></div>
+      </div>
     </div>
     <div class="frame card c-wide" id="s-where">
       <div class="card-head"><h2 id="h-where">Where it happened</h2><button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>

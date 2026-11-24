@@ -244,7 +244,7 @@
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
     "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
-    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "same as last week": "samma som förra veckan", "new": "ny", "vs last week": "jämfört med förra veckan", "vs the same days last week": "jämfört med samma dagar förra veckan", "Most: {0}": "Mest: {0}", "Full race ›": "Hela racet ›", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
+    "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "same as last week": "samma som förra veckan", "new": "ny", "vs last week": "jämfört med förra veckan", "vs the same days last week": "jämfört med samma dagar förra veckan", "Most: {0}": "Mest: {0}", "{0} last week": "{0} förra v.", "Full race ›": "Hela racet ›", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
     "The Graveyard": "Kyrkogården", "Fallen heroes": "Fallna hjältar", "death is permanent": "döden är permanent", "Still standing": "Fortfarande vid liv",
     "highest level first": "högst level först", "Fallen": "Fallen", "Alive": "Vid liv", "Hardcore": "Hardcore", "Average level at death": "Snittlevel vid döden",
     "highest: {0}, level {1}": "högst: {0}, level {1}", "{0} survival rate": "{0} har överlevt", "Nobody has fallen. Yet.": "Ingen har fallit. Än.", "Everyone has fallen.": "Alla har fallit.",
@@ -2402,6 +2402,8 @@
     all.sort((a, b) => b.d.t - a.d.t);
     $("clog").innerHTML = all.slice(0, 80).map(({ p, d }) => deathLine(p, d)).join("") || `<p class="empty">${tr("Nobody died. Suspicious.")}</p>`;
     causeChart("cCause", all.map(x => x.d));
+    causeChart("cOCause", all.map(x => x.d));
+    if ($("oDeaths")) $("oDeaths").innerHTML = all.slice(0, 5).map(({ p, d }) => deathLine(p, d)).join("") || `<p class="empty">${tr("Nobody died. Suspicious.")}</p>`;
 
     // deaths by level bracket, stacked by friend
     const brackets = [...Array(state.cap / 10)].map((_, i) => i ? `${i * 10}–${i * 10 + 9}` : "1–9").concat(String(state.cap));
@@ -2449,7 +2451,9 @@
           <p class="bf-eye">${tr("Most wanted")}</p>
           <strong class="bf-name">${charName(name)}</strong>
           ${who ? `<span class="bf-who">${who}</span>` : ""}
-          <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}${k.last.zone ? ` · ${esc(k.last.zone)}` : ""}</span></div>
+          <div class="bf-tally" title="${esc(killedLine(k))}">${tally}<span>${killedLine(k)}</span></div>
+          <span class="bf-fact">${tr("Victims: {0}", victims(k))}</span>
+          ${k.last.zone ? `<span class="bf-fact">${tr("Last seen in {0}", esc(k.last.zone))} · ${esc(shortDate(localKey(k.last.t)))}</span>` : ""}
           ${st ? `<span class="bf-claim${st.paid ? " paid" : ""}">${stLine(st)}</span>${payPick(name, st)}` : reward ? `<span class="bf-reward">${sprite("coinG", 2)}${reward}</span>` : ""}
           <div class="bf-links">${mapBtn(name)}${more > 0 ? `<button type="button" class="linkbtn" data-goto="deaths">${tr("+{0} more wanted", num(more))} ›</button>` : ""}</div>
         </div></div>`;
@@ -3610,51 +3614,50 @@
   }
 
   // ---------- overview cockpit ----------
-  // Four stat tiles: the range's total, the change since the week before, one bar per day (per week for all time)
-  // and who did the most. Killing blows give way to healing on realms where the addon can't count them.
-  const KPIS = [["dmg", "Damage dealt", compact], ["kb", "Killing blows", num], ["deaths", "Deaths", num, true], ["goldIn", "Gold looted", goldHTML]];
+  // Four stat tiles: the range's total, then two bars comparing it with the same days of the week before
+  // (a week still under way is held against just as many days, named on the bar), and who did the most.
+  const KPIS = [["dmg", "Damage dealt", compact, "sword"], ["quests", "Quests", num, "scroll"], ["levels", "Levels gained", num, "level"], ["deaths", "Deaths", num, "skull", true]];
   function renderKpis(rows, people) {
     if (!$("kpis")) return;
     const all = state.view === "all";
     const week = w => [0, 1, 2, 3, 4, 5, 6].map(i => addDays(w, i));
     const sumDays = (keys, f) => keys.reduce((a, k) => a + people.reduce((b, p) => b + ((p.days[k] || {})[f] || 0), 0), 0);
-    const slots = all ? weeksAvailable(people).slice(-7).map(week) : week(state.week).map(k => [k]);
-    const today = todayKey(), sofar = all ? 7 : Math.min(7, Math.max(1, week(state.week).filter(k => k <= today).length));
-    const kpis = rows.some(r => r.s.kb) ? KPIS : KPIS.map(k => k[0] === "kb" ? ["heal", "Healing done", compact] : k);
-    $("kpis").innerHTML = kpis.map(([f, label, fmt, bad]) => {
+    const today = todayKey(), sofar = Math.min(7, Math.max(1, week(state.week).filter(k => k <= today).length));
+    const prevDays = week(addDays(state.week, -7)).slice(0, sofar);
+    const wd = k => parseDay(k).toLocaleDateString(LOC(), { weekday: "short", timeZone: "UTC" }).replace(".", "");
+    const prevLabel = sofar === 7 ? tr("Last week") : tr("{0} last week", sofar === 1 ? wd(prevDays[0]) : `${wd(prevDays[0])}–${wd(prevDays[sofar - 1])}`);
+    const icons = { ...WOWICON, level: "achievement_level_10" };
+    $("kpis").innerHTML = KPIS.map(([f, label, fmt, ic, bad]) => {
       const total = rows.reduce((a, r) => a + (r.s[f] || 0), 0);
-      const bars = slots.map(ks => sumDays(ks, f)), max = Math.max(...bars, 0);
-      let delta = "";
+      let cmp = "", pill = "";
       if (!all) {
-        // a week still under way is compared with the same days of last week, not all seven
-        const prev = sumDays(week(addDays(state.week, -7)).slice(0, sofar), f);
-        if (prev || total) {
-          const up = total > prev, txt = total === prev ? tr("same as last week") : prev ? `${up ? "▲" : "▼"} ${Math.round(Math.abs(total - prev) / prev * 100)}%` : tr("new");
-          const tone = total === prev ? "" : up === !bad ? " up" : " down"; // more deaths is the bad direction
-          delta = `<span class="kd${tone}" title="${esc(tr(sofar < 7 ? "vs the same days last week" : "vs last week"))}">${txt}</span>`;
-        }
+        const prev = sumDays(prevDays, f), max = Math.max(total, prev, 1), pct = prev ? Math.round((total - prev) / prev * 100) : 0;
+        if (pct) pill = `<span class="kd ${(pct > 0) === !bad ? "up" : "down"}">${pct > 0 ? "▲" : "▼"} ${num(Math.abs(pct))} %</span>`; // more deaths is the bad direction
+        const bar = (lbl, v, cls) => `<span class="kl">${lbl}</span><span class="kb"><i class="${cls}" style="width:${Math.max(2, Math.round(v / max * 100))}%"></i></span><span class="kn">${fmt(v)}</span>`;
+        cmp = `<div class="kcmp">${bar(tr("This week"), total, "now")}${bar(prevLabel, prev, "was")}</div>`;
       }
       const top = rows.filter(r => r.s[f]).sort((a, b) => b.s[f] - a.s[f])[0];
       const who = top ? `<a class="plink" href="${profileHref(top.p)}"><span class="cname" style="--cc:${classOf(top.p.chars[0])[1]}">${esc(top.p.name)}</span></a>` : "";
       return `<div class="frame kpi${bad ? " bad" : ""}">
-        <div class="kh"><span>${tr(label)}</span>${delta}</div>
-        <b class="kval">${fmt(total)}</b>
-        <div class="kbars" aria-hidden="true">${bars.map((v, i) => `<i class="${!all && i >= sofar ? "fut" : max && v === max ? "hi" : ""}" style="height:${!all && i >= sofar ? 100 : max ? Math.max(6, Math.round(v / max * 100)) : 6}%"></i>`).join("")}</div>
+        <div class="kh">${zam(icons[ic], 22)}<span>${tr(label)}</span>${pill}</div>
+        <b class="kval">${fmt(total)}</b>${cmp}
         <span class="kw">${who ? tr("Most: {0}", who) : "&nbsp;"}</span>
       </div>`;
     }).join("");
   }
 
-  // The race to max level as a podium: the highest character in the middle, second on the left, third on the right.
-  function renderPodium(people) {
-    if (!$("podium")) return;
-    $("raceH").textContent = tr("The Race to {0}", state.cap);
-    const top = people.filter(p => p.chars[0] && p.chars[0].level).sort((a, b) => b.chars[0].level - a.chars[0].level).slice(0, 3);
-    $("podium").innerHTML = top.length ? [[top[1], 2], [top[0], 1], [top[2], 3]].filter(x => x[0]).map(([p, place]) => {
-      const ch = p.chars[0];
-      return `<a class="pod p${place}" href="${profileHref(p)}" style="--c:${classOf(ch)[1]}" title="${esc(p.name)}">${portraitHTML(ch)}<span class="cname" style="--cc:${classOf(ch)[1]}">${esc(p.name)}</span><span class="pbar"><b>${esc(ch.level)}</b></span></a>`;
-    }).join("") : `<p class="empty">${tr("No stats yet.")}</p>`;
-    drawFaces($("podium"));
+  // Who leads each stat in the chosen range, with the runner-up underneath.
+  const LEAD = [["sword", "Damage dealt", "dmg", compact], ["heart", "Healing done", "heal", compact], ["axe", "Killing blows", "kb", num],
+    ["skull", "Deaths", "deaths", num], ["scroll", "Quests completed", "quests", num], ["coin", "Gold looted", "goldIn", goldHTML],
+    ["clock", "Time played", "played", dur], ["spring", "Jumps", "jumps", num], ["boot", "Distance", "dist", yards]];
+  function renderLeaders(rows) {
+    if (!$("oLeads")) return;
+    const who = r => `<a class="plink" href="${profileHref(r.p)}"><span class="cname" style="--cc:${classOf(r.p.chars[0])[1]}">${esc(r.p.name)}</span></a>`;
+    $("oLeads").innerHTML = LEAD.map(([ic, label, f, fmt]) => {
+      const [a, b] = rows.filter(r => r.s[f]).sort((x, y) => y.s[f] - x.s[f]);
+      return a ? `<div class="ldr"><span class="lh">${zam(WOWICON[ic], 20)}${tr(label)}</span><b class="n">${fmt(a.s[f])}</b>${who(a)}
+        ${b ? `<small class="r2">2. ${who(b)} · ${fmt(b.s[f])}</small>` : ""}</div>` : "";
+    }).join("") || `<p class="empty">${tr("No stats yet.")}</p>`;
   }
 
   const profileRoute = () => { const r = parseRoute(); return r.kind === "char" ? r.key : null; };
@@ -3777,7 +3780,7 @@
     renderMomentum(people);
     renderStandings(rows);
     renderKpis(rows, people);
-    renderPodium(people);
+    renderLeaders(rows);
     renderLootQuality(rows, people);
     renderAchievements(people);
     renderMeter(active.length ? active : rows);
