@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <!-- Overview card border (a border-image, slice 32): gold scrollwork in each corner, a thin double rule between. -->
+  <defs>
+    <radialGradient id="gem" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#a8f5ea"/><stop offset=".55" stop-color="#2fb3b0"/><stop offset="1" stop-color="#0d5a61"/></radialGradient>
+    <g id="c" fill="none" stroke-linecap="round">
+      <path d="M3 32V3h29" stroke="#120c08" stroke-width="3.4"/>
+      <path d="M3 32V3h29" stroke="#d8ae56" stroke-width="1.6"/>
+      <path d="M8 30C8 17 17 8 30 8" stroke="#f4dc94" stroke-width="1.1"/>
+      <path d="M30 8c-4 0-6 3-4 5s5 0 4-3M8 30c0-4 3-6 5-4s0 5-3 4" stroke="#d8ae56" stroke-width="1"/>
+      <path d="M8 3.5 13 8 8 12.5 3.5 8Z" fill="#b98f3f" stroke="#f4dc94" stroke-width=".8"/>
+      <circle cx="8" cy="8" r="2.1" fill="url(#gem)" stroke="#2a1d08" stroke-width=".4"/>
+    </g>
+  </defs>
+  <g stroke="#d8ae56" stroke-opacity=".55" stroke-width="1" fill="none">
+    <path d="M32 3.5h32M32 92.5h32M3.5 32v32M92.5 32v32"/>
+    <path d="M32 6.5h32M32 89.5h32M6.5 32v32M89.5 32v32" stroke-opacity=".25"/>
+  </g>
+  <use href="#c"/>
+  <use href="#c" transform="matrix(-1 0 0 1 96 0)"/>
+  <use href="#c" transform="matrix(1 0 0 -1 0 96)"/>
+  <use href="#c" transform="matrix(-1 0 0 -1 96 96)"/>
+</svg>

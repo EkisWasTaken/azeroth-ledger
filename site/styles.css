@@ -1110,7 +1110,17 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 .card { padding: 0; gap: 0; overflow: hidden; }
 .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; min-height: 60px; padding: 14px 20px; box-shadow: inset 0 -1px 0 var(--line); }
 .card-head > div:first-child { display: grid; gap: 2px; min-width: 0; }
-.card-head h2 { font: 600 19px/1.2 var(--hf); letter-spacing: .02em; }
+.card-head h2 { font: 700 19px/1.2 var(--hf); letter-spacing: .04em; }
+.cockpit .card-head { position: relative; background: linear-gradient(180deg, rgba(0,0,0,.32), rgba(0,0,0,.08));
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+.cockpit .card-head::before, .cockpit .card-head::after { content: ""; position: absolute; bottom: -4px; width: 7px; height: 7px;
+  transform: rotate(45deg); background: var(--accent); box-shadow: 0 0 0 1px #000; }
+.cockpit .card-head::before { left: 14px; } .cockpit .card-head::after { right: 14px; }
+.cockpit .card-head h2 { color: var(--accent); text-shadow: 0 2px 0 #000; }
+.flav { font: italic 500 12.5px/1.3 var(--body); color: var(--muted); }
+.flav::before { content: "— "; }
+/* the death donut: a skull over the count */
+.donut-mid .wicon { justify-self: center; margin-bottom: 4px; }
 .card > .chart { margin: 16px 20px 14px; }
 /* the momentum chart fills its card when the Fatality report beside it (with its bounty) is taller */
 #s-momentum { grid-template-rows: auto 1fr; align-content: stretch; }
@@ -1482,36 +1492,50 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 /* stat tiles: icon and label, the total, this week against the same days of last week, who did the most */
 .c-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 16px; }
 .kpi { container-type: inline-size; gap: 10px; padding: 14px 16px; align-content: space-between; }
-.kpi .kh { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--muted); }
-.kpi .kh .wicon { width: 22px; height: 22px; border-radius: 4px; flex: none; }
+.kpi .kh { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--ink); }
+.kpi .kh .wicon { width: 24px; height: 24px; flex: none; }
 .kpi .kh > span:not(.kd) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kd { margin-left: auto; flex: none; padding: 1px 7px; border-radius: 99px; font: 800 11.5px var(--nf); white-space: nowrap; }
+.kd { margin-left: auto; flex: none; padding: 1px 6px; border-radius: 3px; font: 800 11.5px var(--nf); white-space: nowrap; box-shadow: inset 0 0 0 1px currentColor; text-shadow: 0 1px 0 #000; }
 .kd.up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
 .kd.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
-.kpi .kval { font: 800 clamp(24px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.kpi .kval { font: 800 clamp(24px, 16cqi, 32px)/1.1 var(--nf); letter-spacing: -.02em; overflow-wrap: anywhere; color: #fff; text-shadow: 0 2px 0 #000, 0 0 14px color-mix(in srgb, var(--accent) 35%, transparent); }
 .kpi.bad .kval { color: var(--bad); }
 .kcmp { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 5px 8px; font-size: 11.5px; }
 .kcmp .kl { color: var(--muted); white-space: nowrap; }
 .kcmp .kn { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-.kcmp .kb { height: 6px; border-radius: 99px; background: color-mix(in srgb, var(--rim) 30%, transparent); overflow: hidden; }
-.kcmp .kb i { display: block; height: 100%; border-radius: inherit; }
-.kcmp i.now { background: var(--accent); }
-.kcmp i.was { background: color-mix(in srgb, var(--muted) 60%, transparent); }
-.kpi.bad .kcmp i.now { background: var(--bad); }
+/* the game's XP bar: a dark track in a thin gold rim, cut into 20 segments */
+.kcmp .kb { position: relative; height: 9px; border-radius: 2px; background: #05070a; overflow: hidden;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, #000), inset 0 1px 2px #000; }
+.kcmp .kb::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(5% - 1px), rgba(0,0,0,.65) calc(5% - 1px) 5%); }
+.kcmp .kb i { display: block; height: 100%; box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+.kcmp i.now { background: linear-gradient(180deg, #c58cff, #7a2fd6 60%, #4b1a8c); }
+.kcmp i.was { background: linear-gradient(180deg, #6fb6ff, #1f5fbf 60%, #133d7d); opacity: .75; }
+.kpi.bad .kcmp i.now { background: linear-gradient(180deg, #ff8a7a, #c0392b 60%, #6d1810); }
 .kcmp .coin .sprite { width: 11px; height: 11px; }
+.kpi .kw .crown { font-style: normal; color: #f2d57e; margin-right: 4px; }
 .kpi .kw { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--muted); }
 
 /* Leaders: who tops each stat, three across, the runner-up under each */
 .c-leads { grid-template-rows: auto 1fr; }
 .leaders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
-.ldr { display: grid; align-content: center; gap: 3px; min-width: 0; padding: 12px 18px; box-shadow: inset -1px -1px 0 var(--line); }
-.ldr .lh { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ldr .lh .wicon { width: 20px; height: 20px; border-radius: 4px; flex: none; }
-.ldr .n { font: 800 22px/1.15 var(--nf); color: var(--ink); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ldr > .plink, .ldr .r2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ldr > .plink { font-size: 13.5px; font-weight: 700; }
+.ldr { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; padding: 12px 12px 12px 14px; box-shadow: inset -1px -1px 0 var(--line); transition: background .15s; }
+.ldr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+/* stat icons framed like action-bar buttons */
+:is(.ldr, .kpi .kh) > .wicon { box-shadow: 0 0 0 1px #000, 0 0 0 2px color-mix(in srgb, var(--accent) 60%, #000), 0 3px 8px rgba(0,0,0,.5); }
+.ldr .lt { display: grid; gap: 1px; min-width: 0; }
+.ldr .lh { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ldr .n { font: 800 21px/1.15 var(--nf); color: var(--accent); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000; }
+.ldr .l1, .ldr .r2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ldr .l1 { font-size: 13.5px; font-weight: 700; }
+.ldr .l1::before { content: "♛"; margin-right: 3px; font-size: 11px; color: #f2d57e; }
+/* names inside one-line cells cut with an ellipsis instead of vanishing whole */
+:is(.ldr .l1, .ldr .r2, .kpi .kw) a.plink { display: inline; }
 .ldr .r2 { font-size: 12px; color: var(--muted); }
 .ldr .r2 .cname { font-weight: 600; }
+/* the runner-up's silver coin */
+.ldr .r2 i { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-right: 5px; border-radius: 50%; vertical-align: -2px;
+  font: 800 9.5px/1 var(--nf); font-style: normal; color: #1d2328; background: radial-gradient(circle at 35% 30%, #fff, #b9c2c9 55%, #7d8790); box-shadow: 0 0 0 1px #000; }
 .leaders > .empty { grid-column: 1 / -1; padding: 16px 20px; }
 @media (max-width: 560px) { .leaders { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
@@ -1587,3 +1611,27 @@ button.hlc:hover, button.hlc:focus-visible { outline: 0; transform: translateY(-
 .wq span { display: inline-flex; align-items: center; gap: 6px; }
 .wq i { width: 8px; height: 8px; border-radius: 2px; }
 .wold { font-size: 12px; font-weight: 700; color: #ffb347; }
+
+/* ---------- Overview dressing: gold scrollwork on every card, a worn-stone grain, and a faded emblem
+   behind each panel (crossed swords, a crown, a skull, a compass, a banner). Decoration only: pointer-events off. ---------- */
+.cockpit > .frame:not(.ornate), .cockpit > div > .frame:not(.potw) { overflow: hidden; }
+.cockpit > .frame:not(.ornate)::before, .cockpit > div > .frame:not(.potw)::before {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  border: 22px solid transparent; border-image: url("card-filigree.svg") 32 / 22px stretch;
+}
+.cockpit > .frame::after, .cockpit > div > .frame:not(.potw)::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit; opacity: .5;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.cockpit > .frame > *, .cockpit > div > .frame:not(.potw) > * { position: relative; z-index: 1; }
+/* the emblem sits in the card's body, low on the right */
+.cockpit > [data-wm]::after {
+  opacity: 1;
+  background: var(--wm) right 26px bottom 22px / 150px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .28 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+#s-standings { --wm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%23e6c26f' fill-opacity='.12'%3E%3Cg id='s'%3E%3Cpath d='M6 4h6l34 34-6 6L6 10z'/%3E%3Cpath d='M36 50l14-14 4 4-14 14z'/%3E%3Ccircle cx='55' cy='55' r='4'/%3E%3C/g%3E%3Cuse href='%23s' transform='matrix(-1 0 0 1 64 0)'/%3E%3C/svg%3E"); }
+#d-leads { --wm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%23e6c26f' fill-opacity='.12'%3E%3Cpath d='M8 44 4 16l15 12 13-20 13 20 15-12-4 28zM8 48h48v7H8z'/%3E%3C/svg%3E"); }
+#d-bounty { --wm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%23e6c26f' fill-opacity='.12' fill-rule='evenodd'%3E%3Cpath d='M32 6C18 6 10 16 10 28c0 8 4 13 8 16v10h28V44c4-3 8-8 8-16C54 16 46 6 32 6zM17 29a6 6 0 1 0 12 0a6 6 0 1 0-12 0zM35 29a6 6 0 1 0 12 0a6 6 0 1 0-12 0zM29 41l3-6 3 6z'/%3E%3C/svg%3E"); }
+#s-where { --wm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%23e6c26f' fill-opacity='.12'%3E%3Cpath d='M32 2l5 25 25 5-25 5-5 25-5-25-25-5 25-5z'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23e6c26f' stroke-opacity='.12' stroke-width='2'/%3E%3C/svg%3E"); }
+#s-guilds { --wm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%23e6c26f' fill-opacity='.12'%3E%3Cpath d='M14 2h4v60h-4zM20 6h32v40L36 36 20 46z'/%3E%3C/svg%3E"); }

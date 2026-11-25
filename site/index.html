@@ -188,7 +188,6 @@
     </div>
   </section>
 
-  <!-- Overview: a dashboard of four cards, each opening the page with the full story. -->
   <!-- Overview cockpit: the whole week on one screen. Tiles size to what's in them; the layout follows the
        width the overview gets (container queries), not the window. -->
   <div class="dash" data-pg="overview">
@@ -196,29 +195,29 @@
     <div class="c-potw" id="potw"></div>
     <div class="c-kpis" id="kpis"></div>
     <div class="c-lead" id="lead"></div>
-    <div class="frame card c-stand" id="s-standings">
-      <div class="card-head"><h2>Hero standings</h2>
+    <div class="frame card c-stand" id="s-standings" data-wm>
+      <div class="card-head"><div><h2>Hero standings</h2><small class="flav">Who carries the realm this week</small></div>
         <button type="button" class="linkbtn" data-goto="characters" id="standAll">View all ›</button></div>
       <div class="standings" id="standings"></div>
     </div>
-    <div class="frame card c-leads" id="d-leads">
-      <div class="card-head"><h2>Leaders</h2><button type="button" class="linkbtn" data-goto="meters" data-sub="s-meter">Details ›</button></div>
+    <div class="frame card c-leads" id="d-leads" data-wm>
+      <div class="card-head"><div><h2>Leaders</h2><small class="flav">A champion for every stat</small></div><button type="button" class="linkbtn" data-goto="meters" data-sub="s-meter">Details ›</button></div>
       <div class="leaders" id="oLeads"></div>
     </div>
-    <div class="frame card ornate c-wide" id="d-bounty">
-      <div class="card-head"><h2>Fatality report</h2><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
+    <div class="frame card ornate c-wide" id="d-bounty" data-wm>
+      <div class="card-head"><div><h2>Fatality report</h2><small class="flav">The spirit healer has been busy</small></div><button type="button" class="linkbtn" data-goto="deaths" data-sub="s-death">Details ›</button></div>
       <div class="fatal">
         <div class="donut-wrap"><div class="donut"><canvas id="cOCause"></canvas><div class="donut-mid" id="cOCauseMid"></div></div><div class="donut-legend" id="cOCauseLegend"></div></div>
         <div class="flog"><div class="lh">Recent deaths</div><div class="clog" id="oDeaths"></div></div>
         <div id="oWanted"></div>
       </div>
     </div>
-    <div class="frame card c-wide" id="s-where">
-      <div class="card-head"><h2 id="h-where">Where it happened</h2><button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>
+    <div class="frame card c-wide" id="s-where" data-wm>
+      <div class="card-head"><div><h2 id="h-where">Where it happened</h2><small class="flav">Pins on the map of Azeroth</small></div><button type="button" class="linkbtn" data-goto="atlas">Open the atlas ›</button></div>
       <div class="hlcards" id="ovHl"></div>
     </div>
-    <div class="frame card c-wide main-only" id="s-guilds">
-      <div class="card-head"><h2 id="h-guilds">Guilds</h2><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
+    <div class="frame card c-wide main-only" id="s-guilds" data-wm>
+      <div class="card-head"><div><h2 id="h-guilds">Guilds</h2><small class="flav">Banners flying over the realm</small></div><span class="car-dots" data-for="guilds" role="group" aria-label="Pages" hidden></span></div>
       <div class="car"><div class="guilds" id="guilds"></div></div>
     </div>
   </div>

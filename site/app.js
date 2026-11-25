@@ -242,7 +242,7 @@
     "<strong>No stats on {0} yet.</strong> Be the first: get the addon and play.": "<strong>Ingen statistik på {0} än.</strong> Bli först: hämta addonen och spela.",
     // navigation
     "Pages": "Sidor", "Open menu": "Öppna menyn", "Close menu": "Stäng menyn",
-    "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport",
+    "Breadcrumb": "Du är här", "Combat output": "Strid", "Group momentum": "Gruppens fart", "Risk assessment": "Riskbedömning", "Fatality report": "Dödsrapport", "Who carries the realm this week": "Vem bär realmen den här veckan", "A champion for every stat": "En mästare för varje stat", "The spirit healer has been busy": "Andehelaren har haft fullt upp", "Pins on the map of Azeroth": "Nålar på Azeroths karta", "Banners flying over the realm": "Fanorna som vajar över realmen",
     "Details ›": "Detaljer ›", "The company": "Sällskapet", "Hero standings": "Hjältarnas ställning", "View all ›": "Visa alla ›", "Spoils collected": "Loot",
     "Loot quality": "Lootkvalitet", "Bounty board": "Efterlysningar", "same as last week": "samma som förra veckan", "new": "ny", "vs last week": "jämfört med förra veckan", "vs the same days last week": "jämfört med samma dagar förra veckan", "Most: {0}": "Mest: {0}", "Looted in {0}": "Lootad i {0}", "Looted": "Lootad", "Time for an upgrade": "dags att byta", "Far below level {0}": "Långt under level {0}",
     "1 item to replace": "1 föremål att byta ut", "{0} items to replace": "{0} föremål att byta ut", "{0} last week": "{0} förra v.", "Full race ›": "Hela racet ›", "No bounties right now.": "Inga efterlysningar just nu.", "Most wanted": "Mest efterlyst",
@@ -2293,7 +2293,7 @@
     deaths.forEach(d => { causes[d.cause || "unknown"] = (causes[d.cause || "unknown"] || 0) + 1; });
     const ck = Object.keys(causes).sort((a, b) => causes[b] - causes[a]);
     const mid = $(canvasId + "Mid"), legend = $(canvasId + "Legend");
-    if (mid) mid.innerHTML = ck.length ? `<strong>${num(deaths.length)}</strong><span>${tr(deaths.length === 1 ? "death" : "deaths")}</span>` : "";
+    if (mid) mid.innerHTML = ck.length ? `${zam(WOWICON.skull, 26)}<strong>${num(deaths.length)}</strong><span>${tr(deaths.length === 1 ? "death" : "deaths")}</span>` : "";
     if (legend) legend.innerHTML = ck.map(c => `<div><i style="background:${(CAUSE[c] || CAUSE.unknown)[1]}"></i><span>${tr((CAUSE[c] || CAUSE.unknown)[0])}</span><strong>${num(causes[c])}</strong></div>`).join("");
     drawChart(canvasId, ck.length ? {
       type: "doughnut",
@@ -3664,7 +3664,7 @@
       return `<div class="frame kpi${bad ? " bad" : ""}">
         <div class="kh">${zam(icons[ic], 22)}<span>${tr(label)}</span>${pill}</div>
         <b class="kval">${fmt(total)}</b>${cmp}
-        <span class="kw">${who ? tr("Most: {0}", who) : "&nbsp;"}</span>
+        <span class="kw">${who ? `<i class="crown" aria-hidden="true">♛</i>${tr("Most: {0}", who)}` : "&nbsp;"}</span>
       </div>`;
     }).join("");
   }
@@ -3678,8 +3678,8 @@
     const who = r => `<a class="plink" href="${profileHref(r.p)}"><span class="cname" style="--cc:${classOf(r.p.chars[0])[1]}">${esc(r.p.name)}</span></a>`;
     $("oLeads").innerHTML = LEAD.map(([ic, label, f, fmt]) => {
       const [a, b] = rows.filter(r => r.s[f]).sort((x, y) => y.s[f] - x.s[f]);
-      return a ? `<div class="ldr"><span class="lh">${zam(WOWICON[ic], 20)}${tr(label)}</span><b class="n">${fmt(a.s[f])}</b>${who(a)}
-        ${b ? `<small class="r2">2. ${who(b)} · ${fmt(b.s[f])}</small>` : ""}</div>` : "";
+      return a ? `<div class="ldr">${zam(WOWICON[ic], 30)}<div class="lt"><span class="lh">${tr(label)}</span><b class="n">${fmt(a.s[f])}</b><span class="l1">${who(a)}</span>
+        ${b ? `<small class="r2"><i>2</i>${who(b)} · ${fmt(b.s[f])}</small>` : ""}</div></div>` : "";
     }).join("") || `<p class="empty">${tr("No stats yet.")}</p>`;
   }
 
