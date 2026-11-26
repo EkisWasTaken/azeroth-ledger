@@ -1485,6 +1485,11 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
   .cockpit:has(#potw:empty) > :is(.c-kpis, .c-lead) { grid-column: span 12; }
 }
 .c-potw > .frame, .c-lead > .frame { height: 100%; }
+/* the week's two stories side by side, stacked when narrow */
+.c-lead { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.c-lead .lead .ticon { width: 52px; height: 52px; }
+.c-lead .lead .ticon .wicon { width: 36px; height: 36px; }
+.c-lead .lead .gname { font-size: clamp(19px, 1.8vw, 24px); }
 .potw-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .potw-big b { font: 800 clamp(40px, 5.2cqi, 64px)/1 var(--nf); letter-spacing: -.03em; color: var(--good); text-shadow: 0 2px 12px rgba(0,0,0,.6); }
 .potw-big span { font-weight: 600; }
@@ -1527,15 +1532,16 @@ body[data-page="join"] #weekNav, body[data-page="join"] #subtitle { display: non
 .ldr .lh { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ldr .n { font: 800 21px/1.15 var(--nf); color: var(--accent); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 0 #000; }
 .ldr .l1, .ldr .r2 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ldr .l1 { font-size: 13.5px; font-weight: 700; }
-.ldr .l1::before { content: "♛"; margin-right: 3px; font-size: 11px; color: #f2d57e; }
+.ldr .l1 { font-size: 14px; font-weight: 700; }
 /* names inside one-line cells cut with an ellipsis instead of vanishing whole */
 :is(.ldr .l1, .ldr .r2, .kpi .kw) a.plink { display: inline; }
 .ldr .r2 { font-size: 12px; color: var(--muted); }
 .ldr .r2 .cname { font-weight: 600; }
-/* the runner-up's silver coin */
-.ldr .r2 i { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-right: 5px; border-radius: 50%; vertical-align: -2px;
-  font: 800 9.5px/1 var(--nf); font-style: normal; color: #1d2328; background: radial-gradient(circle at 35% 30%, #fff, #b9c2c9 55%, #7d8790); box-shadow: 0 0 0 1px #000; }
+/* place coins: gold for the leader, silver for the runner-up */
+.ldr :is(.l1, .r2) i { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 6px; border-radius: 50%; vertical-align: -2px;
+  font: 800 10px/1 var(--nf); font-style: normal; color: #1d2328; background: radial-gradient(circle at 35% 30%, #fff, #b9c2c9 55%, #7d8790); box-shadow: 0 0 0 1px #000; }
+.ldr .l1 i { width: 18px; height: 18px; font-size: 11px; color: #3a2400; background: radial-gradient(circle at 35% 30%, #fff6c8, #f2c94c 50%, #a8741a); box-shadow: 0 0 0 1px #000, 0 0 8px rgba(242,201,76,.5); }
+.ldr .r2 { margin-top: 2px; }
 .leaders > .empty { grid-column: 1 / -1; padding: 16px 20px; }
 @media (max-width: 560px) { .leaders { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 

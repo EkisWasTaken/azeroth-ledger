@@ -1885,15 +1885,15 @@
       top.s.dmg < groupDmg && tr("{0} of the group's damage", pct(top.s.dmg / groupDmg)),
       top.s.maxHit && tr("Hit for {0} with {1}", num(top.s.maxHit), esc(top.s.maxHitSpell || tr("something"))),
       top.s.hits && tr("{0} hits, {1} crits", num(top.s.hits), pct((top.s.crits || 0) / top.s.hits))] });
-    const best = cands.sort((a, b) => b.s - a.s)[0];
-    if (!best) return void ($("lead").innerHTML = "");
-    const ch = best.p.chars[0];
-    $("lead").innerHTML = `<div class="frame lead ${best.tone || ""}">
-      <span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${best.label}</span>
-      <div class="ghead"><span class="ticon">${icon(best.icon, 2)}</span><div>
-        <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(best.p.name)}</a>
-        <p class="lead-h">${best.line}</p></div></div>
-      <div class="chips">${best.tags || ""}${best.chips.filter(Boolean).map(chip).join("")}</div></div>`;
+    cands.sort((a, b) => b.s - a.s);
+    // two stories side by side: the runner-up is someone else if anyone else has one, else another kind of story
+    const best = cands[0], next = best && (cands.find(c => c.p !== best.p) || cands.find(c => c.label !== best.label));
+    $("lead").innerHTML = [best, next].filter(Boolean).map(s => { const ch = s.p.chars[0]; return `<div class="frame lead ${s.tone || ""}">
+      <span class="eyebrow">${tr(state.view === "all" ? "Story of all time" : "Story of the week")} · ${s.label}</span>
+      <div class="ghead"><span class="ticon">${icon(s.icon, 2)}</span><div>
+        <a class="gname" href="${charHref(ch.key)}" style="color:${classOf(ch)[1]}">${esc(s.p.name)}</a>
+        <p class="lead-h">${s.line}</p></div></div>
+      <div class="chips">${s.tags || ""}${s.chips.filter(Boolean).map(chip).join("")}</div></div>`; }).join("");
     whRefresh();
   }
 
@@ -3678,7 +3678,7 @@
     const who = r => `<a class="plink" href="${profileHref(r.p)}"><span class="cname" style="--cc:${classOf(r.p.chars[0])[1]}">${esc(r.p.name)}</span></a>`;
     $("oLeads").innerHTML = LEAD.map(([ic, label, f, fmt]) => {
       const [a, b] = rows.filter(r => r.s[f]).sort((x, y) => y.s[f] - x.s[f]);
-      return a ? `<div class="ldr">${zam(WOWICON[ic], 30)}<div class="lt"><span class="lh">${tr(label)}</span><b class="n">${fmt(a.s[f])}</b><span class="l1">${who(a)}</span>
+      return a ? `<div class="ldr">${zam(WOWICON[ic], 30)}<div class="lt"><span class="lh">${tr(label)}</span><b class="n">${fmt(a.s[f])}</b><span class="l1"><i>1</i>${who(a)}</span>
         ${b ? `<small class="r2"><i>2</i>${who(b)} · ${fmt(b.s[f])}</small>` : ""}</div></div>` : "";
     }).join("") || `<p class="empty">${tr("No stats yet.")}</p>`;
   }
